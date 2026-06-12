@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UpNext — Waitlist Landing Page
 
-## Getting Started
+Premium pre-launch landing page for a service-business platform (cleaning, lawn care, handyman, painting, pet walking, pressure washing, roofing, car wash, and more).
 
-First, run the development server:
+Stack: **Next.js (App Router) · TypeScript · Tailwind CSS v4 · Lucide icons · Framer Motion**
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Where things live
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| What | Where |
+|---|---|
+| All CTA text, nav, form options, brand name | [lib/config.ts](lib/config.ts) |
+| Page sections (one component each) | [components/sections/](components/sections/) |
+| Dashboard / mobile / before-after mockups | [components/mockups/](components/mockups/) |
+| Soft-3D SVG objects | [components/three-d/Objects.tsx](components/three-d/Objects.tsx) |
+| Design tokens (brand teal, ink neutrals, shadows) | [app/globals.css](app/globals.css) |
+| Waitlist API | [app/api/waitlist/route.ts](app/api/waitlist/route.ts) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Waitlist leads
 
-## Learn More
+Submissions are appended to `data/waitlist.jsonl` (one JSON object per line: id, firstName, email, businessName, businessType, businessSize, currentTool, source, createdAt). The file is gitignored.
 
-To learn more about Next.js, take a look at the following resources:
+To switch storage to Supabase / Airtable / anything else, replace only the `persist()` function in [app/api/waitlist/route.ts](app/api/waitlist/route.ts).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+> Note: file storage works on a regular server but not on serverless hosts (Vercel) — swap `persist()` before deploying there.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Going from waitlist → launch
 
-## Deploy on Vercel
+Every button on the page reads from `cta` in [lib/config.ts](lib/config.ts). To switch from "Join the waitlist" to "Start free":
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Change `cta.primary` / `cta.compact` labels and point `href` at `/signup`.
+2. Set `phase` to `"launch"`.
+3. Optionally remove `<AnnouncementBar />` and `<Waitlist />` from [app/page.tsx](app/page.tsx).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+No section needs a redesign.

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7fafa;
+  --foreground: #0b2b2e;
 }
 
 @theme inline {
@@ -10,17 +10,68 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-hand: var(--font-caveat), cursive;
+
+  /* Brand: teal / blue-green */
+  --color-brand-50: #effaf8;
+  --color-brand-100: #d6f3ee;
+  --color-brand-200: #ade7de;
+  --color-brand-300: #7cd4c9;
+  --color-brand-400: #4cbab0;
+  --color-brand-500: #2c9f96;
+  --color-brand-600: #1f807b;
+  --color-brand-700: #1c6663;
+  --color-brand-800: #1a5250;
+  --color-brand-900: #194443;
+  --color-brand-950: #082827;
+
+  /* Ink: deep blue-green neutrals */
+  --color-ink-50: #f4f8f8;
+  --color-ink-100: #e7eeee;
+  --color-ink-200: #cfdede;
+  --color-ink-300: #a7c1c1;
+  --color-ink-400: #779d9e;
+  --color-ink-500: #588182;
+  --color-ink-600: #466a6c;
+  --color-ink-700: #3b5758;
+  --color-ink-800: #33494b;
+  --color-ink-900: #1d3133;
+  --color-ink-950: #0b2b2e;
+
+  --shadow-soft: 0 1px 2px rgba(11, 43, 46, 0.04), 0 8px 24px rgba(11, 43, 46, 0.06);
+  --shadow-lift: 0 2px 4px rgba(11, 43, 46, 0.05), 0 16px 40px rgba(11, 43, 46, 0.1);
+  --shadow-float: 0 4px 8px rgba(11, 43, 46, 0.06), 0 24px 64px rgba(11, 43, 46, 0.14);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-950);
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--tilt, 0deg)); }
+}
+@keyframes float-slower {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
+  50% { transform: translateY(-6px) rotate(var(--tilt, 0deg)); }
+}
+
+.animate-float { animation: float-slow 6s ease-in-out infinite; }
+.animate-float-delayed { animation: float-slower 7.5s ease-in-out 1.2s infinite; }
+.animate-float-late { animation: float-slow 8.5s ease-in-out 2.4s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .animate-float-delayed, .animate-float-late { animation: none; }
+  html { scroll-behavior: auto; }
 }
