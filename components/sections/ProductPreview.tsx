@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, Users, CalendarDays, Wallet, BellRing } from "lucide-react";
+import { ClipboardList, Users, CalendarDays, Wallet, BellRing, Globe } from "lucide-react";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { CleanCalendarMock } from "@/components/mockups/BeforeAfterMocks";
+import { BookingPortalDemo } from "@/components/mockups/BookingPortalDemo";
 
-const tabs = ["Jobs", "Customers", "Calendar", "Payments"] as const;
+const tabs = ["Jobs", "Customers", "Calendar", "Payments", "Client portal"] as const;
 type Tab = (typeof tabs)[number];
 
 const tabIcons: Record<Tab, typeof ClipboardList> = {
@@ -13,6 +14,7 @@ const tabIcons: Record<Tab, typeof ClipboardList> = {
   Customers: Users,
   Calendar: CalendarDays,
   Payments: Wallet,
+  "Client portal": Globe,
 };
 
 const jobRows = [
@@ -112,7 +114,7 @@ export function ProductPreview() {
       <SectionHeading
         eyebrow="Product preview"
         title="One workspace for your daily operations"
-        subtitle="See what needs to be done today, what's coming next, and what needs your attention."
+        subtitle="See what needs to be done today, what's coming next, and what needs your attention — plus the booking page your customers get."
       />
       <div className="mx-auto max-w-4xl">
         <div role="tablist" aria-label="Product areas" className="mb-5 flex flex-wrap justify-center gap-2">
@@ -132,6 +134,15 @@ export function ProductPreview() {
                 }`}
               >
                 <Icon className="size-4" aria-hidden /> {t}
+                {t === "Client portal" && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                      selected ? "bg-white/20 text-white" : "bg-brand-100 text-brand-800"
+                    }`}
+                  >
+                    Try it
+                  </span>
+                )}
               </button>
             );
           })}
@@ -144,9 +155,12 @@ export function ProductPreview() {
           {active === "Customers" && <CustomersPanel />}
           {active === "Calendar" && <CleanCalendarMock />}
           {active === "Payments" && <PaymentsPanel />}
+          {active === "Client portal" && <BookingPortalDemo />}
         </div>
         <p className="mt-4 text-center text-xs text-ink-400">
-          Product preview — final interface may evolve before launch.
+          {active === "Client portal"
+            ? "Interactive demo — this is the booking experience your customers would get, branded as your business."
+            : "Product preview — final interface may evolve before launch."}
         </p>
       </div>
     </Section>

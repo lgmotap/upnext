@@ -1,68 +1,223 @@
 /** "Before" and "after" visuals used inside the comparison sliders. */
 
 const rows = [
-  ["Hendersn, Kate", "tue??", "deep clean", "PAID??", "check w/ maya", "done?"],
-  ["Lakeside offc", "3/14", "comercial", "$420 pend", "KEYS!!", "??"],
-  ["nguyen", "every 2wk", "recur", "cash", "dog!!", "ok"],
-  ["oak st rental", "FRI", "moveout", "OVERDUE", "call back", ""],
-  ["Mr Patel", "??", "carpet", "paid i think", "re-quote", "no show?"],
-  ["sara b.", "3/18", "windows", "$180", "", "done"],
-  ["GREENWAY LLC", "mon+thu", "office", "invoice??", "ask jordan", ""],
+  ["Hendersn, Kate", "tue??", "deep clean", "PAID??"],
+  ["Lakeside offc", "3/14", "comercial", "$420 pend"],
+  ["nguyen", "every 2wk", "recur", "cash"],
+  ["oak st rental", "FRI", "moveout", "OVERDUE"],
+  ["Mr Patel", "??", "carpet", "paid i think"],
 ];
 
-const cellTint = ["", "bg-yellow-100", "", "bg-rose-100", "bg-yellow-100", "bg-orange-100"];
+const smsThread = [
+  { from: "them", text: "Hi! Can we move Friday's clean to Saturday instead?" },
+  { from: "them", text: "Also — did you get my e-transfer? 😊" },
+  { from: "me", text: "So sorry, just seeing this now!! Which Friday did you mean?" },
+  { from: "them", text: "...the one that was yesterday 😕" },
+];
 
-export function SpreadsheetMock({ className = "" }: { className?: string }) {
+/**
+ * "Before" collage: jobs in a spreadsheet, customers texting, missed calls,
+ * payments chased over the phone, reminders on paper scraps.
+ */
+export function ManualTrackingMock({ className = "" }: { className?: string }) {
   return (
-    <div className={`relative ${className}`}>
-      <div
-        className="overflow-hidden rounded-xl bg-white ring-1 ring-ink-200 shadow-soft"
-        role="img"
-        aria-label="A messy spreadsheet with inconsistent job, payment, and customer notes"
-      >
-        <div className="flex items-center gap-1.5 border-b border-ink-200 bg-ink-100 px-3 py-1.5">
-          <span className="size-2 rounded-full bg-ink-300" />
-          <span className="size-2 rounded-full bg-ink-300" />
-          <span className="text-[9px] font-semibold text-ink-500">jobs_FINAL_v7_USE-THIS-ONE.xlsx</span>
-        </div>
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              {["CUSTOMER", "date", "Service", "$$$", "notes", "status???"].map((h) => (
-                <th key={h} className="border border-ink-200 bg-ink-50 px-1.5 py-1 text-left text-[8px] font-bold text-ink-600">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, ri) => (
-              <tr key={ri}>
-                {r.map((c, ci) => (
-                  <td
-                    key={ci}
-                    className={`border border-ink-200 px-1.5 py-1 text-[8px] text-ink-700 ${
-                      (ri * 7 + ci) % 5 === 0 ? cellTint[ci] : ""
-                    } ${ri === 3 && ci === 3 ? "bg-rose-100 font-bold text-rose-700" : ""}`}
-                  >
-                    {c}
-                  </td>
+    <div
+      className={`relative ${className}`}
+      role="img"
+      aria-label="Scattered manual tools: a messy spreadsheet, an unanswered text thread, missed call notifications, and sticky note reminders"
+    >
+      <div className="grid grid-cols-[1.1fr_1fr] items-start gap-3 sm:gap-4">
+        {/* left column: spreadsheet + missed calls */}
+        <div className="space-y-3">
+          <div className="-rotate-1 overflow-hidden rounded-xl bg-white ring-1 ring-ink-200 shadow-soft">
+            <div className="flex items-center gap-1.5 border-b border-ink-200 bg-ink-100 px-3 py-1.5">
+              <span className="size-2 rounded-full bg-ink-300" />
+              <span className="size-2 rounded-full bg-ink-300" />
+              <span className="truncate text-[9px] font-semibold text-ink-500">jobs_FINAL_v7_USE-THIS-ONE.xlsx</span>
+            </div>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {["CUSTOMER", "date", "Service", "$$$"].map((h) => (
+                    <th key={h} className="border border-ink-200 bg-ink-50 px-1.5 py-1 text-left text-[8px] font-bold text-ink-600">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, ri) => (
+                  <tr key={ri}>
+                    {r.map((c, ci) => (
+                      <td
+                        key={ci}
+                        className={`border border-ink-200 px-1.5 py-1 text-[8px] text-ink-700 ${
+                          (ri * 5 + ci) % 4 === 0 ? "bg-yellow-100" : ""
+                        } ${ri === 3 && ci === 3 ? "bg-rose-100 font-bold text-rose-700" : ""}`}
+                      >
+                        {c}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* missed call notifications */}
+          <div className="rotate-1 space-y-1.5">
+            {[
+              { who: "Lakeside Offices", what: "Missed call (2) · Voicemail 0:48 — “…about the keys for…”" },
+              { who: "Kate Henderson", what: "Missed call · yesterday, 4:12 PM" },
+            ].map((c) => (
+              <div key={c.who} className="flex items-start gap-2 rounded-xl bg-white p-2.5 ring-1 ring-ink-200 shadow-soft">
+                <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-rose-100">
+                  <svg viewBox="0 0 16 16" className="size-3 text-rose-600" fill="none" aria-hidden>
+                    <path d="M3 3 c0 6 4 10 10 10 l1-3 -3-1 -1 1.5 c-2-.8 -3.7-2.5 -4.5-4.5 L7 5 6 2 Z" fill="currentColor" />
+                  </svg>
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold text-ink-900">{c.who}</p>
+                  <p className="truncate text-[8px] text-ink-500">{c.what}</p>
+                </div>
+                <span className="ml-auto rounded-full bg-rose-50 px-1.5 py-0.5 text-[7px] font-bold text-rose-600">
+                  CALL BACK
+                </span>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
+
+        {/* right column: SMS thread */}
+        <div className="rotate-1 overflow-hidden rounded-2xl bg-white ring-1 ring-ink-200 shadow-soft">
+          <div className="flex items-center gap-2 border-b border-ink-100 bg-ink-50 px-3 py-2">
+            <span className="flex size-6 items-center justify-center rounded-full bg-ink-200 text-[8px] font-bold text-ink-600">
+              KH
+            </span>
+            <div>
+              <p className="text-[9px] font-bold text-ink-900">Kate H. (customer)</p>
+              <p className="text-[7.5px] text-ink-400">Text message</p>
+            </div>
+          </div>
+          <div className="space-y-1.5 p-2.5">
+            {smsThread.map((m, i) => (
+              <div
+                key={i}
+                className={`max-w-[85%] rounded-2xl px-2.5 py-1.5 text-[8.5px] leading-snug ${
+                  m.from === "me"
+                    ? "ml-auto rounded-br-sm bg-sky-500 text-white"
+                    : "rounded-bl-sm bg-ink-100 text-ink-800"
+                }`}
+              >
+                {m.text}
+              </div>
+            ))}
+            <p className="pt-0.5 text-right text-[7px] font-medium text-ink-400">Replied 2 days late</p>
+          </div>
+        </div>
       </div>
 
-      {/* scattered sticky notes & chat bubbles */}
-      <div className="absolute -right-3 -top-4 w-28 -rotate-6 rounded-md bg-yellow-200 p-2 text-[8px] font-medium text-yellow-900 shadow-md">
-        Did anyone confirm Friday move-out??
+      {/* paper scraps on top */}
+      <div className="absolute -right-3 -top-4 w-28 -rotate-6 rounded-md bg-yellow-200 p-2 shadow-md">
+        <p className="font-hand text-[13px] leading-tight text-yellow-900">send Patel quote!! (from last week)</p>
       </div>
-      <div className="absolute -bottom-4 -left-3 w-32 rotate-3 rounded-2xl rounded-bl-sm bg-emerald-500 p-2 text-[8px] font-medium text-white shadow-md">
-        hey did the Patel job get paid? can&apos;t find it 😅
+      <div className="absolute -bottom-2 right-10 w-28 rotate-3 rounded-md bg-rose-200 p-2 shadow-md">
+        <p className="font-hand text-[13px] leading-tight text-rose-900">who&apos;s paid?? check bank app</p>
       </div>
-      <div className="absolute -right-2 bottom-10 w-24 rotate-6 rounded-md bg-rose-200 p-2 text-[8px] font-semibold text-rose-900 shadow-md">
-        CALL BACK: lakeside keys!!
+    </div>
+  );
+}
+
+/**
+ * "After" counterpart to ManualTrackingMock: the same jobs, payments, and
+ * the same customer conversation — but inside one platform window, with
+ * confirmations and reminders sending themselves.
+ */
+export function ManagedPlatformMock({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`overflow-hidden rounded-2xl bg-white ring-1 ring-ink-200/70 shadow-lift ${className}`}
+      role="img"
+      aria-label="One platform window showing today's jobs and payments next to a customer conversation with automatic reminders and receipts"
+    >
+      {/* window chrome */}
+      <div className="flex items-center gap-2 border-b border-ink-100 bg-ink-50/60 px-4 py-2.5">
+        <span className="size-2.5 rounded-full bg-rose-300" />
+        <span className="size-2.5 rounded-full bg-amber-300" />
+        <span className="size-2.5 rounded-full bg-emerald-300" />
+        <div className="mx-auto flex h-5 w-44 items-center justify-center rounded-md bg-white text-[9px] text-ink-400 ring-1 ring-ink-100">
+          app.upnext.com/inbox
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[1.1fr_1fr] gap-3 p-3 sm:gap-4 sm:p-4">
+        {/* left: jobs + payments */}
+        <div className="space-y-3">
+          <div className="rounded-xl ring-1 ring-ink-100 p-2.5">
+            <p className="mb-2 text-[9px] font-bold text-ink-900">Today&apos;s jobs</p>
+            <div className="space-y-1.5">
+              {[
+                { client: "Harper Residence", info: "8:30 · Maya R.", status: "In progress", cls: "bg-amber-50 text-amber-700", bar: "bg-brand-500" },
+                { client: "Lakeside Offices", info: "10:00 · Team A · Keys: front desk", status: "Scheduled", cls: "bg-ink-100 text-ink-600", bar: "bg-sky-500" },
+                { client: "Oak St. Rental", info: "3:00 · Maya R.", status: "Paid", cls: "bg-emerald-50 text-emerald-700", bar: "bg-rose-400" },
+              ].map((j) => (
+                <div key={j.client} className="flex items-center gap-2 rounded-lg bg-ink-50/50 px-2 py-1.5">
+                  <span className={`h-6 w-1 rounded-full ${j.bar}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[9px] font-semibold text-ink-900">{j.client}</p>
+                    <p className="truncate text-[8px] text-ink-500">{j.info}</p>
+                  </div>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[7px] font-bold ${j.cls}`}>{j.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl ring-1 ring-ink-100 p-2.5">
+            <p className="mb-2 text-[9px] font-bold text-ink-900">Payments</p>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-2 py-1.5">
+                <p className="text-[8.5px] font-semibold text-emerald-800">Lakeside Offices — $420</p>
+                <p className="text-[7.5px] font-bold text-emerald-600">Paid online today ✓</p>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-ink-50 px-2 py-1.5">
+                <p className="text-[8.5px] font-semibold text-ink-700">Raj Patel — $280</p>
+                <p className="text-[7.5px] font-bold text-brand-700">Reminder scheduled · auto</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* right: the same conversation, handled */}
+        <div className="flex flex-col rounded-xl ring-1 ring-ink-100">
+          <div className="flex items-center gap-2 border-b border-ink-100 bg-ink-50/60 px-2.5 py-2 rounded-t-xl">
+            <span className="flex size-6 items-center justify-center rounded-full bg-brand-100 text-[8px] font-bold text-brand-800">
+              KH
+            </span>
+            <div>
+              <p className="text-[9px] font-bold text-ink-900">Kate Henderson</p>
+              <p className="text-[7.5px] text-ink-400">Recurring · every 2 weeks</p>
+            </div>
+          </div>
+          <div className="flex-1 space-y-1.5 p-2.5">
+            <div className="ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-brand-600 px-2.5 py-1.5 text-[8.5px] leading-snug text-white">
+              Reminder: your deep clean is tomorrow at 8:30 AM ✨
+            </div>
+            <p className="text-right text-[7px] font-semibold text-brand-600">Sent automatically</p>
+            <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-ink-100 px-2.5 py-1.5 text-[8.5px] leading-snug text-ink-800">
+              Perfect, thank you! 🙌
+            </div>
+            <div className="ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-brand-600 px-2.5 py-1.5 text-[8.5px] leading-snug text-white">
+              Payment received — receipt sent to your email ✓
+            </div>
+            <p className="text-right text-[7px] font-semibold text-brand-600">Sent automatically</p>
+          </div>
+          <div className="border-t border-ink-100 px-2.5 py-2">
+            <p className="rounded-lg bg-brand-50 px-2 py-1.5 text-[7.5px] font-semibold text-brand-800">
+              Next follow-up scheduled · no chasing needed
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
