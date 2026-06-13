@@ -1,10 +1,10 @@
-import { MapPin, Clock, StickyNote, CheckCircle2, Wifi, Signal, BatteryFull, ChevronRight } from "lucide-react";
+import { MapPin, Clock, StickyNote, Wifi, Signal, BatteryFull, Send, Camera, Receipt, Check } from "lucide-react";
 
 const checklist = [
   { task: "Kitchen — counters & appliances", done: true },
   { task: "Bathrooms — full clean", done: true },
-  { task: "Bedrooms — vacuum & dust", done: false },
-  { task: "Windows — interior only", done: false },
+  { task: "Bedrooms — vacuum & dust", done: true },
+  { task: "Windows — interior only", done: true },
 ];
 
 /**
@@ -18,7 +18,7 @@ export function MobileMockup({ className = "" }: { className?: string }) {
       <div
         className="relative aspect-[9/19.3] w-full rounded-[2.9rem] bg-ink-950 p-[8px] shadow-float ring-1 ring-ink-800"
         role="img"
-        aria-label="UpNext mobile app on a phone, showing a cleaner's job for today with checklist, customer note, and mark complete button"
+        aria-label="UpNext mobile app on a phone, showing a just-completed job with a finished checklist and a summary — checklist, photos, and receipt — automatically sent to the customer"
       >
         {/* side buttons */}
         <div className="absolute -left-[3px] top-24 h-8 w-[3px] rounded-l-md bg-ink-800" />
@@ -40,7 +40,7 @@ export function MobileMockup({ className = "" }: { className?: string }) {
                 <BatteryFull className="size-3.5" aria-hidden />
               </span>
             </div>
-            <p className="text-[10px] font-medium text-brand-100">Today · 2 of 4 jobs done</p>
+            <p className="text-[10px] font-medium text-brand-100">Today · 3 of 4 jobs done</p>
             <p className="text-[16px] font-bold leading-snug">Harper Residence</p>
             <div className="mt-1.5 flex items-center gap-3 text-[9px] text-brand-100">
               <span className="flex items-center gap-1">
@@ -52,7 +52,7 @@ export function MobileMockup({ className = "" }: { className?: string }) {
             </div>
             {/* progress */}
             <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-brand-800/60">
-              <div className="h-full w-1/2 rounded-full bg-white/90" />
+              <div className="h-full w-3/4 rounded-full bg-white/90" />
             </div>
           </div>
 
@@ -92,28 +92,39 @@ export function MobileMockup({ className = "" }: { className?: string }) {
               </p>
             </div>
 
-            {/* up next */}
-            <div className="flex items-center gap-2 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-ink-100">
-              <span className="h-7 w-1 rounded-full bg-violet-400" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[8.5px] font-semibold text-ink-400">UP NEXT · 4:00 PM</p>
-                <p className="truncate text-[10px] font-bold text-ink-900">Nguyen Family — Recurring</p>
+            {/* job-complete summary auto-sent to the client */}
+            <div className="mt-auto rounded-2xl bg-white p-3 shadow-soft ring-1 ring-brand-200">
+              <div className="mb-2 flex items-center gap-1.5">
+                <span className="flex size-4 items-center justify-center rounded-full bg-brand-500">
+                  <Check className="size-2.5 text-white" strokeWidth={3} aria-hidden />
+                </span>
+                <p className="text-[10px] font-bold text-ink-900">Job complete</p>
+                <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-brand-50 px-1.5 py-0.5 text-[8px] font-bold text-brand-700">
+                  <Send className="size-2.5" aria-hidden /> Sent to client
+                </span>
               </div>
-              <ChevronRight className="size-3.5 shrink-0 text-ink-300" aria-hidden />
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[9px] font-medium text-ink-700">
+                  <Check className="size-3 shrink-0 text-brand-500" strokeWidth={3} aria-hidden />
+                  Checklist <span className="font-bold text-ink-900">4/4 done</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Camera className="size-3 shrink-0 text-ink-400" aria-hidden />
+                  <span className="text-[9px] font-medium text-ink-700">2 photos</span>
+                  <span className="ml-0.5 size-5 rounded-md bg-gradient-to-br from-brand-200 to-brand-400" />
+                  <span className="size-5 rounded-md bg-gradient-to-br from-amber-200 to-amber-400" />
+                </div>
+                <div className="flex items-center gap-1.5 text-[9px] font-medium text-ink-700">
+                  <Receipt className="size-3 shrink-0 text-ink-400" aria-hidden />
+                  Receipt <span className="font-bold text-ink-900">$220</span>
+                  <span className="ml-auto rounded-full bg-emerald-50 px-1.5 py-0.5 text-[8px] font-bold text-emerald-600">
+                    Paid
+                  </span>
+                </div>
+              </div>
             </div>
-
-            {/* CTA pinned to bottom */}
-            <div className="mt-auto">
-              <button
-                type="button"
-                tabIndex={-1}
-                className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-600 py-3 text-[11px] font-bold text-white shadow-md"
-              >
-                <CheckCircle2 className="size-4" aria-hidden /> Mark job complete
-              </button>
-              {/* home indicator */}
-              <div className="mx-auto mt-2.5 h-1 w-24 rounded-full bg-ink-300" />
-            </div>
+            {/* home indicator */}
+            <div className="mx-auto mt-1 h-1 w-24 rounded-full bg-ink-300" />
           </div>
         </div>
       </div>

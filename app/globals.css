@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7fafa;
-  --foreground: #0b2b2e;
+  --background: #f7f8fc;
+  --foreground: #161a2b;
 }
 
 @theme inline {
@@ -10,37 +10,51 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-space-grotesk);
   --font-hand: var(--font-caveat), cursive;
 
-  /* Brand: teal / blue-green */
-  --color-brand-50: #effaf8;
-  --color-brand-100: #d6f3ee;
-  --color-brand-200: #ade7de;
-  --color-brand-300: #7cd4c9;
-  --color-brand-400: #4cbab0;
-  --color-brand-500: #2c9f96;
-  --color-brand-600: #1f807b;
-  --color-brand-700: #1c6663;
-  --color-brand-800: #1a5250;
-  --color-brand-900: #194443;
-  --color-brand-950: #082827;
+  /* Brand: cobalt blue */
+  --color-brand-50: #f0f2fe;
+  --color-brand-100: #e3e6fd;
+  --color-brand-200: #c8cdfb;
+  --color-brand-300: #a3acf6;
+  --color-brand-400: #7a87ef;
+  --color-brand-500: #4f63e8;
+  --color-brand-600: #2d4be0;
+  --color-brand-700: #233bbf;
+  --color-brand-800: #21349a;
+  --color-brand-900: #1f3179;
+  --color-brand-950: #151d49;
 
-  /* Ink: deep blue-green neutrals */
-  --color-ink-50: #f4f8f8;
-  --color-ink-100: #e7eeee;
-  --color-ink-200: #cfdede;
-  --color-ink-300: #a7c1c1;
-  --color-ink-400: #779d9e;
-  --color-ink-500: #588182;
-  --color-ink-600: #466a6c;
-  --color-ink-700: #3b5758;
-  --color-ink-800: #33494b;
-  --color-ink-900: #1d3133;
-  --color-ink-950: #0b2b2e;
+  /* Accent: coral */
+  --color-accent-50: #fff2f0;
+  --color-accent-100: #ffe3df;
+  --color-accent-200: #ffc9c2;
+  --color-accent-300: #ffa498;
+  --color-accent-400: #ff8071;
+  --color-accent-500: #ff6b5e;
+  --color-accent-600: #ed4636;
+  --color-accent-700: #c83325;
+  --color-accent-800: #a52d22;
+  --color-accent-900: #882a22;
+  --color-accent-950: #4a110c;
 
-  --shadow-soft: 0 1px 2px rgba(11, 43, 46, 0.04), 0 8px 24px rgba(11, 43, 46, 0.06);
-  --shadow-lift: 0 2px 4px rgba(11, 43, 46, 0.05), 0 16px 40px rgba(11, 43, 46, 0.1);
-  --shadow-float: 0 4px 8px rgba(11, 43, 46, 0.06), 0 24px 64px rgba(11, 43, 46, 0.14);
+  /* Ink: navy-tinted neutrals */
+  --color-ink-50: #f4f6fa;
+  --color-ink-100: #e8ebf1;
+  --color-ink-200: #d2d7e2;
+  --color-ink-300: #b3bacb;
+  --color-ink-400: #858ea8;
+  --color-ink-500: #5e6783;
+  --color-ink-600: #485072;
+  --color-ink-700: #394264;
+  --color-ink-800: #29304b;
+  --color-ink-900: #1d2238;
+  --color-ink-950: #161a2b;
+
+  --shadow-soft: 0 1px 2px rgba(22, 26, 43, 0.04), 0 8px 24px rgba(22, 26, 43, 0.07);
+  --shadow-lift: 0 2px 4px rgba(22, 26, 43, 0.05), 0 16px 40px rgba(22, 26, 43, 0.1);
+  --shadow-float: 0 4px 8px rgba(22, 26, 43, 0.06), 0 24px 64px rgba(22, 26, 43, 0.14);
 }
 
 html {
@@ -53,10 +67,36 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Bold geometric display for headlines */
+h1,
+h2 {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  letter-spacing: -0.03em;
+}
+
 ::selection {
   background: var(--color-brand-200);
   color: var(--color-brand-950);
 }
+
+/* Texture utilities ---------------------------------------------------- */
+
+/* Dotted grid background (apply to a positioned, -z layer) */
+.bg-grid {
+  background-image: radial-gradient(rgba(22, 26, 43, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.bg-grid-brand {
+  background-image: radial-gradient(rgba(45, 75, 224, 0.12) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Subtle film grain overlay */
+.texture-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Animations ----------------------------------------------------------- */
 
 @keyframes float-slow {
   0%, 100% { transform: translateY(0) rotate(var(--tilt, 0deg)); }
@@ -71,7 +111,31 @@ body {
 .animate-float-delayed { animation: float-slower 7.5s ease-in-out 1.2s infinite; }
 .animate-float-late { animation: float-slow 8.5s ease-in-out 2.4s infinite; }
 
+/* Pointer-tracked spotlight used by SpotlightCard */
+.spotlight-card__glow {
+  background: radial-gradient(
+    16rem 16rem at var(--mx, 50%) var(--my, 0%),
+    rgba(45, 75, 224, 0.16),
+    transparent 70%
+  );
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 38s linear infinite;
+}
+.marquee-group:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-float, .animate-float-delayed, .animate-float-late { animation: none; }
+  .animate-marquee { animation: none; }
+  .spotlight-card { transition: none !important; }
+  .spotlight-card:hover { transform: none !important; }
+  .spotlight-card__glow { display: none; }
   html { scroll-behavior: auto; }
 }

@@ -3,18 +3,19 @@
 import { useState } from "react";
 import { ClipboardList, Users, CalendarDays, Wallet, BellRing, Globe } from "lucide-react";
 import { Section, SectionHeading } from "@/components/ui/Section";
+import { HandNote } from "@/components/ui/HandNote";
 import { CleanCalendarMock } from "@/components/mockups/BeforeAfterMocks";
 import { BookingPortalDemo } from "@/components/mockups/BookingPortalDemo";
 
-const tabs = ["Jobs", "Customers", "Calendar", "Payments", "Client portal"] as const;
+const tabs = ["Client portal", "Jobs", "Customers", "Calendar", "Payments"] as const;
 type Tab = (typeof tabs)[number];
 
 const tabIcons: Record<Tab, typeof ClipboardList> = {
+  "Client portal": Globe,
   Jobs: ClipboardList,
   Customers: Users,
   Calendar: CalendarDays,
   Payments: Wallet,
-  "Client portal": Globe,
 };
 
 const jobRows = [
@@ -106,17 +107,25 @@ function PaymentsPanel() {
 }
 
 export function ProductPreview() {
-  const [active, setActive] = useState<Tab>("Jobs");
+  const [active, setActive] = useState<Tab>("Client portal");
 
   return (
     <Section className="relative">
       <div className="absolute inset-x-0 top-1/4 -z-10 h-96 bg-gradient-to-b from-transparent via-brand-50/50 to-transparent" />
       <SectionHeading
         eyebrow="Product preview"
-        title="One workspace for your daily operations"
-        subtitle="See what needs to be done today, what's coming next, and what needs your attention — plus the booking page your customers get."
+        title="The booking page your customers see — and the dashboard behind it"
+        subtitle="Start with the online booking experience your customers get, then see how every request flows into your jobs, calendar, and payments."
       />
-      <div className="mx-auto max-w-4xl">
+      <div className="relative mx-auto max-w-4xl">
+        <HandNote
+          direction="down-right"
+          rotate="-7deg"
+          className="absolute -top-4 left-2 z-10 hidden w-32 sm:block"
+          arrowClassName="ml-12 w-7"
+        >
+          start here — try it!
+        </HandNote>
         <div role="tablist" aria-label="Product areas" className="mb-5 flex flex-wrap justify-center gap-2">
           {tabs.map((t) => {
             const Icon = tabIcons[t];

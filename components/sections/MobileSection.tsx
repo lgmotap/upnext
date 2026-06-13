@@ -1,4 +1,4 @@
-import { Smartphone, ListChecks, StickyNote, CheckCircle2, MapPin } from "lucide-react";
+import { Smartphone, ListChecks, StickyNote, Send, MapPin } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { MobileMockup } from "@/components/mockups/MobileMockup";
@@ -21,9 +21,9 @@ const points = [
     text: "Open directions straight from the job card. No copy-pasting from messages.",
   },
   {
-    icon: CheckCircle2,
-    title: "Mark complete, done",
-    text: "When a job is finished, the office knows instantly — and payment tracking updates itself.",
+    icon: Send,
+    title: "Finish the job, wow the customer",
+    text: "Mark complete and your customer is automatically sent a tidy summary — checklist done, before & after photos, and a receipt.",
   },
 ];
 
@@ -39,14 +39,15 @@ export function MobileSection() {
         </Reveal>
         <div>
           <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-800">
-            <Smartphone className="size-3.5" /> For your crew
+            <Smartphone className="size-3.5" /> For you or your crew
           </p>
           <h2 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl text-balance">
-            Your team gets everything they need — right on their phone
+            Everything you need for the day — right on your phone
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ink-600">
-            No more morning group chats, screenshots of addresses, or &quot;wait, which house was
-            it?&quot; Your cleaners and techs see their day clearly and get on with the work.
+            Whether it&apos;s just you or a whole crew, no more morning group chats, screenshots of
+            addresses, or &quot;wait, which house was it?&quot; See the day clearly, get on with the
+            work, and keep customers in the loop automatically.
           </p>
           <ul className="mt-8 space-y-5">
             {points.map(({ icon: Icon, title, text }) => (

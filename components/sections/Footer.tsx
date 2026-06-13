@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { site } from "@/lib/config";
 
 const columns = [
@@ -34,11 +33,11 @@ export function Footer() {
     <footer className="border-t border-ink-100 bg-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
-          <Link href="#" className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 shadow-md">
-              <Sparkles className="size-4 text-white" aria-hidden />
+          <Link href="#" className="flex items-center" aria-label={`${site.name} home`}>
+            <span className="text-xl font-bold tracking-tight text-ink-950">
+              Up<span className="text-brand-600">Next</span>
             </span>
-            <span className="text-lg font-bold tracking-tight text-ink-950">{site.name}</span>
+            <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-500" />
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-500">{site.description}</p>
         </div>

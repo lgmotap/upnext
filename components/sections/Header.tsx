@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { nav, site } from "@/lib/config";
 import { PrimaryCTA } from "@/components/ui/CTAButton";
 
@@ -12,11 +12,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/80 backdrop-blur-lg">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
-        <Link href="#" className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-700 shadow-md">
-            <Sparkles className="size-4 text-white" aria-hidden />
+        <Link href="#" className="group flex items-center" aria-label={`${site.name} home`}>
+          <span className="text-xl font-bold tracking-tight text-ink-950">
+            Up<span className="text-brand-600">Next</span>
           </span>
-          <span className="text-lg font-bold tracking-tight text-ink-950">{site.name}</span>
+          <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-500 transition-transform group-hover:scale-125" />
         </Link>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">

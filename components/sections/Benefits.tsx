@@ -1,6 +1,7 @@
 import { Clock3, BellRing, BadgeCheck, Eye, Rocket, HeartHandshake } from "lucide-react";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
+import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
 const benefits = [
   {
@@ -46,15 +47,15 @@ export function Benefits() {
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {benefits.map(({ icon: Icon, title, text }, i) => (
           <Reveal key={title} delay={(i % 3) * 0.07}>
-            <div className="flex h-full gap-4 rounded-2xl bg-gradient-to-br from-ink-50/80 to-white p-6 ring-1 ring-ink-100 transition hover:-translate-y-0.5 hover:shadow-soft">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-md">
+            <SpotlightCard className="group flex h-full gap-4 rounded-2xl bg-gradient-to-br from-ink-50/80 to-white p-6 ring-1 ring-ink-100 hover:shadow-soft hover:ring-brand-200">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-md transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
                 <Icon className="size-5" aria-hidden />
               </span>
               <div>
                 <h3 className="mb-1 font-bold text-ink-950">{title}</h3>
                 <p className="text-sm leading-relaxed text-ink-600">{text}</p>
               </div>
-            </div>
+            </SpotlightCard>
           </Reveal>
         ))}
       </div>

@@ -99,21 +99,24 @@ export function WhoItsFor() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {businesses.map(({ icon: Icon, title, text, photo, alt }, i) => (
           <Reveal key={title} delay={(i % 5) * 0.05}>
-            <div className="group h-full overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 transition hover:-translate-y-0.5 hover:shadow-lift hover:ring-brand-200">
+            <div className="group h-full overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 transition duration-300 hover:-translate-y-1 hover:shadow-lift hover:ring-brand-200">
               <div className="relative h-32 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={photo}
                   alt={alt}
                   loading="lazy"
-                  className="size-full object-cover transition duration-500 group-hover:scale-105"
+                  className="size-full object-cover transition duration-500 group-hover:scale-110"
                 />
-                <span className="absolute bottom-2 left-2 flex size-9 items-center justify-center rounded-xl bg-white/95 text-brand-700 shadow-md">
+                <span className="absolute inset-0 bg-gradient-to-t from-ink-950/45 via-ink-950/5 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+                <span className="absolute bottom-2 left-2 flex size-9 items-center justify-center rounded-xl bg-white/95 text-brand-700 shadow-md transition-transform duration-300 group-hover:scale-110">
                   <Icon className="size-4.5" aria-hidden />
                 </span>
               </div>
               <div className="p-4">
-                <h3 className="mb-1 text-sm font-bold text-ink-950">{title}</h3>
+                <h3 className="mb-1 text-sm font-bold text-ink-950 transition-colors group-hover:text-brand-700">
+                  {title}
+                </h3>
                 <p className="text-[13px] leading-relaxed text-ink-600">{text}</p>
               </div>
             </div>

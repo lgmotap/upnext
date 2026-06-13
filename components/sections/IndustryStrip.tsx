@@ -32,9 +32,9 @@ export function IndustryStrip() {
           {industries.map(({ icon: Icon, label }) => (
             <li
               key={label}
-              className="inline-flex items-center gap-2 rounded-full bg-ink-50 px-4 py-2 text-sm font-semibold text-ink-700 ring-1 ring-ink-100 transition hover:bg-brand-50 hover:text-brand-800 hover:ring-brand-200"
+              className="group inline-flex items-center gap-2 rounded-full bg-ink-50 px-4 py-2 text-sm font-semibold text-ink-700 ring-1 ring-ink-100 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:text-white hover:shadow-md hover:ring-brand-600"
             >
-              <Icon className="size-4 text-brand-600" aria-hidden />
+              <Icon className="size-4 text-brand-600 transition-colors group-hover:text-white" aria-hidden />
               {label}
             </li>
           ))}
