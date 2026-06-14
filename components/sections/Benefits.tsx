@@ -2,6 +2,7 @@ import { Clock3, BellRing, BadgeCheck, Eye, Rocket, HeartHandshake } from "lucid
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
+import { Em } from "@/components/ui/Em";
 
 const benefits = [
   {
@@ -41,14 +42,14 @@ export function Benefits() {
     <Section className="bg-white">
       <SectionHeading
         eyebrow="Why it matters"
-        title="Less admin. More control. A better customer experience."
+        title={<>Less admin. More <Em className="text-brand-700">control</Em>. A better customer experience.</>}
         subtitle="Built so the day-to-day of running a service business stops eating your evenings."
       />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {benefits.map(({ icon: Icon, title, text }, i) => (
           <Reveal key={title} delay={(i % 3) * 0.07}>
-            <SpotlightCard className="group flex h-full gap-4 rounded-2xl bg-gradient-to-br from-ink-50/80 to-white p-6 ring-1 ring-ink-100 hover:shadow-soft hover:ring-brand-200">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-md transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+            <SpotlightCard className="group flex h-full gap-4 rounded-3xl bg-brand-50/60 p-6 ring-1 ring-brand-100 hover:shadow-soft hover:ring-brand-200">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-brand-950 shadow-sm transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
                 <Icon className="size-5" aria-hidden />
               </span>
               <div>

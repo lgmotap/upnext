@@ -30,24 +30,22 @@ const columns = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-ink-100 bg-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer className="bg-brand-950 text-white">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Link href="#" className="flex items-center" aria-label={`${site.name} home`}>
-            <span className="text-xl font-bold tracking-tight text-ink-950">
-              Up<span className="text-brand-600">Next</span>
-            </span>
-            <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-500" />
+            <span className="text-xl font-bold tracking-tight text-white">UpNext</span>
+            <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-400" />
           </Link>
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-500">{site.description}</p>
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">{site.description}</p>
         </div>
         {columns.map((col) => (
           <nav key={col.title} aria-label={col.title}>
-            <p className="mb-4 text-sm font-bold text-ink-950">{col.title}</p>
+            <p className="mb-4 text-sm font-bold text-white">{col.title}</p>
             <ul className="space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-sm text-ink-500 transition hover:text-brand-700">
+                  <Link href={l.href} className="text-sm text-white/60 transition hover:text-brand-300">
                     {l.label}
                   </Link>
                 </li>
@@ -56,8 +54,8 @@ export function Footer() {
           </nav>
         ))}
       </div>
-      <div className="border-t border-ink-100">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-5 py-5 text-xs text-ink-400 sm:px-8">
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-5 py-5 text-xs text-white/45 sm:px-8">
           <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
           <p>Currently in pre-launch · early access coming soon</p>
         </div>

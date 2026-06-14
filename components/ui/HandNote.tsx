@@ -39,7 +39,7 @@ export function HandNote({
       style={{ transform: `rotate(${rotate})` }}
       aria-hidden
     >
-      <p className="font-hand text-[1.35rem] font-bold leading-tight text-accent-500">{children}</p>
+      <p className="font-hand text-[1.35rem] font-bold leading-tight text-brand-600">{children}</p>
       <svg
         viewBox="0 0 48 48"
         fill="none"
@@ -47,7 +47,7 @@ export function HandNote({
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`text-accent-400 ${arrowClassName}`}
+        className={`text-brand-500 ${arrowClassName}`}
       >
         {arrows[direction]}
       </svg>

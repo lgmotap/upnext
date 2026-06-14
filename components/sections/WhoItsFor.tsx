@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
+import { Em } from "@/components/ui/Em";
 
 const img = (id: string) => `https://images.unsplash.com/${id}?w=640&q=60&auto=format&fit=crop`;
 
@@ -93,31 +94,27 @@ export function WhoItsFor() {
     <Section id="who-its-for">
       <SectionHeading
         eyebrow="Who it's for"
-        title="Built for the businesses that keep local communities moving"
+        title={<>Built for the businesses that keep <Em className="text-brand-700">local communities</Em> moving</>}
         subtitle="Whether you're working alone or managing a growing team, the platform is designed to help you stay organized and look professional."
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {businesses.map(({ icon: Icon, title, text, photo, alt }, i) => (
           <Reveal key={title} delay={(i % 5) * 0.05}>
-            <div className="group h-full overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink-100 transition duration-300 hover:-translate-y-1 hover:shadow-lift hover:ring-brand-200">
-              <div className="relative h-32 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo}
-                  alt={alt}
-                  loading="lazy"
-                  className="size-full object-cover transition duration-500 group-hover:scale-110"
-                />
-                <span className="absolute inset-0 bg-gradient-to-t from-ink-950/45 via-ink-950/5 to-transparent opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
-                <span className="absolute bottom-2 left-2 flex size-9 items-center justify-center rounded-xl bg-white/95 text-brand-700 shadow-md transition-transform duration-300 group-hover:scale-110">
-                  <Icon className="size-4.5" aria-hidden />
-                </span>
-              </div>
-              <div className="p-4">
-                <h3 className="mb-1 text-sm font-bold text-ink-950 transition-colors group-hover:text-brand-700">
-                  {title}
-                </h3>
-                <p className="text-[13px] leading-relaxed text-ink-600">{text}</p>
+            <div className="group relative h-72 overflow-hidden rounded-3xl shadow-soft ring-1 ring-ink-100/60 transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photo}
+                alt={alt}
+                loading="lazy"
+                className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-105"
+              />
+              <span className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/30 to-transparent" />
+              <span className="absolute left-3 top-3 flex size-9 items-center justify-center rounded-full bg-brand-400 text-brand-950 shadow-md transition-transform duration-300 group-hover:scale-110">
+                <Icon className="size-4.5" aria-hidden />
+              </span>
+              <div className="absolute inset-x-0 bottom-0 p-4">
+                <h3 className="text-sm font-bold text-white">{title}</h3>
+                <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-white/75">{text}</p>
               </div>
             </div>
           </Reveal>

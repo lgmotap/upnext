@@ -21,7 +21,7 @@ export function SectionHeading({
   align = "center",
 }: {
   eyebrow?: string;
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   align?: "center" | "left";
 }) {
@@ -29,12 +29,12 @@ export function SectionHeading({
   return (
     <div className={`max-w-3xl ${alignCls} mb-12 sm:mb-16`}>
       {eyebrow && (
-        <p className="mb-4 inline-flex -rotate-2 items-center gap-1.5 rounded-xl bg-white px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-700 ring-1 ring-ink-200 shadow-soft">
-          <span className="size-1.5 rounded-full bg-accent-500" />
+        <p className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-brand-700 ring-1 ring-brand-100">
+          <span className="size-1.5 rounded-full bg-brand-500" />
           {eyebrow}
         </p>
       )}
-      <h2 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl text-balance">
+      <h2 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-[2.7rem] sm:leading-[1.1] text-balance">
         {title}
       </h2>
       {subtitle && (

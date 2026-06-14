@@ -8,6 +8,7 @@ import {
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
+import { Em } from "@/components/ui/Em";
 
 const problems = [
   {
@@ -42,17 +43,14 @@ export function Problem() {
     <Section className="bg-white">
       <SectionHeading
         eyebrow="The problem"
-        title="Stop running your business from five different places"
+        title={<>Stop running your business from <Em className="text-ink-700">five different places</Em></>}
         subtitle="Most service businesses start with simple tools. But as bookings grow, the admin work becomes harder to manage."
       />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
         {problems.map(({ icon: Icon, title, text }, i) => (
           <Reveal key={title} delay={i * 0.06}>
-            <SpotlightCard
-              className="group h-full rounded-2xl bg-ink-50/60 p-6 ring-1 ring-ink-100 hover:shadow-soft"
-              spotlightClassName="[background:radial-gradient(16rem_16rem_at_var(--mx,50%)_var(--my,0%),rgba(244,63,94,0.10),transparent_70%)]"
-            >
-              <span className="mb-4 inline-flex size-11 items-center justify-center rounded-xl bg-white text-rose-500 shadow-soft ring-1 ring-ink-100 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+            <SpotlightCard className="group h-full rounded-3xl bg-ink-50 p-6 ring-1 ring-ink-100 hover:shadow-soft">
+              <span className="mb-4 inline-flex size-11 items-center justify-center rounded-2xl bg-white text-ink-500 shadow-soft ring-1 ring-ink-100 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
                 <Icon className="size-5" aria-hidden />
               </span>
               <h3 className="mb-1.5 font-bold text-ink-950">{title}</h3>

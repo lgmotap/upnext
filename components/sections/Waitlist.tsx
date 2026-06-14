@@ -36,15 +36,15 @@ export function Waitlist() {
   }
 
   return (
-    <Section id="waitlist" className="relative overflow-hidden bg-ink-950">
-      <div className="absolute -left-32 top-0 size-96 rounded-full bg-brand-500/15 blur-3xl" />
-      <div className="absolute -right-32 bottom-0 size-96 rounded-full bg-brand-400/10 blur-3xl" />
+    <Section id="waitlist" className="relative overflow-hidden bg-brand-950">
+      <div className="absolute -left-32 top-0 size-96 rounded-full bg-brand-500/18 blur-3xl" />
+      <div className="absolute -right-32 bottom-0 size-96 rounded-full bg-brand-400/12 blur-3xl" />
       <SprayBottle className="animate-float absolute left-[6%] top-16 hidden w-16 opacity-80 lg:block [--tilt:-10deg]" />
       <Calendar3D className="animate-float-delayed absolute right-[7%] top-24 hidden w-16 opacity-80 lg:block [--tilt:8deg]" />
       <Sparkle className="animate-float-late absolute bottom-16 left-[12%] hidden w-10 opacity-70 lg:block" />
 
       <div className="relative mx-auto max-w-2xl text-center">
-        <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-500/20 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-300">
+        <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-400/20 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-300">
           <Lock className="size-3.5" /> Exclusive early access
         </p>
         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl text-balance">
@@ -71,19 +71,19 @@ export function Waitlist() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="wl-name" className={`${labelCls} text-ink-100`}>
-                  First name <span className="text-brand-400">*</span>
+                  First name <span className="text-brand-500">*</span>
                 </label>
                 <input id="wl-name" name="firstName" required autoComplete="given-name" placeholder="Alex" className={inputCls} />
               </div>
               <div>
                 <label htmlFor="wl-email" className={`${labelCls} text-ink-100`}>
-                  Email <span className="text-brand-400">*</span>
+                  Email <span className="text-brand-500">*</span>
                 </label>
                 <input id="wl-email" name="email" type="email" required autoComplete="email" placeholder="alex@yourbusiness.com" className={inputCls} />
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="wl-business" className={`${labelCls} text-ink-100`}>
-                  Business name <span className="text-brand-400">*</span>
+                  Business name <span className="text-brand-500">*</span>
                 </label>
                 <input id="wl-business" name="businessName" required autoComplete="organization" placeholder="Sparkle & Shine Cleaning Co." className={inputCls} />
               </div>
@@ -132,7 +132,7 @@ export function Waitlist() {
             <button
               type="submit"
               disabled={status === "submitting"}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-accent-500 px-7 py-4 text-base font-bold text-white shadow-[0_8px_24px_rgba(255,107,94,0.45)] transition hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 px-7 py-4 text-base font-bold text-brand-950 shadow-[0_8px_24px_rgba(31,184,99,0.4)] transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {status === "submitting" ? (
                 <>

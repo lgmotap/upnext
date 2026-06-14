@@ -41,7 +41,7 @@ function Avatar({ initials, cls }: { initials: string; cls: string }) {
 const stats = [
   { label: "Revenue · this week", value: "$4,860", delta: "+18%", color: "text-brand-500", spark: "0,20 12,15 24,17 36,9 48,12 60,5 72,4 80,2" },
   { label: "Jobs today", value: "6", delta: "2 done", color: "text-ink-400", spark: "0,14 12,12 24,16 36,10 48,14 60,8 72,11 80,7" },
-  { label: "New bookings", value: "9", delta: "+3 today", color: "text-accent-500", spark: "0,18 12,14 24,15 36,12 48,8 60,9 72,4 80,3" },
+  { label: "New bookings", value: "9", delta: "+3 today", color: "text-brand-500", spark: "0,18 12,14 24,15 36,12 48,8 60,9 72,4 80,3" },
   { label: "Outstanding", value: "$1,240", delta: "2 to chase", color: "text-amber-500", spark: "0,8 12,10 24,7 36,12 48,9 60,13 72,11 80,14" },
 ];
 
@@ -82,7 +82,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
         <div className="hidden w-32 shrink-0 flex-col border-r border-ink-100 bg-ink-50/40 p-2.5 sm:flex">
           <div className="mb-3 px-1 text-[12px] font-bold tracking-tight text-ink-950">
             Up<span className="text-brand-600">Next</span>
-            <span className="ml-0.5 inline-block size-1 rounded-full bg-accent-500 align-middle" />
+            <span className="ml-0.5 inline-block size-1 rounded-full bg-brand-400 align-middle" />
           </div>
           {[
             { icon: LayoutDashboard, label: "Dashboard", active: true },
@@ -101,7 +101,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
               <Icon className="size-3" />
               {label}
               {badge && (
-                <span className="ml-auto rounded-full bg-accent-500 px-1.5 text-[7px] font-bold text-white">
+                <span className="ml-auto rounded-full bg-brand-500 px-1.5 text-[7px] font-bold text-white">
                   {badge}
                 </span>
               )}
@@ -125,9 +125,9 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
             </span>
             <span className="relative">
               <Bell className="size-3.5 text-ink-400" />
-              <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-accent-500 ring-1 ring-white" />
+              <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-brand-400 ring-1 ring-white" />
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-accent-500 px-2 py-1 text-[8px] font-bold text-white shadow-sm">
+            <span className="flex items-center gap-1 rounded-full bg-brand-400 px-2 py-1 text-[8px] font-bold text-brand-950 shadow-sm">
               <Plus className="size-2.5" /> New
             </span>
             <Avatar initials="AB" cls="bg-brand-200 text-brand-900 !size-6 !text-[8px]" />
@@ -193,7 +193,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
                 <div className="rounded-xl ring-1 ring-ink-100">
                   <div className="flex items-center justify-between border-b border-ink-100 px-2.5 py-2">
                     <p className="text-[9px] font-bold text-ink-900">Booking requests</p>
-                    <span className="rounded-full bg-accent-100 px-1.5 py-0.5 text-[7px] font-bold text-accent-700">
+                    <span className="rounded-full bg-brand-100 px-1.5 py-0.5 text-[7px] font-bold text-brand-700">
                       3 new
                     </span>
                   </div>
@@ -225,7 +225,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
                       <div
                         key={i}
                         style={{ height: `${h}%` }}
-                        className={`flex-1 rounded-t ${i === weekBars.length - 1 ? "bg-accent-500" : "bg-brand-500/70"}`}
+                        className={`flex-1 rounded-t ${i === weekBars.length - 1 ? "bg-brand-400" : "bg-brand-500/70"}`}
                       />
                     ))}
                   </div>

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f8fc;
-  --foreground: #161a2b;
+  --background: #f7f5ef;
+  --foreground: #15191b;
 }
 
 @theme inline {
@@ -11,50 +11,51 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-space-grotesk);
+  --font-serif: var(--font-fraunces), Georgia, serif;
   --font-hand: var(--font-caveat), cursive;
 
-  /* Brand: cobalt blue */
-  --color-brand-50: #f0f2fe;
-  --color-brand-100: #e3e6fd;
-  --color-brand-200: #c8cdfb;
-  --color-brand-300: #a3acf6;
-  --color-brand-400: #7a87ef;
-  --color-brand-500: #4f63e8;
-  --color-brand-600: #2d4be0;
-  --color-brand-700: #233bbf;
-  --color-brand-800: #21349a;
-  --color-brand-900: #1f3179;
-  --color-brand-950: #151d49;
+  /* Brand: spring green -> deep forest (the whole identity) */
+  --color-brand-50: #ecfdf3;
+  --color-brand-100: #d2f9e0;
+  --color-brand-200: #a6f1c4;
+  --color-brand-300: #6fe3a1;
+  --color-brand-400: #3ad079;
+  --color-brand-500: #1fb863;
+  --color-brand-600: #149a52;
+  --color-brand-700: #117a44;
+  --color-brand-800: #155c43;
+  --color-brand-900: #114a37;
+  --color-brand-950: #0c3a2c;
 
-  /* Accent: coral */
-  --color-accent-50: #fff2f0;
-  --color-accent-100: #ffe3df;
-  --color-accent-200: #ffc9c2;
-  --color-accent-300: #ffa498;
-  --color-accent-400: #ff8071;
-  --color-accent-500: #ff6b5e;
-  --color-accent-600: #ed4636;
-  --color-accent-700: #c83325;
-  --color-accent-800: #a52d22;
-  --color-accent-900: #882a22;
-  --color-accent-950: #4a110c;
+  /* Accent: soft amber — used very sparingly for warm pops */
+  --color-accent-50: #fdf6e3;
+  --color-accent-100: #f9e9bd;
+  --color-accent-200: #f3d985;
+  --color-accent-300: #eec659;
+  --color-accent-400: #e6b53a;
+  --color-accent-500: #d29a26;
+  --color-accent-600: #ab7a1e;
+  --color-accent-700: #855e1b;
+  --color-accent-800: #6e4d1c;
+  --color-accent-900: #5e421d;
+  --color-accent-950: #362413;
 
-  /* Ink: navy-tinted neutrals */
-  --color-ink-50: #f4f6fa;
-  --color-ink-100: #e8ebf1;
-  --color-ink-200: #d2d7e2;
-  --color-ink-300: #b3bacb;
-  --color-ink-400: #858ea8;
-  --color-ink-500: #5e6783;
-  --color-ink-600: #485072;
-  --color-ink-700: #394264;
-  --color-ink-800: #29304b;
-  --color-ink-900: #1d2238;
-  --color-ink-950: #161a2b;
+  /* Ink: neutral near-black */
+  --color-ink-50: #f4f5f4;
+  --color-ink-100: #e8eae8;
+  --color-ink-200: #d6dad7;
+  --color-ink-300: #b3bab6;
+  --color-ink-400: #868f8a;
+  --color-ink-500: #5e6863;
+  --color-ink-600: #47514c;
+  --color-ink-700: #39423d;
+  --color-ink-800: #262d29;
+  --color-ink-900: #1a201d;
+  --color-ink-950: #15191b;
 
-  --shadow-soft: 0 1px 2px rgba(22, 26, 43, 0.04), 0 8px 24px rgba(22, 26, 43, 0.07);
-  --shadow-lift: 0 2px 4px rgba(22, 26, 43, 0.05), 0 16px 40px rgba(22, 26, 43, 0.1);
-  --shadow-float: 0 4px 8px rgba(22, 26, 43, 0.06), 0 24px 64px rgba(22, 26, 43, 0.14);
+  --shadow-soft: 0 1px 2px rgba(21, 25, 27, 0.04), 0 8px 24px rgba(21, 25, 27, 0.07);
+  --shadow-lift: 0 2px 4px rgba(21, 25, 27, 0.05), 0 16px 40px rgba(21, 25, 27, 0.1);
+  --shadow-float: 0 4px 8px rgba(21, 25, 27, 0.06), 0 24px 64px rgba(21, 25, 27, 0.13);
 }
 
 html {
@@ -83,11 +84,11 @@ h2 {
 
 /* Dotted grid background (apply to a positioned, -z layer) */
 .bg-grid {
-  background-image: radial-gradient(rgba(22, 26, 43, 0.07) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(21, 25, 27, 0.06) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 .bg-grid-brand {
-  background-image: radial-gradient(rgba(45, 75, 224, 0.12) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(31, 184, 99, 0.14) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
@@ -115,7 +116,7 @@ h2 {
 .spotlight-card__glow {
   background: radial-gradient(
     16rem 16rem at var(--mx, 50%) var(--my, 0%),
-    rgba(45, 75, 224, 0.16),
+    rgba(31, 184, 99, 0.15),
     transparent 70%
   );
 }
