@@ -44,3 +44,4 @@ data/
 
 # prisma 7 generated client (regenerated via postinstall / db:generate)
 /generated/prisma
+.env*.local
