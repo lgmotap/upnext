@@ -11,6 +11,7 @@
 
 ## Product (App)
 ```
+/app/onboarding          (post-signup business setup wizard)
 /app/dashboard
 /app/bookings
 /app/bookings/[bookingRequestId]

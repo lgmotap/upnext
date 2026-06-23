@@ -99,7 +99,8 @@ export async function signUpAction(formData: FormData): Promise<void> {
     });
   }
 
-  redirect("/app/dashboard");
+  // New accounts land in onboarding to finish business setup (docs/04 Journey 1).
+  redirect("/app/onboarding");
 }
 
 export async function forgotPasswordAction(formData: FormData): Promise<void> {
