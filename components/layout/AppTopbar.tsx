@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Search, Bell, Plus, ArrowUpRight } from "lucide-react";
 import { business } from "@/lib/mock/data";
 import { Avatar } from "@/components/app/ui";
+import { MobileNav } from "./MobileNav";
 
 export function AppTopbar() {
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink-100 bg-background/80 px-4 py-3 backdrop-blur-lg sm:px-6">
-      {/* mobile brand */}
+      {/* mobile menu + brand */}
+      <MobileNav />
       <Link href="/app/dashboard" className="flex items-center lg:hidden">
         <span className="text-lg font-bold tracking-tight text-ink-950">UpNext</span>
         <span className="ml-0.5 mt-1.5 size-1.5 rounded-full bg-brand-500" />

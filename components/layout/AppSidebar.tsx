@@ -2,31 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Inbox,
-  CalendarDays,
-  ClipboardList,
-  Users,
-  UserCog,
-  Wrench,
-  CreditCard,
-  Settings,
-  ExternalLink,
-} from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { business } from "@/lib/mock/data";
-
-const nav = [
-  { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
-  { label: "Bookings", href: "/app/bookings", icon: Inbox, badge: "3" },
-  { label: "Calendar", href: "/app/calendar", icon: CalendarDays },
-  { label: "Jobs", href: "/app/jobs", icon: ClipboardList },
-  { label: "Customers", href: "/app/customers", icon: Users },
-  { label: "Team", href: "/app/team", icon: UserCog },
-  { label: "Services", href: "/app/services", icon: Wrench },
-  { label: "Payments", href: "/app/payments", icon: CreditCard },
-  { label: "Settings", href: "/app/settings/business", icon: Settings },
-];
+import { appNav, isActive } from "./appNav";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -50,9 +28,8 @@ export function AppSidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5" aria-label="Product">
-        {nav.map(({ label, href, icon: Icon, badge }) => {
-          const active = pathname === href || pathname.startsWith(href + "/") ||
-            (href.includes("/settings") && pathname.startsWith("/app/settings"));
+        {appNav.map(({ label, href, icon: Icon, badge }) => {
+          const active = isActive(pathname, href);
           return (
             <Link
               key={href}
