@@ -24,8 +24,8 @@ export function CalendarCompare() {
             and job changes are hard to coordinate manually.
           </p>
           <p className="rounded-xl bg-brand-50 px-4 py-3 text-brand-900 ring-1 ring-brand-200/60">
-            <span className="font-bold">After:</span> a clean schedule that shows what's booked,
-            who's assigned, and what needs attention.
+            <span className="font-bold">After:</span> a clean schedule that shows what&apos;s booked,
+            who&apos;s assigned, and what needs attention.
           </p>
         </div>
       </Reveal>

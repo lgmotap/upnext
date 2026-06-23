@@ -1,5 +1,12 @@
 ---
-description: Database & Prisma rules
-globs: ["prisma/**", "server/repositories/**"]
+description: Database & Prisma 7 rules
+globs: ["prisma/**", "lib/db/**", "generated/**", "server/repositories/**", "prisma.config.ts"]
 ---
-Use Prisma + migrations. Every business-owned entity has organizationId; queries filter by membership. Money in integer cents; timestamps UTC. Index common lookups. No destructive migrations without explicit confirmation.
+**Prisma 7 only** — see `.cursor/rules/000-stack-prisma7-supabase.mdc` and `docs/architecture/database.md`.
+
+- Generator: `prisma-client` with output `generated/prisma/`.
+- Import client from `@/generated/prisma/client`; use singleton `lib/db/prisma.ts`.
+- Migrations via `prisma.config.ts` + `DIRECT_URL`; runtime via `@prisma/adapter-pg` + `DATABASE_URL`.
+- Every business-owned entity has `organizationId`; queries filter by membership.
+- Money in integer cents; timestamps UTC. Index common lookups.
+- No Prisma in client components. No destructive migrations without explicit confirmation.

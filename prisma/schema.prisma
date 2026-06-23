@@ -1,19 +1,92 @@
-// UpNext Prisma schema — placeholder.
-// The full data model is specified in docs/07-data-model.md and will be
-// implemented in Sprint 01+ (entities: User, Organization, Membership,
-// BusinessProfile, Service, AvailabilityRule, BlackoutDate, Customer,
-// CustomerAddress, BookingRequest, Job, JobAssignment, ChecklistTemplate,
-// JobChecklistItem, JobPhoto, PaymentRecord, NotificationLog, ActivityLog,
-// Subscription). Money in integer cents; timestamps UTC; every business-owned
-// model carries organizationId.
+// UpNext data model — see docs/07-data-model.md
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
+enum MembershipRole {
+  owner
+  admin
+  dispatcher
+  worker
+  viewer
+}
+
+enum MembershipStatus {
+  active
+  invited
+  disabled
+}
+
+enum OrganizationStatus {
+  active
+  suspended
+}
+
+/// Mirrors Supabase auth.users.id — created on first sign-up.
+model User {
+  id          String       @id
+  email       String       @unique
+  name        String?
+  avatarUrl   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+  ownedOrgs   Organization[] @relation("OrganizationOwner")
+}
+
+model Organization {
+  id              String             @id @default(cuid())
+  name            String
+  slug            String             @unique
+  ownerId         String
+  timezone        String             @default("America/New_York")
+  currency        String             @default("USD")
+  status          OrganizationStatus @default(active)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  owner           User               @relation("OrganizationOwner", fields: [ownerId], references: [id])
+  memberships     Membership[]
+  businessProfile BusinessProfile?
+
+  @@index([slug])
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MembershipRole
+  status         MembershipStatus @default(active)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model BusinessProfile {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  displayName    String
+  publicSlug     String       @unique
+  logoUrl        String?
+  phone          String?
+  email          String?
+  websiteUrl     String?
+  serviceArea    String?
+  description    String?
+  bookingEnabled Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([publicSlug])
+}

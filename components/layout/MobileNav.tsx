@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,12 +8,18 @@ import { Menu, X, ExternalLink } from "lucide-react";
 import { business } from "@/lib/mock/data";
 import { appNav, isActive } from "./appNav";
 
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
 export function MobileNav() {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsClient();
   const pathname = usePathname();
-
-  useEffect(() => setMounted(true), []);
 
   return (
     <div className="lg:hidden">

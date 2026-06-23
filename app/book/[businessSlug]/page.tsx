@@ -107,7 +107,7 @@ export default function PublicBookingPage({
             <Check className="size-5" /> Request booking
           </Link>
           <p className="pb-6 text-center text-xs text-ink-400">
-            You'll get a confirmation email. {business.name} will confirm your time shortly.
+            You&apos;ll get a confirmation email. {business.name} will confirm your time shortly.
           </p>
         </div>
       </div>

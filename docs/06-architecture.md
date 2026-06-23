@@ -16,9 +16,18 @@ Auth · Business · Services · Availability · Booking · Jobs · Calendar · C
 | `server/validators/` | Zod schemas / input validation |
 | `server/permissions/` | RBAC and ownership checks |
 | `lib/` | Shared infrastructure utilities |
+| `lib/db/prisma.ts` | Prisma 7 singleton (server-only) |
+| `generated/prisma/` | Prisma 7 generated client |
 | `emails/` | Email templates |
 | `prisma/` | Schema and migrations |
+| `prisma.config.ts` | Prisma 7 CLI config (migrations use `DIRECT_URL`) |
 | `tests/` | Unit, integration, e2e |
+
+## Architecture deep-dives
+
+- `docs/architecture/database.md` — Prisma 7 + Postgres rules
+- `docs/architecture/auth-and-permissions.md` — Supabase Auth + RBAC
+- `docs/architecture/ai-agent-rules.md` — agent behavior
 
 ## Request Flow
 `UI/API → validator → auth/session check → permission check → service → repository/db → side effects (notifications/billing) → typed response`

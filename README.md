@@ -2,15 +2,24 @@
 
 Premium pre-launch landing page for a service-business platform (cleaning, lawn care, handyman, painting, pet walking, pressure washing, roofing, car wash, and more).
 
-Stack: **Next.js (App Router) · TypeScript · Tailwind CSS v4 · Lucide icons · Framer Motion**
+Stack: **Next.js (App Router) · TypeScript · Tailwind CSS v4 · Prisma 7 · Supabase · Lucide · Framer Motion**
+
+**Node.js ≥ 20.19** required (Prisma 7). Use `nvm use` with `.nvmrc` (Node 22).
 
 ## Run it
 
 ```bash
+nvm use                    # Node 22 (see .nvmrc)
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # production build
+cp .env.example .env.local   # fill Supabase + database URLs (see comments in file)
+npm run db:generate
+npm run dev                  # http://localhost:3000
+npm run build                # production build
 ```
+
+Agent/stack docs: `AGENTS.md`, `docs/architecture/database.md`.
+
+Product auth and `/app/*` routes require `.env.local`. On Vercel, set the same variables in Project Settings → Environment Variables (never commit `.env.local`).
 
 ## Where things live
 

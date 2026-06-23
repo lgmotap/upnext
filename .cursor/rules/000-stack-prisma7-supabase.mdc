@@ -1,0 +1,78 @@
+---
+description: Canonical stack — Prisma 7 + Supabase + Next.js (read first)
+alwaysApply: true
+---
+# Stack: Prisma 7 + Supabase + Next.js
+
+**This project uses Prisma 7, not Prisma 6.**
+
+Do not downgrade Prisma. Do not replace Prisma with Drizzle, TypeORM, Sequelize, or MongoDB unless the project owner explicitly requests it.
+
+Read before editing database or auth code:
+- `docs/architecture/database.md`
+- `docs/architecture/auth-and-permissions.md`
+- `docs/architecture/ai-agent-rules.md`
+- `AGENTS.md`
+
+## Approved stack
+
+```txt
+Next.js App Router (App Router at repo root — no src/ directory)
+Supabase Auth (@supabase/ssr)
+Supabase Postgres
+Supabase Storage (when needed)
+Prisma 7 + @prisma/adapter-pg
+PostgreSQL
+TypeScript
+Tailwind (+ shadcn/ui later)
+```
+
+## Forbidden
+
+```txt
+Prisma 6 or prisma-client-js generator
+Drizzle / TypeORM / Sequelize / MongoDB
+Prisma imports in client components or "use client" files
+DATABASE_URL / DIRECT_URL / SUPABASE_SERVICE_ROLE_KEY in browser code
+Multiple PrismaClient instances
+Unscoped prisma.* queries for tenant-owned data
+prisma db push for production
+```
+
+## Paths (this repo)
+
+| Concern | Path |
+|---------|------|
+| Prisma schema | `prisma/schema.prisma` |
+| Prisma config | `prisma.config.ts` |
+| Generated client | `generated/prisma/` → import `@/generated/prisma/client` |
+| Prisma singleton | `lib/db/prisma.ts` — **only** entry point for Prisma |
+| Supabase browser | `lib/supabase/client.ts` |
+| Supabase server | `lib/supabase/server.ts` |
+| Session refresh | `lib/supabase/proxy.ts` + root `proxy.ts` |
+| Server actions | `server/actions/` |
+| Permissions | `server/permissions/` |
+| Repositories | `server/repositories/` |
+
+## Tenant model
+
+UpNext uses **Organization** + **Membership** (not a separate Workspace table). Treat `organizationId` as the tenant scope. See `docs/07-data-model.md`.
+
+## Env vars
+
+```txt
+DATABASE_URL      → runtime app (Supavisor transaction pooler)
+DIRECT_URL        → Prisma CLI migrations only (prisma.config.ts)
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY   (Supabase anon/publishable key — browser-safe)
+SUPABASE_SERVICE_ROLE_KEY       (server-only)
+```
+
+## Agent workflow for DB changes
+
+1. Explain the schema change.
+2. Update `prisma/schema.prisma`.
+3. Run `npx prisma migrate dev --name <name>` (ask before destructive changes).
+4. Run `npx prisma generate`.
+5. Update server code, Zod validators, permission checks.
+6. Run `npm run db:validate`, `npm run typecheck`, `npm run lint`, `npm run build`.

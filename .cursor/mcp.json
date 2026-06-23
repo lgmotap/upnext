@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "upnext-supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=flmumvxvyhfckvmnwzin",
+      "headers": {}
+    },
+    "upnext-stripe": {
+      "url": "https://mcp.stripe.com",
+      "headers": {}
+    },
+    "upnext-vercel": {
+      "url": "https://mcp.vercel.com",
+      "headers": {}
+    },
+    "upnext-resend": {
+      "command": "npx",
+      "args": ["-y", "resend-mcp"],
+      "env": {
+        "RESEND_API_KEY": "${env:UPNEXT_RESEND_API_KEY}"
+      }
+    }
+  }
+}

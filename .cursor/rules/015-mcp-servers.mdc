@@ -1,0 +1,21 @@
+---
+description: UpNext-only MCP servers — do not use other projects' integrations
+globs:
+alwaysApply: true
+---
+
+# MCP servers (UpNext workspace)
+
+Use **only** the UpNext-prefixed MCP servers defined in `.cursor/mcp.json`:
+
+- `upnext-supabase` — Supabase for the UpNext project (not Simtem2026 or invoice)
+- `upnext-stripe` — Stripe for UpNext
+- `upnext-vercel` — Vercel for UpNext
+- `upnext-resend` — Resend for UpNext (`UPNEXT_RESEND_API_KEY` env var)
+
+**Do not** call global MCP servers from other projects (`supabase - Simtem2026`, `supabase invoice`, `revenuecat`, `upstash`, etc.). Those stay disabled in this workspace.
+
+When `project_ref` is known, pin Supabase with:
+`https://mcp.supabase.com/mcp?project_ref=<UPNEXT_SUPABASE_PROJECT_REF>`
+
+First use of OAuth MCPs (Supabase, Stripe, Vercel) requires signing in to the **UpNext** accounts in Cursor Settings → MCP.
