@@ -1,0 +1,5 @@
+---
+description: Next.js + React frontend rules
+globs: ["app/**", "components/**"]
+---
+App Router + Server Components by default; add "use client" only when needed. Tailwind for styling using the project's green design tokens (brand/ink/accent). Keep business logic out of components. Co-locate route UI; share primitives in components/ui and components/app.

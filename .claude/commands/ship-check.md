@@ -1,0 +1,1 @@
+Pre-ship checklist: typecheck, lint, tests pass; auth/permissions enforced; public booking works; jobs schedulable/completable; payment status tracked; emails send; errors handled; analytics + Sentry installed. Report PASS/FAIL per item.

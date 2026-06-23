@@ -1,0 +1,5 @@
+---
+description: Auth, RBAC, security
+alwaysApply: true
+---
+Deny by default. Every server function verifies: authenticated user, organization membership, role permission, and entity-org ownership. Workers access only assigned jobs. Rate-limit public/customer endpoints. Verify Stripe webhook signatures. Never store card data. Never trust client-provided org/user/payment/job IDs.

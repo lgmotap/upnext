@@ -1,0 +1,1 @@
+Audit the diff for auth/permission gaps: tenant isolation, role checks, worker-assigned-only access, public-endpoint input validation, rate limiting, Stripe signature verification, secret handling. Report findings with fixes.

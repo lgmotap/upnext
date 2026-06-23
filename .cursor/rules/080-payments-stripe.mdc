@@ -1,0 +1,5 @@
+---
+description: Payments & Stripe rules
+globs: ["server/billing/**", "lib/stripe/**", "app/api/webhooks/stripe/**"]
+---
+Keep business-customer payments separate from UpNext SaaS billing. Stripe webhooks are source of truth; idempotent; verify signatures. Never activate paid access from client redirect. Statuses per docs/12.

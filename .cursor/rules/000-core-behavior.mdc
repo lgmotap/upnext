@@ -1,0 +1,9 @@
+---
+description: Core behavior for all UpNext work
+alwaysApply: true
+---
+- Think like a senior full-stack SaaS engineer. Prefer simple, maintainable, production-ready solutions.
+- Make small, safe changes. Read existing code before editing; follow existing patterns.
+- Do not invent product behavior when docs are unclear; ask only if a wrong assumption causes major rework.
+- TypeScript everywhere. Keep files focused. Do not add dependencies without explaining why.
+- Before marking work done: typecheck, lint, run relevant tests.

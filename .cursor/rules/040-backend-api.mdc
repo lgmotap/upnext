@@ -1,0 +1,5 @@
+---
+description: Backend & API rules
+globs: ["server/**", "app/api/**"]
+---
+Server actions for authenticated mutations; API routes for webhooks/public/cron. Validate every external input with Zod. Authenticate and authorize server-side. Return typed results and the standard error shape. Log internal errors; never leak secrets or stack traces to clients.

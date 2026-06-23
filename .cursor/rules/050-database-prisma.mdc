@@ -1,0 +1,5 @@
+---
+description: Database & Prisma rules
+globs: ["prisma/**", "server/repositories/**"]
+---
+Use Prisma + migrations. Every business-owned entity has organizationId; queries filter by membership. Money in integer cents; timestamps UTC. Index common lookups. No destructive migrations without explicit confirmation.

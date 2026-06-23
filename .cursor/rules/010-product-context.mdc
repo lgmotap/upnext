@@ -1,0 +1,8 @@
+---
+description: UpNext product context
+alwaysApply: true
+---
+UpNext is booking/scheduling/CRM/payments software for home-service businesses (solo operators and teams of 2–50).
+Marketing landing page lives at `/`. The product app lives under `/app/*`; public booking `/book/[slug]`; crew `/crew`.
+Read `docs/00-product-brief.md`, `docs/02-mvp-scope.md`, `docs/06-architecture.md`, `docs/07-data-model.md` before major work.
+MVP scope only — do not build website builder, marketing automation, native apps, gift cards, promo codes, auto-charge, payouts, or multi-location.

@@ -1,0 +1,1 @@
+Make a database change: update prisma/schema.prisma, create a migration, update repositories/validators, keep organizationId isolation, add indexes. Never run a destructive migration without explicit confirmation.

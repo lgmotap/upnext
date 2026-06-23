@@ -1,0 +1,5 @@
+---
+description: Refactor & review discipline
+alwaysApply: true
+---
+Avoid unrelated refactors inside feature work. Prefer reuse over new abstractions. Self-review the diff before finishing: correctness, security (authz), tests, and docs. Keep changes reviewable.

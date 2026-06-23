@@ -1,0 +1,5 @@
+---
+description: Notifications rules
+globs: ["server/notifications/**", "emails/**", "app/api/cron/**"]
+---
+Email only in MVP (Resend). Templates per docs/13. No duplicate reminders; log every attempt in NotificationLog; org-timezone scheduling; never expose internal notes to customers.

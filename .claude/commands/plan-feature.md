@@ -1,0 +1,1 @@
+Plan a feature: read relevant `docs/`, inspect existing code, then produce a short step-by-step plan with the files to touch, data-model impact, validators, permissions, and tests. Do not write code yet.

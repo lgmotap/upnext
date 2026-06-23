@@ -1,0 +1,5 @@
+---
+description: Architecture rules
+globs: ["server/**", "app/**", "lib/**"]
+---
+Modular monolith. Business logic in `server/services`; DB access in `server/repositories`; validation in `server/validators` (Zod); authorization in `server/permissions`. UI stays dumb. External providers behind `lib/*` boundaries. No microservices, no premature abstractions.

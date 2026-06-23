@@ -1,0 +1,1 @@
+Build a feature end-to-end using the non-stop loop: read docs -> inspect -> plan -> implement smallest safe version -> run scripts/ai/validate.sh -> fix -> repeat -> self-review -> update docs -> summarize how to test.

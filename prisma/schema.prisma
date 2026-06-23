@@ -1,0 +1,19 @@
+// UpNext Prisma schema — placeholder.
+// The full data model is specified in docs/07-data-model.md and will be
+// implemented in Sprint 01+ (entities: User, Organization, Membership,
+// BusinessProfile, Service, AvailabilityRule, BlackoutDate, Customer,
+// CustomerAddress, BookingRequest, Job, JobAssignment, ChecklistTemplate,
+// JobChecklistItem, JobPhoto, PaymentRecord, NotificationLog, ActivityLog,
+// Subscription). Money in integer cents; timestamps UTC; every business-owned
+// model carries organizationId.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+

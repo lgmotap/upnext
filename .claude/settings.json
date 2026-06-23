@@ -1,0 +1,22 @@
+{
+  "_note": "Copy to settings.json to enable. Adds local permission shortcuts and dev hooks. Review before enabling.",
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx prisma *)",
+      "Bash(git status)",
+      "Bash(git diff *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Edit|Write", "hooks": [{ "type": "command", "command": ".claude/hooks/format-after-edit.sh" }] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [{ "type": "command", "command": ".claude/hooks/block-dangerous-commands.sh" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": ".claude/hooks/validate-before-stop.sh" }] }
+    ]
+  }
+}

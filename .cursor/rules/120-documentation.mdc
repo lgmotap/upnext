@@ -1,0 +1,5 @@
+---
+description: Documentation rules
+alwaysApply: true
+---
+When product behavior changes, update the relevant `docs/`. When architecture changes, add/update an ADR in `docs/adr/`. When scope changes, update `docs/02-mvp-scope.md`. Keep `CHANGELOG.md` current.

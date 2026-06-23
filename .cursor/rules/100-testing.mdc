@@ -1,0 +1,5 @@
+---
+description: Testing rules
+globs: ["tests/**", "**/*.test.ts", "**/*.spec.ts"]
+---
+Vitest for unit/integration, Playwright for e2e. Add/update tests with any business-logic change. Cover authorization paths and critical flows (onboarding, booking→job, crew completion, payments). Run scripts/ai/validate.sh before done.

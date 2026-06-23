@@ -1,0 +1,5 @@
+---
+description: Booking & scheduling rules
+globs: ["server/services/booking*", "app/book/**", "app/app/calendar/**"]
+---
+Request-based booking in MVP. Statuses per docs/11. Validate availability server-side (weekly hours, blackout dates, min notice, max window, duration). Store UTC, display org timezone. Warn on conflicts; allow admin override.
