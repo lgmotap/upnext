@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthAlert } from "@/components/auth/AuthAlert";
+import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
 import { signInAction } from "@/server/actions/auth";
 
 const input =
@@ -33,12 +34,7 @@ export default async function SignInPage({ searchParams }: PageProps) {
           </label>
           <input id="password" name="password" type="password" required autoComplete="current-password" placeholder="••••••••" className={input} />
         </div>
-        <button
-          type="submit"
-          className="flex w-full items-center justify-center rounded-full bg-brand-400 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
-        >
-          Sign in
-        </button>
+        <AuthSubmitButton loadingLabel="Signing in…">Sign in</AuthSubmitButton>
       </form>
 
       <div className="mt-4 flex items-center justify-between text-sm">

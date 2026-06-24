@@ -28,9 +28,43 @@ export async function updateBusinessSettings(organizationId: string, input: Busi
   });
 }
 
-/** Onboarding uses the same shape without profile email. */
+/** Full onboarding wizard — industry, address, profile, completion flag. */
 export async function updateBusinessSetup(organizationId: string, input: BusinessSetupInput) {
-  return updateBusinessSettings(organizationId, { ...input, email: "" });
+  const serviceArea =
+    input.serviceArea?.trim() ||
+    [input.city, input.region].filter(Boolean).join(", ");
+
+  return prisma.$transaction(async (tx) => {
+    const organization = await tx.organization.update({
+      where: { id: organizationId },
+      data: {
+        name: input.displayName,
+        timezone: input.timezone,
+        currency: input.currency,
+      },
+    });
+
+    const businessProfile = await tx.businessProfile.update({
+      where: { organizationId },
+      data: {
+        displayName: input.displayName,
+        businessType: input.businessType,
+        teamSize: input.teamSize,
+        addressLine1: input.addressLine1,
+        addressLine2: input.addressLine2 || null,
+        city: input.city,
+        region: input.region,
+        postalCode: input.postalCode,
+        country: input.country,
+        serviceArea: serviceArea || null,
+        phone: input.phone || null,
+        description: input.description || null,
+        onboardingCompletedAt: new Date(),
+      },
+    });
+
+    return { organization, businessProfile };
+  });
 }
 
 /** The org + public profile for the signed-in user's workspace. */

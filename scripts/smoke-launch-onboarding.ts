@@ -35,6 +35,14 @@ async function main() {
   console.log(`✓ Workspace provisioned (org ${organization.id})`);
 
   await updateBusinessSetup(organization.id, {
+    businessType: "Residential Cleaning",
+    teamSize: "Just me",
+    addressLine1: "100 Launch Lane",
+    addressLine2: "",
+    city: "Launchville",
+    region: "NY",
+    postalCode: "10001",
+    country: "US",
     displayName: businessName,
     timezone: "America/New_York",
     currency: "USD",

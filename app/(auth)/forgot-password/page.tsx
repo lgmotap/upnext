@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthAlert } from "@/components/auth/AuthAlert";
+import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
 import { forgotPasswordAction } from "@/server/actions/auth";
 
 const input =
@@ -26,12 +27,7 @@ export default async function ForgotPasswordPage({ searchParams }: PageProps) {
           </label>
           <input id="email" name="email" type="email" required autoComplete="email" placeholder="you@business.com" className={input} />
         </div>
-        <button
-          type="submit"
-          className="flex w-full items-center justify-center rounded-full bg-brand-400 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
-        >
-          Send reset link
-        </button>
+        <AuthSubmitButton loadingLabel="Sending link…">Send reset link</AuthSubmitButton>
       </form>
 
       <p className="mt-4 text-center text-sm">

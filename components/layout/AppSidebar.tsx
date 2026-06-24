@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
-import { business } from "@/lib/mock/data";
+import type { WorkspaceShellData } from "@/server/services/workspace-shell";
 import { appNav, isActive } from "./appNav";
 
-export function AppSidebar() {
+export function AppSidebar({ workspace }: { workspace: WorkspaceShellData }) {
   const pathname = usePathname();
 
   return (
@@ -16,20 +16,23 @@ export function AppSidebar() {
         <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-400" />
       </Link>
 
-      {/* business switcher */}
       <div className="mb-4 flex items-center gap-2.5 rounded-xl bg-white/5 px-2.5 py-2 ring-1 ring-white/10">
         <span className="flex size-8 items-center justify-center rounded-lg bg-brand-400 text-sm font-bold text-brand-950">
-          {business.name.charAt(0)}
+          {workspace.businessName.charAt(0)}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-xs font-bold">{business.name}</p>
-          <p className="truncate text-[11px] text-white/50">{business.serviceArea}</p>
+          <p className="truncate text-xs font-bold">{workspace.businessName}</p>
+          <p className="truncate text-[11px] text-white/50">{workspace.serviceArea}</p>
         </div>
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5" aria-label="Main navigation">
-        {appNav.map(({ label, href, icon: Icon, badge }) => {
+        {appNav.map(({ label, href, icon: Icon }) => {
           const active = isActive(pathname, href);
+          const badge =
+            href === "/app/bookings" && workspace.pendingBookings > 0
+              ? String(workspace.pendingBookings)
+              : undefined;
           return (
             <Link
               key={href}
@@ -51,7 +54,9 @@ export function AppSidebar() {
       </nav>
 
       <Link
-        href={`/book/${business.slug}`}
+        href={`/book/${workspace.publicSlug}`}
+        target="_blank"
+        rel="noopener noreferrer"
         className="mt-2 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-white/55 hover:text-brand-300"
       >
         <ExternalLink className="size-3.5" /> View booking page

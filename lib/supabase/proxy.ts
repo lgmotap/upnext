@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isBackendConfigured, serverEnv } from "@/lib/env";
+import { ONBOARDING_COOKIE } from "@/lib/onboarding/constants";
 
 const USER_TIMEOUT_MS = 1500;
 const TIMED_OUT = Symbol("timed_out");
@@ -83,12 +84,25 @@ function isProtectedAppRoute(pathname: string): boolean {
   return pathname === "/app" || pathname.startsWith("/app/");
 }
 
+function needsOnboardingRedirect(request: NextRequest, pathname: string): boolean {
+  if (!pathname.startsWith("/app/") || pathname.startsWith("/app/onboarding")) return false;
+  if (!hasLikelySupabaseSessionCookie(request)) return false;
+  return !request.cookies.get(ONBOARDING_COOKIE)?.value;
+}
+
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  if (needsOnboardingRedirect(request, pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/app/onboarding";
+    return NextResponse.redirect(url);
+  }
+
   if (!isBackendConfigured()) {
     return NextResponse.next({ request });
   }
 
-  const pathname = request.nextUrl.pathname;
   const hasSessionCookie = hasLikelySupabaseSessionCookie(request);
   const isPasswordFlow =
     pathname.startsWith("/auth/callback") || pathname.startsWith("/auth/confirm");
@@ -129,7 +143,6 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (!isPublicRoute(pathname) && hasSessionCookie) {
-    // Fail closed for unknown authenticated areas until explicitly opened.
     const { user } = await verifyUser(request);
     if (!user) {
       return NextResponse.redirect(new URL("/sign-in", request.url));

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { AppTopbar } from "@/components/layout/AppTopbar";
+import { cookies } from "next/headers";
+import { WorkspaceShell } from "@/components/layout/WorkspaceShell";
+import { ONBOARDING_COOKIE } from "@/lib/onboarding/constants";
+import { getAppSession } from "@/server/permissions/session";
+import { getWorkspaceShellData } from "@/server/services/workspace-shell";
+import { prisma } from "@/lib/db/prisma";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -8,22 +12,33 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const session = await getAppSession();
+  const userName = session?.name ?? session?.email?.split("@")[0] ?? "User";
+
+  if (session) {
+    const completed = await prisma.businessProfile.findUnique({
+      where: { organizationId: session.organizationId },
+      select: { onboardingCompletedAt: true },
+    });
+    if (completed?.onboardingCompletedAt) {
+      const jar = await cookies();
+      if (!jar.get(ONBOARDING_COOKIE)) {
+        jar.set(ONBOARDING_COOKIE, session.organizationId, {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60 * 24 * 365,
+        });
+      }
+    }
+  }
+
+  const workspace = session ? await getWorkspaceShellData(session.organizationId, userName) : null;
+
   return (
-    <div className="flex min-h-screen bg-background text-ink-900">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand-400 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-brand-950"
-      >
-        Skip to main content
-      </a>
-      <AppSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <AppTopbar />
-        <main id="main-content" className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
-        </main>
-      </div>
-    </div>
+    <WorkspaceShell workspace={workspace} userName={userName}>
+      {children}
+    </WorkspaceShell>
   );
 }

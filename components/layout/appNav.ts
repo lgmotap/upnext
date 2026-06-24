@@ -11,11 +11,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type NavItem = { label: string; href: string; icon: LucideIcon; badge?: string };
+export type NavItem = { label: string; href: string; icon: LucideIcon };
 
 export const appNav: NavItem[] = [
   { label: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
-  { label: "Bookings", href: "/app/bookings", icon: Inbox, badge: "3" },
+  { label: "Bookings", href: "/app/bookings", icon: Inbox },
   { label: "Calendar", href: "/app/calendar", icon: CalendarDays },
   { label: "Jobs", href: "/app/jobs", icon: ClipboardList },
   { label: "Customers", href: "/app/customers", icon: Users },

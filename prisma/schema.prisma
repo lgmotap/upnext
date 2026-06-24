@@ -96,12 +96,21 @@ model BusinessProfile {
   organizationId String       @unique
   displayName    String
   publicSlug     String       @unique
+  businessType   String?
+  teamSize       String?
+  addressLine1   String?
+  addressLine2   String?
+  city           String?
+  region         String?
+  postalCode     String?
+  country        String       @default("US")
   logoUrl        String?
   phone          String?
   email          String?
   websiteUrl     String?
   serviceArea    String?
   description    String?
+  onboardingCompletedAt DateTime?
   bookingEnabled        Boolean      @default(true)
   minNoticeHours        Int          @default(24)
   maxBookingDaysAhead   Int          @default(60)

@@ -25,7 +25,14 @@ export default async function JobsPage() {
       <PageHeader
         title="Jobs"
         subtitle="Every confirmed job, its schedule, status, and price."
-        action={<AppButton href="/app/bookings">From bookings</AppButton>}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <AppButton href="/app/bookings/new">New booking</AppButton>
+            <AppButton variant="outline" href="/app/bookings">
+              From bookings
+            </AppButton>
+          </div>
+        }
       />
 
       {jobs.length === 0 ? (

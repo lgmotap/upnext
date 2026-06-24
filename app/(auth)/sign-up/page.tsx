@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AuthAlert } from "@/components/auth/AuthAlert";
+import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
 import { signUpAction } from "@/server/actions/auth";
 
 const input =
@@ -44,12 +45,7 @@ export default async function SignUpPage({ searchParams }: PageProps) {
           </label>
           <input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" placeholder="••••••••" className={input} />
         </div>
-        <button
-          type="submit"
-          className="flex w-full items-center justify-center rounded-full bg-brand-400 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
-        >
-          Create workspace
-        </button>
+        <AuthSubmitButton loadingLabel="Creating workspace…">Create workspace</AuthSubmitButton>
       </form>
 
       <p className="mt-4 text-center text-sm text-ink-500">

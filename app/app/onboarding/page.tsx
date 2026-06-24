@@ -19,6 +19,10 @@ export default async function OnboardingPage({
 
   const setup = await getBusinessSetup(session.organizationId);
   const profile = setup?.businessProfile;
+  if (profile?.onboardingCompletedAt) {
+    redirect("/app/dashboard");
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const slug = profile?.publicSlug ?? setup?.slug ?? "";
   const { error } = await searchParams;
@@ -29,6 +33,14 @@ export default async function OnboardingPage({
         error={error}
         bookingUrl={`${appUrl}/book/${slug}`}
         defaults={{
+          businessType: profile?.businessType ?? "",
+          teamSize: profile?.teamSize ?? "",
+          addressLine1: profile?.addressLine1 ?? "",
+          addressLine2: profile?.addressLine2 ?? "",
+          city: profile?.city ?? "",
+          region: profile?.region ?? "",
+          postalCode: profile?.postalCode ?? "",
+          country: profile?.country ?? "US",
           displayName: profile?.displayName ?? setup?.name ?? "",
           timezone: setup?.timezone ?? "America/New_York",
           currency: setup?.currency ?? "USD",

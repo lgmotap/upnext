@@ -1,14 +1,29 @@
 import Link from "next/link";
-import { Search, Bell, Plus, ArrowUpRight } from "lucide-react";
-import { business } from "@/lib/mock/data";
+import { Search, Bell, ArrowUpRight } from "lucide-react";
 import { Avatar } from "@/components/app/ui";
+import type { WorkspaceShellData } from "@/server/services/workspace-shell";
 import { MobileNav } from "./MobileNav";
+import { NewActionMenu } from "./NewActionMenu";
 
-export function AppTopbar() {
+export function AppTopbar({
+  workspace,
+  userName,
+}: {
+  workspace: WorkspaceShellData | null;
+  userName: string;
+}) {
+  const initials =
+    (workspace?.ownerInitials ??
+      userName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((n) => n[0]?.toUpperCase() ?? "")
+        .join("")) || "U";
+
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink-100 bg-background/80 px-4 py-3 backdrop-blur-lg sm:px-6">
-      {/* mobile menu + brand */}
-      <MobileNav />
+      {workspace ? <MobileNav workspace={workspace} /> : <MobileNav workspace={null} />}
       <Link href="/app/dashboard" className="flex items-center lg:hidden">
         <span className="text-lg font-bold tracking-tight text-ink-950">UpNext</span>
         <span className="ml-0.5 mt-1.5 size-1.5 rounded-full bg-brand-500" />
@@ -18,8 +33,10 @@ export function AppTopbar() {
         <Search className="pointer-events-none absolute left-3 size-4 text-ink-400" />
         <input
           type="search"
+          disabled
+          title="Search coming soon"
           placeholder="Search customers, jobs, bookings…"
-          className="w-full rounded-full bg-white py-2 pl-9 pr-3 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
+          className="w-full cursor-not-allowed rounded-full bg-ink-50 py-2 pl-9 pr-3 text-sm text-ink-500 ring-1 ring-ink-200 placeholder:text-ink-400"
         />
       </div>
 
@@ -30,17 +47,17 @@ export function AppTopbar() {
         >
           Marketing site <ArrowUpRight className="size-3.5" />
         </Link>
-        <button className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-3.5 py-2 text-sm font-bold text-brand-950 transition hover:bg-brand-300">
-          <Plus className="size-4" /> New
-        </button>
+        <NewActionMenu />
         <button
-          aria-label="Notifications"
-          className="relative rounded-full p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-900"
+          type="button"
+          disabled
+          title="Notifications coming soon"
+          aria-label="Notifications (coming soon)"
+          className="relative cursor-not-allowed rounded-full p-2 text-ink-300"
         >
           <Bell className="size-5" />
-          <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-brand-500 ring-2 ring-background" />
         </button>
-        <Avatar initials={business.ownerName.split(" ").map((n) => n[0]).join("")} className="bg-brand-200" />
+        <Avatar initials={initials} className="bg-brand-200" />
       </div>
     </header>
   );
