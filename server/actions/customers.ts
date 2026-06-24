@@ -6,6 +6,7 @@ import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { addCustomerAddress, updateCustomerNotes } from "@/server/repositories/customers";
 import { customerAddressSchema, customerNotesSchema } from "@/server/validators/customer";
+import { sendCustomerPortalLinkFromOwner } from "@/server/services/customer-portal";
 
 function customerRedirect(customerId: string, params: Record<string, string>): never {
   const qs = new URLSearchParams(params).toString();
@@ -54,4 +55,19 @@ export async function addCustomerAddressAction(formData: FormData): Promise<void
 
   revalidatePath(`/app/customers/${parsed.data.customerId}`);
   customerRedirect(parsed.data.customerId, { saved: "address" });
+}
+
+export async function sendCustomerPortalLinkAction(formData: FormData): Promise<void> {
+  const session = await getAppSession();
+  if (!session || !canManageBookings(session)) redirect("/app/customers?error=denied");
+
+  const customerId = String(formData.get("customerId") ?? "");
+  if (!customerId) redirect("/app/customers?error=denied");
+
+  const result = await sendCustomerPortalLinkFromOwner(session.organizationId, customerId);
+  if (!result.ok) {
+    customerRedirect(customerId, { error: result.error });
+  }
+
+  customerRedirect(customerId, { saved: "portal" });
 }

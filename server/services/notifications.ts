@@ -661,3 +661,93 @@ export async function notifyTeamInvite(organizationId: string, inviteId: string)
     ].join("\n"),
   });
 }
+
+export async function notifyCustomerPortalLink(params: {
+  organizationId: string;
+  customerId: string;
+  tokenId: string;
+  customerEmail: string;
+  customerName: string;
+  businessName: string;
+  authUrl: string;
+}): Promise<void> {
+  await sendAndLogEmail({
+    organizationId: params.organizationId,
+    to: params.customerEmail,
+    recipientType: "customer",
+    template: "customer_portal_link",
+    relatedType: "customer_portal_token",
+    relatedId: params.tokenId,
+    subject: `Your ${params.businessName} customer portal link`,
+    text: [
+      `Hi ${params.customerName || "there"},`,
+      "",
+      `Open your customer portal for ${params.businessName} to view bookings, book again, and manage appointments:`,
+      params.authUrl,
+      "",
+      `This link expires in 15 minutes. If you didn't request this, you can ignore this email.`,
+    ].join("\n"),
+  });
+}
+
+export async function notifyBookingCancelledByCustomer(
+  organizationId: string,
+  bookingRequestId: string,
+): Promise<void> {
+  const booking = await prisma.bookingRequest.findFirst({
+    where: { id: bookingRequestId, organizationId },
+    include: {
+      customer: true,
+      service: true,
+      organization: {
+        include: {
+          businessProfile: true,
+          memberships: {
+            where: { status: "active", role: { in: ["owner", "admin", "dispatcher"] } },
+            include: { user: true },
+          },
+        },
+      },
+    },
+  });
+  if (!booking) return;
+
+  const businessName =
+    booking.organization.businessProfile?.displayName ?? booking.organization.name;
+  const customerName = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
+
+  await sendAndLogEmail({
+    organizationId,
+    to: booking.customer.email,
+    recipientType: "customer",
+    template: "booking_cancelled_by_customer",
+    relatedType: "booking_request",
+    relatedId: booking.id,
+    subject: `Your booking with ${businessName} was cancelled`,
+    text: [
+      `Hi ${customerName},`,
+      "",
+      `Your ${booking.service.name} booking has been cancelled as requested.`,
+      "",
+      `Need another visit? Book again anytime.`,
+    ].join("\n"),
+  });
+
+  for (const m of booking.organization.memberships) {
+    if (!m.user.email) continue;
+    await sendAndLogEmail({
+      organizationId,
+      to: m.user.email,
+      recipientType: "owner",
+      template: "booking_cancelled_by_customer",
+      relatedType: "booking_request",
+      relatedId: booking.id,
+      subject: `Customer cancelled: ${customerName}`,
+      text: [
+        `${customerName} cancelled their ${booking.service.name} booking request.`,
+        "",
+        `Review in your inbox: ${appBaseUrl()}/app/bookings/${booking.id}`,
+      ].join("\n"),
+    });
+  }
+}

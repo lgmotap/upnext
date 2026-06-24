@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Mail, Phone, MapPin } from "lucide-react";
 import { Card, CardHeader, StatCard, Avatar } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
+import { createPrefillLink } from "@/server/services/customer-portal";
 import { formatMoney } from "@/lib/money/format";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
 import { CustomerDetailActions } from "@/components/app/CustomerDetailActions";
@@ -36,8 +37,8 @@ export default async function CustomerDetailPage({
   });
   const timeZone = org?.timezone ?? "America/New_York";
   const slug = org?.businessProfile?.publicSlug ?? "";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const bookAgainHref = slug ? `${appUrl}/book/${slug}` : "/app/bookings/new";
+  const bookAgainHref =
+    slug ? createPrefillLink(slug, customerId, session.organizationId) : "/app/bookings/new";
   const canEdit = canManageBookings(session);
 
   const [history, lifetimeCents] = await Promise.all([
@@ -64,7 +65,11 @@ export default async function CustomerDetailPage({
       )}
       {query.saved && (
         <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
-          {query.saved === "notes" ? "Notes saved." : "Address added."}
+          {query.saved === "notes"
+            ? "Notes saved."
+            : query.saved === "portal"
+              ? "Portal sign-in link sent to customer."
+              : "Address added."}
         </p>
       )}
 

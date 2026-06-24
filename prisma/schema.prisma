@@ -64,6 +64,7 @@ model Organization {
   notificationLogs  NotificationLog[]
   checklistTemplates ChecklistTemplate[]
   teamInvites       TeamInvite[]
+  customerPortalTokens CustomerPortalToken[]
 
   /// Stripe Connect account for customer payments (not UpNext SaaS billing).
   stripeConnectAccountId   String?
@@ -121,6 +122,7 @@ model BusinessProfile {
   notifyCustomerReminder2h           Boolean @default(false)
   notifyCustomerJobCompleted         Boolean @default(true)
   notifyCustomerPaymentRequest       Boolean @default(true)
+  customerPortalEnabled              Boolean @default(true)
   createdAt             DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -190,6 +192,13 @@ enum BookingRequestStatus {
   expired
 }
 
+enum BookingFrequency {
+  one_time
+  weekly
+  biweekly
+  monthly
+}
+
 model Customer {
   id             String            @id @default(cuid())
   organizationId String
@@ -199,6 +208,7 @@ model Customer {
   phone          String?
   notes          String?
   tags           String[]          @default([])
+  portalLastLoginAt DateTime?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -206,6 +216,7 @@ model Customer {
   bookingRequests BookingRequest[]
   jobs           Job[]
   paymentRecords PaymentRecord[]
+  portalTokens   CustomerPortalToken[]
 
   @@index([organizationId])
   @@index([organizationId, email])
@@ -238,6 +249,7 @@ model BookingRequest {
   requestedStartAt DateTime
   requestedEndAt   DateTime
   status           BookingRequestStatus @default(pending)
+  frequency        BookingFrequency     @default(one_time)
   customerNotes    String?
   internalNotes    String?
   source           String               @default("public_booking")
@@ -407,6 +419,8 @@ enum NotificationTemplate {
   job_running_late
   payment_request
   team_invite
+  customer_portal_link
+  booking_cancelled_by_customer
 }
 
 model NotificationLog {
@@ -501,4 +515,20 @@ model TeamInvite {
   @@index([organizationId])
   @@index([email])
   @@index([organizationId, email])
+}
+
+/// Magic-link tokens for customer portal sign-in (15 min TTL).
+model CustomerPortalToken {
+  id             String       @id @default(cuid())
+  organizationId String
+  customerId     String
+  token          String       @unique
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer       Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, customerId])
+  @@index([expiresAt])
 }

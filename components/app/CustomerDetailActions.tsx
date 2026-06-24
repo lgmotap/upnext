@@ -5,7 +5,7 @@ import { MapPin, Pencil, Plus } from "lucide-react";
 import { AppButton } from "@/components/app/ui";
 import { Modal } from "@/components/app/Modal";
 import { FormSubmitButton } from "@/components/app/FormSubmitButton";
-import { addCustomerAddressAction, updateCustomerNotesAction } from "@/server/actions/customers";
+import { addCustomerAddressAction, sendCustomerPortalLinkAction, updateCustomerNotesAction } from "@/server/actions/customers";
 import { US_REGIONS } from "@/server/validators/onboarding";
 
 const input =
@@ -33,6 +33,18 @@ export function CustomerDetailActions({
       <AppButton href={`/app/bookings/new?customerId=${customerId}`} variant="outline">
         New booking
       </AppButton>
+      {canEdit && (
+        <form action={sendCustomerPortalLinkAction}>
+          <input type="hidden" name="customerId" value={customerId} />
+          <FormSubmitButton
+            variant="outline"
+            loadingLabel="Sending…"
+            className="rounded-full px-4 py-2 text-sm font-semibold"
+          >
+            Send portal link
+          </FormSubmitButton>
+        </form>
+      )}
       {canEdit && (
         <>
           <button
