@@ -28,6 +28,7 @@
     "smoke:launch-onboarding": "tsx scripts/smoke-launch-onboarding.ts",
     "smoke:launch-crew": "tsx scripts/smoke-launch-crew.ts",
     "smoke:launch-payment": "tsx scripts/smoke-launch-payment.ts",
+    "smoke:scheduling": "tsx scripts/smoke-scheduling.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "smoke:stripe": "tsx scripts/smoke-stripe-payments.ts",

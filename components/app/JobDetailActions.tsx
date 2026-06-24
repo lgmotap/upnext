@@ -1,13 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { UserPlus, XCircle } from "lucide-react";
+import { CalendarClock, UserPlus, XCircle } from "lucide-react";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { FormSubmitButton } from "@/components/app/FormSubmitButton";
 import { Modal } from "@/components/app/Modal";
+import { RescheduleModal } from "@/components/app/RescheduleModal";
 import { cancelJobAction, markJobCompleteAction, markJobInProgressAction, assignJobAction } from "@/server/actions/jobs";
+import {
+  rescheduleJobAction,
+  fetchJobRescheduleDaysAction,
+  fetchJobRescheduleSlotsAction,
+} from "@/server/actions/scheduling";
+import type { BookableDay } from "@/lib/availability/calendar-ui";
 
 type Assignable = { id: string; label: string };
+type SlotOption = { date: string; time: string; label: string };
 
 export function JobDetailActions({
   jobId,
@@ -16,6 +24,7 @@ export function JobDetailActions({
   canAssign,
   assignable,
   currentAssigneeId,
+  reschedule,
 }: {
   jobId: string;
   status: string;
@@ -23,15 +32,32 @@ export function JobDetailActions({
   canAssign: boolean;
   assignable: Assignable[];
   currentAssigneeId?: string;
+  reschedule?: {
+    timeZone: string;
+    initialDays: BookableDay[];
+    initialSlots: SlotOption[];
+    initialDate: string;
+    initialTime: string;
+  };
 }) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
   if (!canEdit || status === "completed" || status === "cancelled") return null;
 
   return (
     <>
       <div className="flex flex-wrap gap-2">
+        {reschedule && (
+          <button
+            type="button"
+            onClick={() => setRescheduleOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold ring-1 ring-ink-200 text-ink-800 hover:ring-brand-400"
+          >
+            <CalendarClock className="size-4" /> Reschedule
+          </button>
+        )}
         {canAssign && assignable.length > 0 && (
           <button
             type="button"
@@ -61,6 +87,24 @@ export function JobDetailActions({
           <XCircle className="size-4" /> Cancel job
         </button>
       </div>
+
+      {reschedule && (
+        <RescheduleModal
+          open={rescheduleOpen}
+          onClose={() => setRescheduleOpen(false)}
+          title="Reschedule job"
+          entityId={jobId}
+          idFieldName="jobId"
+          formAction={rescheduleJobAction}
+          fetchDays={fetchJobRescheduleDaysAction}
+          fetchSlots={fetchJobRescheduleSlotsAction}
+          initialDays={reschedule.initialDays}
+          initialSlots={reschedule.initialSlots}
+          initialDate={reschedule.initialDate}
+          initialTime={reschedule.initialTime}
+          timeZone={reschedule.timeZone}
+        />
+      )}
 
       <ConfirmDialog
         open={cancelOpen}

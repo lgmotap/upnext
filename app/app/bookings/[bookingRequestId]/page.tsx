@@ -3,13 +3,19 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, CalendarClock, MapPin, Clock, Mail, Phone, Briefcase } from "lucide-react";
 import { Card, CardHeader, AppButton } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
-import { formatDisplayDateTime } from "@/lib/datetime/timezone";
+import { formatDisplayDateTime, formatTimeHmInTimezone, formatYmdInTimezone } from "@/lib/datetime/timezone";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
 import { formatMoney } from "@/lib/money/format";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { getBookingRequestForOrg } from "@/server/repositories/bookings";
 import { BookingRespondPanel } from "@/components/app/BookingRespondPanel";
+import { BookingRescheduleButton } from "@/components/app/BookingRescheduleButton";
+import {
+  getRescheduleDaysForBooking,
+  getRescheduleSlotsForBooking,
+} from "@/server/services/scheduling";
+import type { BookableDay } from "@/lib/availability/calendar-ui";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function BookingDetailPage({
@@ -17,7 +23,7 @@ export default async function BookingDetailPage({
   searchParams,
 }: {
   params: Promise<{ bookingRequestId: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; rescheduled?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/bookings");
@@ -42,6 +48,37 @@ export default async function BookingDetailPage({
   const priceCents = booking.service.basePriceCents + addonTotal;
   const canRespond = booking.status === "pending" && canManageBookings(session);
 
+  let reschedule:
+    | {
+        timeZone: string;
+        initialDays: BookableDay[];
+        initialSlots: { date: string; time: string; label: string }[];
+        initialDate: string;
+        initialTime: string;
+      }
+    | undefined;
+
+  if (canRespond) {
+    const initialDate = formatYmdInTimezone(booking.requestedStartAt, timeZone);
+    const currentTime = formatTimeHmInTimezone(booking.requestedStartAt, timeZone);
+    const daysResult = await getRescheduleDaysForBooking(session.organizationId, bookingRequestId);
+    const slotRows =
+      (await getRescheduleSlotsForBooking(session.organizationId, bookingRequestId, initialDate)) ?? [];
+    const initialSlots = slotRows.map((s) => ({
+      date: s.date,
+      time: s.time,
+      label: formatTime12h(s.time),
+    }));
+    reschedule = {
+      timeZone,
+      initialDays: daysResult?.days ?? [],
+      initialSlots,
+      initialDate,
+      initialTime:
+        initialSlots.find((s) => s.time === currentTime)?.time ?? initialSlots[0]?.time ?? currentTime,
+    };
+  }
+
   return (
     <>
       <Link
@@ -54,6 +91,12 @@ export default async function BookingDetailPage({
       {query.error && (
         <p className="mb-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 ring-1 ring-rose-100">
           {decodeURIComponent(query.error)}
+        </p>
+      )}
+
+      {query.rescheduled === "1" && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Request rescheduled. The customer was notified by email.
         </p>
       )}
 
@@ -161,7 +204,13 @@ export default async function BookingDetailPage({
           {canRespond && (
             <Card>
               <CardHeader title="Respond" />
-              <div className="p-5">
+              <div className="space-y-2.5 p-5">
+                {reschedule && (
+                  <BookingRescheduleButton
+                    bookingRequestId={booking.id}
+                    reschedule={reschedule}
+                  />
+                )}
                 <BookingRespondPanel bookingRequestId={booking.id} />
               </div>
             </Card>
@@ -191,6 +240,13 @@ export default async function BookingDetailPage({
       </div>
     </>
   );
+}
+
+function formatTime12h(hm: string): string {
+  const [h, m] = hm.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${suffix}`;
 }
 
 function Detail({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {

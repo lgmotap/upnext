@@ -12,6 +12,7 @@ import { JobPhotoGallery, JobPhotoUpload } from "@/components/crew/JobPhotos";
 import { MAX_JOB_PHOTOS } from "@/lib/storage/job-photos";
 import { getJobPhotosWithUrls } from "@/server/services/job-photos";
 import { ensureJobChecklistItems } from "@/server/services/checklists";
+import { CrewStatusActions } from "@/components/crew/CrewStatusActions";
 import {
   markJobCompleteCrewAction,
   markJobInProgressAction,
@@ -19,11 +20,18 @@ import {
 } from "@/server/actions/jobs";
 import { prisma } from "@/lib/db/prisma";
 
-export default async function CrewJobPage({ params }: { params: Promise<{ jobId: string }> }) {
+export default async function CrewJobPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ jobId: string }>;
+  searchParams: Promise<{ status?: string; error?: string }>;
+}) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/crew");
 
   const { jobId } = await params;
+  const query = await searchParams;
   if (!(await requireJobAccess(session, jobId))) notFound();
 
   const job = await getJobForOrg(session.organizationId, jobId);
@@ -53,6 +61,17 @@ export default async function CrewJobPage({ params }: { params: Promise<{ jobId:
       >
         <ArrowLeft className="size-4" /> Today
       </Link>
+
+      {query.status === "on_the_way" && (
+        <p className="mb-3 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Customer notified — you&apos;re on the way.
+        </p>
+      )}
+      {query.status === "running_late" && (
+        <p className="mb-3 rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900 ring-1 ring-amber-100">
+          Customer notified that you&apos;re running late.
+        </p>
+      )}
 
       <div className="rounded-2xl bg-white p-4 ring-1 ring-ink-100 shadow-soft">
         <div className="flex items-center justify-between">
@@ -127,6 +146,9 @@ export default async function CrewJobPage({ params }: { params: Promise<{ jobId:
           </form>
         </div>
       )}
+
+      <CrewStatusActions jobId={jobWithChecklist.id} status={jobWithChecklist.status} />
+
       <div className="h-6" />
     </div>
   );

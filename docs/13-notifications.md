@@ -10,9 +10,13 @@ MVP: email only. Later: SMS, push, WhatsApp.
 | new-booking-request | Owner/admin | Booking request submitted |
 | booking-accepted | Customer | Request accepted |
 | booking-declined | Customer | Request declined |
+| booking-rescheduled | Customer | Owner reschedules pending request |
 | booking-reminder | Customer | Before scheduled job |
 | crew-job-assigned | Team member | Job assigned |
 | job-completed | Customer | Job marked complete |
+| job-rescheduled | Customer | Owner reschedules scheduled job |
+| job-on-the-way | Customer | Crew taps On the way |
+| job-running-late | Customer | Crew taps Running late |
 | payment-request | Customer | Owner sends payment request |
 
 ## Rules

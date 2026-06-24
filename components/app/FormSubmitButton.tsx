@@ -8,11 +8,13 @@ export function FormSubmitButton({
   loadingLabel = "Saving…",
   className = "",
   variant = "primary",
+  disabled = false,
 }: {
   children: React.ReactNode;
   loadingLabel?: string;
   className?: string;
   variant?: "primary" | "outline" | "danger";
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
   const base =
@@ -26,7 +28,7 @@ export function FormSubmitButton({
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       aria-busy={pending}
       className={`${base} ${variants[variant]} ${className}`}
     >

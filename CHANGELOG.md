@@ -4,6 +4,8 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Portal batch 3**: Job + pending booking **reschedule** (calendar modal, conflict-aware slots, customer email). Crew **On the way** / **Running late** customer notifications. `npm run smoke:scheduling`.
+- **Portal batch 2**: Getting Started checklist, decline confirm modals, job assign/cancel, customer notes/address, calendar week nav, copy booking link.
 - **Launch smokes**: `npm run smoke:launch` (+ onboarding, crew, payment scripts) automates launch-checklist core product flows.
 - **Legal pages**: `/privacy` and `/terms` with footer links.
 - **Sprint 08 beta hardening**: shared `ErrorFallback`, app-wide error boundaries, PostHog (`lib/posthog/*`) + Sentry (`instrumentation.ts`, optional DSN), Playwright e2e (`npm run test:e2e`), security review doc, skip-link + `:focus-visible` a11y.

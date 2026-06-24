@@ -5,8 +5,11 @@ import { Card, CardHeader } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatMoney } from "@/lib/money/format";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
+import { formatTimeHmInTimezone, formatYmdInTimezone } from "@/lib/datetime/timezone";
+import { getRescheduleDaysForJob, getRescheduleSlotsForJob } from "@/server/services/scheduling";
 import { formatElapsedDuration } from "@/lib/datetime/duration";
 import { JobDetailActions } from "@/components/app/JobDetailActions";
+import type { BookableDay } from "@/lib/availability/calendar-ui";
 import { JobChecklist } from "@/components/crew/JobChecklist";
 import { JobPhotoGallery } from "@/components/crew/JobPhotos";
 import { getJobPhotosWithUrls } from "@/server/services/job-photos";
@@ -24,7 +27,7 @@ export default async function JobDetailPage({
   searchParams,
 }: {
   params: Promise<{ jobId: string }>;
-  searchParams: Promise<{ error?: string; payment?: string; cancelled?: string }>;
+  searchParams: Promise<{ error?: string; payment?: string; cancelled?: string; rescheduled?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in");
@@ -53,6 +56,36 @@ export default async function JobDetailPage({
   const payment = job.paymentRecord;
   const stripeReady = isStripeConfigured() && Boolean(org?.stripeConnectChargesEnabled);
   const photos = await getJobPhotosWithUrls(session.organizationId, jobId);
+
+  let reschedule:
+    | {
+        timeZone: string;
+        initialDays: BookableDay[];
+        initialSlots: { date: string; time: string; label: string }[];
+        initialDate: string;
+        initialTime: string;
+      }
+    | undefined;
+
+  if (canEdit && job.status !== "completed" && job.status !== "cancelled") {
+    const initialDate = formatYmdInTimezone(job.scheduledStartAt, timeZone);
+    const currentTime = formatTimeHmInTimezone(job.scheduledStartAt, timeZone);
+    const daysResult = await getRescheduleDaysForJob(session.organizationId, jobId);
+    const slotRows = (await getRescheduleSlotsForJob(session.organizationId, jobId, initialDate)) ?? [];
+    const initialSlots = slotRows.map((s) => ({
+      date: s.date,
+      time: s.time,
+      label: formatTime12h(s.time),
+    }));
+    reschedule = {
+      timeZone,
+      initialDays: daysResult?.days ?? [],
+      initialSlots,
+      initialDate,
+      initialTime:
+        initialSlots.find((s) => s.time === currentTime)?.time ?? initialSlots[0]?.time ?? currentTime,
+    };
+  }
 
   return (
     <>
@@ -85,6 +118,12 @@ export default async function JobDetailPage({
         </p>
       )}
 
+      {query.rescheduled === "1" && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Job rescheduled. The customer was notified by email.
+        </p>
+      )}
+
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-3">
@@ -103,6 +142,7 @@ export default async function JobDetailPage({
           canAssign={canAssign}
           assignable={assignableOptions}
           currentAssigneeId={assignee?.id}
+          reschedule={reschedule}
         />
       </div>
 
@@ -234,6 +274,13 @@ export default async function JobDetailPage({
       </Card>
     </>
   );
+}
+
+function formatTime12h(hm: string): string {
+  const [h, m] = hm.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${String(m).padStart(2, "0")} ${suffix}`;
 }
 
 function Detail({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {

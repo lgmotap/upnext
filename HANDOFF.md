@@ -139,6 +139,8 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 | Team | Invite submit loading state |
 | Settings | Copy booking link button |
 
-**Still P1 vs ConvertLabs:** recurring bookings, pricing parameters, customer portal, ⌘K search, On The Way / Running Late.
+**Still P1 vs ConvertLabs:** recurring bookings, pricing parameters, customer portal, ⌘K search.
+
+**Batch 3 (2026-06-25):** Job + pending booking reschedule (calendar modal, conflict-aware slots, customer email). Crew **On the way** / **Running late** with customer notifications. `npm run smoke:scheduling`.
 
 **Validation:** `npm run typecheck` ✓ · `db:validate` needs Node ≥ 20.19 (use `nvm use` / Node 22).

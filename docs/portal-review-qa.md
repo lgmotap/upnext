@@ -153,8 +153,8 @@ Website builder, marketing campaigns, quotes, invoices, gift cards, multi-locati
 
 1. Set `NEXT_PUBLIC_APP_URL` on Vercel + Supabase auth URLs  
 2. ~~Getting Started checklist on dashboard empty state (4–5 tasks)~~ — done  
-3. Booking reschedule UX (ConvertLabs frequency / reschedule modals)  
-4. Crew "On the way" email button  
+3. ~~Booking reschedule UX (ConvertLabs frequency / reschedule modals)~~ — done (job + pending request)  
+4. ~~Crew "On the way" email button~~ — done (On the way + Running late)  
 5. Playwright E2E: sign-up → onboarding → book → accept → crew complete  
 
 ---
