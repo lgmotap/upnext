@@ -8,18 +8,18 @@ Stack: **Next.js (App Router) · TypeScript · Tailwind CSS v4 · Prisma 7 · Su
 
 ## Run it
 
+Secrets live in **Vercel** (not `.env.local`). Local dev uses `vercel env run` to inject them.
+
 ```bash
-nvm use                    # Node 22 (see .nvmrc)
+nvm use
 npm install
-cp .env.example .env.local   # fill Supabase + database URLs (see comments in file)
-npm run db:generate
-npm run dev                  # http://localhost:3000
-npm run build                # production build
+npm run check:env:vercel   # must be all ✓ before dev
+npm run dev                # http://localhost:3000
 ```
 
-Agent/stack docs: `AGENTS.md`, `docs/architecture/database.md`.
+One-time setup: `HANDOFF.md` → Phase A (paste secrets into Vercel via dashboard or `scripts/push-env-to-vercel.sh`).
 
-Product auth and `/app/*` routes require `.env.local`. On Vercel, set the same variables in Project Settings → Environment Variables (never commit `.env.local`).
+Agent/stack docs: `AGENTS.md`, `docs/architecture/database.md`.
 
 ## Where things live
 

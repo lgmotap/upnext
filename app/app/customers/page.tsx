@@ -1,40 +1,76 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Mail, Phone } from "lucide-react";
 import { Card, PageHeader, Avatar, AppButton } from "@/components/app/ui";
-import { customers, formatMoney } from "@/lib/mock/data";
+import { formatMoney } from "@/lib/money/format";
+import { formatAddressLine } from "@/lib/datetime/calendar";
+import { getAppSession } from "@/server/permissions/session";
+import { listCustomersForOrg, getCustomerLifetimeCents } from "@/server/repositories/customers";
 
-export default function CustomersPage() {
+export default async function CustomersPage() {
+  const session = await getAppSession();
+  if (!session) redirect("/sign-in?next=/app/customers");
+
+  const customers = await listCustomersForOrg(session.organizationId);
+  const lifetimeByCustomer = await Promise.all(
+    customers.map(async (c) => ({
+      id: c.id,
+      cents: await getCustomerLifetimeCents(session.organizationId, c.id),
+    })),
+  );
+  const lifetimeMap = Object.fromEntries(lifetimeByCustomer.map((x) => [x.id, x.cents]));
+
   return (
     <>
       <PageHeader
         title="Customers"
         subtitle="Profiles, history, and lifetime value."
-        action={<AppButton>+ Add customer</AppButton>}
+        action={<AppButton href="/book">Share booking page</AppButton>}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {customers.map((c) => (
-          <Link key={c.id} href={`/app/customers/${c.id}`}>
-            <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:shadow-lift">
-              <div className="flex items-center gap-3">
-                <Avatar initials={c.name.split(" ").map((w) => w[0]).slice(0, 2).join("")} className="size-10" />
-                <div className="min-w-0">
-                  <p className="truncate font-bold text-ink-950">{c.name}</p>
-                  <p className="truncate text-xs text-ink-500">{c.contact}</p>
-                </div>
-              </div>
-              <div className="mt-4 space-y-1 text-xs text-ink-500">
-                <p className="flex items-center gap-1.5"><Mail className="size-3.5" /> {c.email}</p>
-                <p className="flex items-center gap-1.5"><Phone className="size-3.5" /> {c.phone}</p>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-ink-100 pt-3">
-                <span className="text-xs text-ink-500">{c.jobs} jobs</span>
-                <span className="text-sm font-bold text-ink-950">{formatMoney(c.lifetimeCents)}</span>
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {customers.length === 0 ? (
+        <Card className="p-8 text-center">
+          <p className="text-sm text-ink-500">No customers yet. They appear when someone books online.</p>
+        </Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {customers.map((c) => {
+            const name = `${c.firstName} ${c.lastName}`;
+            const address = c.addresses[0];
+            return (
+              <Link key={c.id} href={`/app/customers/${c.id}`}>
+                <Card className="h-full p-5 transition hover:-translate-y-0.5 hover:shadow-lift">
+                  <div className="flex items-center gap-3">
+                    <Avatar initials={`${c.firstName[0] ?? ""}${c.lastName[0] ?? ""}`} className="size-10" />
+                    <div className="min-w-0">
+                      <p className="truncate font-bold text-ink-950">{name}</p>
+                      <p className="truncate text-xs text-ink-500">
+                        {address ? formatAddressLine(address) : c.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-1 text-xs text-ink-500">
+                    <p className="flex items-center gap-1.5">
+                      <Mail className="size-3.5" /> {c.email}
+                    </p>
+                    {c.phone && (
+                      <p className="flex items-center gap-1.5">
+                        <Phone className="size-3.5" /> {c.phone}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between border-t border-ink-100 pt-3">
+                    <span className="text-xs text-ink-500">{c._count.jobs} jobs</span>
+                    <span className="text-sm font-bold text-ink-950">
+                      {formatMoney(lifetimeMap[c.id] ?? 0)}
+                    </span>
+                  </div>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }

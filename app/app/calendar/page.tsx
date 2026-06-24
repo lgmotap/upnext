@@ -1,16 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Card, PageHeader, AppButton } from "@/components/app/ui";
-import { jobs } from "@/lib/mock/data";
-
-const days = [
-  { label: "Mon", date: "16", today: true },
-  { label: "Tue", date: "17" },
-  { label: "Wed", date: "18" },
-  { label: "Thu", date: "19" },
-  { label: "Fri", date: "20" },
-  { label: "Sat", date: "21" },
-  { label: "Sun", date: "22" },
-];
+import { getWeekRange } from "@/lib/datetime/calendar";
+import { formatTimeHmInTimezone } from "@/lib/datetime/timezone";
+import { getAppSession } from "@/server/permissions/session";
+import { listJobsInRange } from "@/server/repositories/jobs";
+import { prisma } from "@/lib/db/prisma";
 
 const statusColor: Record<string, string> = {
   in_progress: "border-amber-400 bg-amber-50 text-amber-800",
@@ -19,45 +14,62 @@ const statusColor: Record<string, string> = {
   completed: "border-brand-500 bg-brand-100 text-brand-800",
 };
 
-// spread the mock jobs across the week for the preview
-const byDay = days.map((d, i) => ({
-  ...d,
-  jobs: jobs.filter((_, idx) => idx % 7 === i || (d.today && jobs[idx]?.date === "Today")),
-}));
+export default async function CalendarPage() {
+  const session = await getAppSession();
+  if (!session) redirect("/sign-in?next=/app/calendar");
 
-export default function CalendarPage() {
+  const org = await prisma.organization.findUnique({
+    where: { id: session.organizationId },
+    select: { timezone: true },
+  });
+  const timeZone = org?.timezone ?? "America/New_York";
+
+  const { days, rangeStart, rangeEnd, weekLabel } = getWeekRange(timeZone);
+  const jobs = await listJobsInRange(session.organizationId, rangeStart, rangeEnd);
+
+  const jobsByDate = Object.fromEntries(
+    days.map((d) => [
+      d.date,
+      jobs.filter((j) => formatYmd(j.scheduledStartAt, timeZone) === d.date),
+    ]),
+  );
+
   return (
     <>
       <PageHeader
         title="Calendar"
-        subtitle="June 16 – 22 · week view"
-        action={
-          <div className="flex items-center gap-2">
-            <AppButton variant="outline">Day</AppButton>
-            <AppButton variant="ghost">Week</AppButton>
-            <AppButton>+ New job</AppButton>
-          </div>
-        }
+        subtitle={weekLabel}
+        action={<AppButton href="/app/jobs">View all jobs</AppButton>}
       />
 
       <Card className="overflow-x-auto p-3">
         <div className="grid min-w-[760px] grid-cols-7 gap-2">
-          {byDay.map((d) => (
-            <div key={d.label} className="min-h-[22rem]">
-              <div className={`mb-2 rounded-xl px-3 py-2 text-center ${d.today ? "bg-brand-950 text-white" : "bg-ink-50 text-ink-600"}`}>
+          {days.map((d) => (
+            <div key={d.date} className="min-h-[18rem]">
+              <div
+                className={`mb-2 rounded-xl px-3 py-2 text-center ${
+                  d.isToday ? "bg-brand-950 text-white" : "bg-ink-50 text-ink-600"
+                }`}
+              >
                 <p className="text-[11px] font-semibold uppercase tracking-wide">{d.label}</p>
-                <p className="text-lg font-bold">{d.date}</p>
+                <p className="text-lg font-bold">{d.dayNum}</p>
               </div>
               <div className="space-y-2">
-                {d.jobs.map((j) => (
+                {(jobsByDate[d.date] ?? []).map((j) => (
                   <Link
                     key={j.id}
                     href={`/app/jobs/${j.id}`}
-                    className={`block rounded-lg border-l-2 px-2.5 py-2 text-left transition hover:shadow-soft ${statusColor[j.status] ?? statusColor.scheduled}`}
+                    className={`block rounded-lg border-l-2 px-2.5 py-2 text-left transition hover:shadow-soft ${
+                      statusColor[j.status] ?? statusColor.scheduled
+                    }`}
                   >
-                    <p className="text-[11px] font-bold">{j.start}</p>
-                    <p className="truncate text-xs font-semibold">{j.customer}</p>
-                    <p className="truncate text-[11px] opacity-70">{j.service}</p>
+                    <p className="text-[11px] font-bold">
+                      {formatTimeHmInTimezone(j.scheduledStartAt, timeZone)}
+                    </p>
+                    <p className="truncate text-xs font-semibold">
+                      {j.customer.firstName} {j.customer.lastName}
+                    </p>
+                    <p className="truncate text-[11px] opacity-70">{j.service.name}</p>
                   </Link>
                 ))}
               </div>
@@ -67,4 +79,17 @@ export default function CalendarPage() {
       </Card>
     </>
   );
+}
+
+function formatYmd(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const y = parts.find((p) => p.type === "year")?.value ?? "1970";
+  const m = parts.find((p) => p.type === "month")?.value ?? "01";
+  const d = parts.find((p) => p.type === "day")?.value ?? "01";
+  return `${y}-${m}-${d}`;
 }

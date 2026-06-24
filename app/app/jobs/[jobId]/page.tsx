@@ -1,104 +1,276 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin, Clock, Wrench, Check, Camera, Send } from "lucide-react";
-import { Card, CardHeader, Avatar, AppButton } from "@/components/app/ui";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, MapPin, Clock, Wrench, CreditCard, ExternalLink } from "lucide-react";
+import { Card, CardHeader } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
-import { jobs, checklist, formatMoney } from "@/lib/mock/data";
+import { formatMoney } from "@/lib/money/format";
+import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
+import { formatElapsedDuration } from "@/lib/datetime/duration";
+import { JobChecklist } from "@/components/crew/JobChecklist";
+import { JobPhotoGallery } from "@/components/crew/JobPhotos";
+import { getJobPhotosWithUrls } from "@/server/services/job-photos";
+import { getAppSession } from "@/server/permissions/session";
+import { canManageBookings } from "@/server/permissions/can";
+import { getJobForOrg } from "@/server/repositories/jobs";
+import { markJobCompleteAction, markJobInProgressAction, assignJobAction } from "@/server/actions/jobs";
+import {
+  markJobPaymentOverdueAction,
+  markJobPaymentPaidAction,
+  requestJobPaymentLinkAction,
+} from "@/server/actions/payments";
+import { getAssignableMembers } from "@/server/repositories/team";
+import { canAssignJobs } from "@/server/permissions/job-access";
+import { isStripeConfigured } from "@/server/services/payments";
+import { prisma } from "@/lib/db/prisma";
 
-export default async function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
+export default async function JobDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ jobId: string }>;
+  searchParams: Promise<{ error?: string; payment?: string }>;
+}) {
+  const session = await getAppSession();
+  if (!session) redirect("/sign-in");
+
   const { jobId } = await params;
-  const job = jobs.find((j) => j.id === jobId);
+  const query = await searchParams;
+  const job = await getJobForOrg(session.organizationId, jobId);
   if (!job) notFound();
 
-  const done = checklist.filter((c) => c.done).length;
+  const org = await prisma.organization.findUnique({
+    where: { id: session.organizationId },
+    select: { timezone: true, stripeConnectChargesEnabled: true },
+  });
+  const timeZone = org?.timezone ?? "America/New_York";
+  const schedule = formatJobSchedule(job.scheduledStartAt, job.scheduledEndAt, timeZone);
+  const customerName = `${job.customer.firstName} ${job.customer.lastName}`;
+  const address = job.customerAddress ?? job.customer.addresses[0];
+  const canEdit = canManageBookings(session);
+  const canAssign = canAssignJobs(session);
+  const assignable = canAssign ? await getAssignableMembers(session.organizationId) : [];
+  const assignee = job.assignments[0]?.membership;
+  const payment = job.paymentRecord;
+  const stripeReady = isStripeConfigured() && Boolean(org?.stripeConnectChargesEnabled);
+  const photos = await getJobPhotosWithUrls(session.organizationId, jobId);
 
   return (
     <>
-      <Link href="/app/jobs" className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-ink-500 hover:text-ink-900">
+      <Link
+        href="/app/jobs"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-ink-500 hover:text-ink-900"
+      >
         <ArrowLeft className="size-4" /> Back to jobs
       </Link>
 
+      {query.error && (
+        <p className="mb-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 ring-1 ring-rose-100">
+          {decodeURIComponent(query.error)}
+        </p>
+      )}
+      {query.payment === "success" && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Payment received — status will update when Stripe confirms (usually instant).
+        </p>
+      )}
+      {query.payment === "paid" && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Marked as paid manually.
+        </p>
+      )}
+
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-ink-950">{job.customer}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold text-ink-950">{customerName}</h1>
             <StatusBadge status={job.status} />
+            {payment && <StatusBadge status={payment.status} />}
           </div>
-          <p className="mt-1 text-sm text-ink-500">{job.service} · {job.date} at {job.start}</p>
+          <p className="mt-1 text-sm text-ink-500">
+            {job.service.name} · {schedule.date} at {schedule.shortTime}
+          </p>
         </div>
-        <AppButton>Mark complete</AppButton>
+        {canEdit && job.status !== "completed" && job.status !== "cancelled" && (
+          <div className="flex gap-2">
+            {job.status === "scheduled" && (
+              <form action={markJobInProgressAction}>
+                <input type="hidden" name="jobId" value={job.id} />
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold ring-1 ring-ink-200 text-ink-800 hover:ring-brand-400"
+                >
+                  Start job
+                </button>
+              </form>
+            )}
+            <form action={markJobCompleteAction}>
+              <input type="hidden" name="jobId" value={job.id} />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              >
+                Mark complete
+              </button>
+            </form>
+          </div>
+        )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <Card>
-            <CardHeader title="Details" />
-            <dl className="grid gap-3 p-5 sm:grid-cols-2">
-              <Detail icon={MapPin} label="Address" value={job.address} />
-              <Detail icon={Clock} label="Scheduled" value={`${job.date} · ${job.start}`} />
-              <Detail icon={Wrench} label="Service" value={job.service} />
-              <Detail icon={Clock} label="Price" value={formatMoney(job.priceCents)} />
-            </dl>
-          </Card>
+      <Card>
+        <CardHeader title="Details" />
+        <dl className="grid gap-3 p-5 sm:grid-cols-2">
+          <Detail icon={MapPin} label="Address" value={formatAddressLine(address)} />
+          <Detail icon={Clock} label="Scheduled" value={`${schedule.date} · ${schedule.time}`} />
+          {job.checkedInAt && (
+            <Detail
+              icon={Clock}
+              label="Checked in"
+              value={
+                job.completedAt
+                  ? `${formatElapsedDuration(job.completedAt.getTime() - job.checkedInAt.getTime())} on site`
+                  : "In progress"
+              }
+            />
+          )}
+          <Detail icon={Wrench} label="Service" value={job.service.name} />
+          <Detail icon={Clock} label="Price" value={formatMoney(job.priceCents, job.currency)} />
+        </dl>
+        {job.customerNotes && (
+          <p className="border-t border-ink-100 px-5 py-4 text-sm text-ink-600">
+            Customer note: {job.customerNotes}
+          </p>
+        )}
+      </Card>
 
-          <Card>
-            <CardHeader title={`Checklist · ${done}/${checklist.length}`} />
-            <ul className="divide-y divide-ink-100">
-              {checklist.map((c) => (
-                <li key={c.id} className="flex items-center gap-3 px-5 py-3">
-                  <span
-                    className={`flex size-5 items-center justify-center rounded-md ${
-                      c.done ? "bg-brand-400 text-brand-950" : "ring-1 ring-ink-300"
-                    }`}
-                  >
-                    {c.done && <Check className="size-3.5" strokeWidth={3} />}
-                  </span>
-                  <span className={`text-sm ${c.done ? "text-ink-500 line-through" : "text-ink-800"}`}>{c.label}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
+      <JobChecklist jobId={job.id} items={job.checklistItems} readOnly />
 
-          <Card>
-            <CardHeader title="Photos" />
-            <div className="flex flex-wrap gap-3 p-5">
-              {["from-brand-200 to-brand-400", "from-amber-200 to-amber-400", "from-ink-100 to-ink-200"].map((g, i) => (
-                <div key={i} className={`size-20 rounded-xl bg-gradient-to-br ${g}`} />
-              ))}
-              <button className="flex size-20 flex-col items-center justify-center gap-1 rounded-xl text-ink-400 ring-1 ring-dashed ring-ink-300 hover:text-brand-700 hover:ring-brand-400">
-                <Camera className="size-5" />
-                <span className="text-[10px] font-medium">Add</span>
-              </button>
-            </div>
-          </Card>
-        </div>
+      <JobPhotoGallery photos={photos} title="Photos" />
 
-        <div className="space-y-4">
-          <Card>
-            <CardHeader title="Assigned" />
-            <div className="flex items-center gap-3 p-5">
-              <Avatar initials={job.assigneeInitials} className="size-10" />
-              <div>
-                <p className="text-sm font-semibold text-ink-950">{job.assignee}</p>
-                <p className="text-xs text-ink-500">Field crew</p>
+      <Card className="mt-4">
+        <CardHeader title="Assigned" />
+        <div className="p-5">
+          {assignee ? (
+            <p className="text-sm font-semibold text-ink-900">
+              {assignee.user.name ?? assignee.user.email}
+              <span className="ml-2 text-xs font-normal capitalize text-ink-500">{assignee.role}</span>
+            </p>
+          ) : (
+            <p className="text-sm text-ink-500">No one assigned yet.</p>
+          )}
+          {canAssign && assignable.length > 0 && (
+            <form action={assignJobAction} className="mt-4 flex flex-wrap items-end gap-2">
+              <input type="hidden" name="jobId" value={job.id} />
+              <div className="min-w-[12rem] flex-1">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+                  Assign to
+                </label>
+                <select
+                  name="membershipId"
+                  defaultValue={assignee?.id ?? ""}
+                  className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-ink-200"
+                  required
+                >
+                  <option value="" disabled>
+                    Select team member
+                  </option>
+                  {assignable.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {(m.user.name ?? m.user.email) + ` (${m.role})`}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
-          </Card>
-
-          <Card>
-            <CardHeader title="Payment" action={<StatusBadge status={job.payment} />} />
-            <div className="space-y-2.5 p-5">
-              <p className="text-2xl font-bold text-ink-950">{formatMoney(job.priceCents)}</p>
-              <button className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300">
-                <Send className="size-4" /> Send payment link
+              <button
+                type="submit"
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              >
+                Save assignment
               </button>
-              <button className="w-full rounded-full py-2.5 text-sm font-semibold text-ink-700 ring-1 ring-ink-200 hover:bg-ink-100">
-                Mark as paid
-              </button>
-            </div>
-          </Card>
+            </form>
+          )}
         </div>
-      </div>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader title="Payment" />
+        <div className="space-y-4 p-5">
+          {payment ? (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-2xl font-bold text-ink-950">
+                    {formatMoney(payment.amountCents, payment.currency)}
+                  </p>
+                  <p className="mt-1 flex items-center gap-2 text-sm text-ink-500">
+                    <CreditCard className="size-4" />
+                    {payment.provider === "stripe" ? "Stripe Checkout" : "Manual tracking"}
+                  </p>
+                </div>
+                <StatusBadge status={payment.status} />
+              </div>
+
+              {payment.paymentUrl && payment.status === "pending" && (
+                <a
+                  href={payment.paymentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"
+                >
+                  Open payment link <ExternalLink className="size-3.5" />
+                </a>
+              )}
+
+              {canEdit && payment.status !== "paid" && (
+                <div className="flex flex-wrap gap-2 border-t border-ink-100 pt-4">
+                  {stripeReady && (
+                    <form action={requestJobPaymentLinkAction}>
+                      <input type="hidden" name="jobId" value={job.id} />
+                      <button
+                        type="submit"
+                        className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                      >
+                        {payment.paymentUrl ? "Regenerate payment link" : "Send payment link"}
+                      </button>
+                    </form>
+                  )}
+                  <form action={markJobPaymentPaidAction}>
+                    <input type="hidden" name="jobId" value={job.id} />
+                    <button
+                      type="submit"
+                      className="rounded-full px-4 py-2 text-sm font-semibold text-ink-700 ring-1 ring-ink-200 hover:bg-ink-100"
+                    >
+                      Mark paid (manual)
+                    </button>
+                  </form>
+                  {payment.status === "pending" && (
+                    <form action={markJobPaymentOverdueAction}>
+                      <input type="hidden" name="jobId" value={job.id} />
+                      <button
+                        type="submit"
+                        className="rounded-full px-4 py-2 text-sm font-semibold text-rose-600 ring-1 ring-rose-200 hover:bg-rose-50"
+                      >
+                        Mark overdue
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {!stripeReady && canEdit && payment.status !== "paid" && (
+                <p className="text-xs text-ink-400">
+                  Connect Stripe in{" "}
+                  <Link href="/app/settings/billing" className="font-semibold text-brand-700 hover:underline">
+                    Settings → Billing
+                  </Link>{" "}
+                  to send Checkout links, or use mark paid for cash/check.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-ink-500">No payment record for this job.</p>
+          )}
+        </div>
+      </Card>
     </>
   );
 }

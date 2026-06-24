@@ -5,7 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientEnv, isBackendConfigured } from "@/lib/env";
 import { createWorkspaceForNewUser } from "@/server/services/onboarding";
+import { acceptTeamInvite } from "@/server/services/team-invites";
 import { forgotPasswordSchema, signInSchema, signUpSchema } from "@/server/validators/auth";
+import { inviteSignUpSchema } from "@/server/validators/team";
 
 function authRedirect(path: string, params: Record<string, string>): never {
   const qs = new URLSearchParams(params).toString();
@@ -40,7 +42,11 @@ export async function signInAction(formData: FormData): Promise<void> {
   }
 
   const next = String(formData.get("next") ?? "/app/dashboard");
-  redirect(next.startsWith("/app") ? next : "/app/dashboard");
+  const safeNext =
+    next.startsWith("/app") || next.startsWith("/crew") || next.startsWith("/accept-invite")
+      ? next
+      : "/app/dashboard";
+  redirect(safeNext);
 }
 
 export async function signUpAction(formData: FormData): Promise<void> {
@@ -101,6 +107,60 @@ export async function signUpAction(formData: FormData): Promise<void> {
 
   // New accounts land in onboarding to finish business setup (docs/04 Journey 1).
   redirect("/app/onboarding");
+}
+
+export async function signUpInviteAction(formData: FormData): Promise<void> {
+  requireBackend("/accept-invite");
+  const parsed = inviteSignUpSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    inviteToken: formData.get("inviteToken"),
+  });
+
+  if (!parsed.success) {
+    const msg = Object.values(parsed.error.flatten().fieldErrors).flat()[0] ?? "Validation failed";
+    authRedirect(`/accept-invite/${String(formData.get("inviteToken") ?? "")}`, { error: msg });
+  }
+
+  const { name, email, password, inviteToken } = parsed.data;
+  const supabase = await createClient();
+
+  const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: name } },
+  });
+
+  if (signUpError) {
+    authRedirect(`/accept-invite/${inviteToken}`, { error: signUpError.message });
+  }
+
+  if (!authData.user) {
+    authRedirect(`/accept-invite/${inviteToken}`, { error: "Failed to create account" });
+  }
+
+  if (authData.user.identities?.length === 0) {
+    authRedirect(`/accept-invite/${inviteToken}`, {
+      message: "An account with this email already exists. Sign in to accept the invite.",
+    });
+  }
+
+  if (!authData.session) {
+    authRedirect("/sign-in", {
+      message: "Check your email to confirm your account, then sign in to accept the invite.",
+      next: `/accept-invite/${inviteToken}`,
+    });
+  }
+
+  const accepted = await acceptTeamInvite(inviteToken, authData.user.id, email);
+  if (!accepted.ok) {
+    const admin = createAdminClient();
+    await admin.auth.admin.deleteUser(authData.user.id);
+    authRedirect(`/accept-invite/${inviteToken}`, { error: accepted.error });
+  }
+
+  redirect("/crew");
 }
 
 export async function forgotPasswordAction(formData: FormData): Promise<void> {

@@ -64,6 +64,7 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up") || pathname.startsWith("/forgot-password")) {
     return true;
   }
+  if (pathname.startsWith("/accept-invite/")) return true;
   if (pathname.startsWith("/auth/")) return true;
   if (pathname.startsWith("/api/webhooks/")) return true;
   return false;

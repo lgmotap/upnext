@@ -6,4 +6,4 @@ alwaysApply: true
 - Make small, safe changes. Read existing code before editing; follow existing patterns.
 - Do not invent product behavior when docs are unclear; ask only if a wrong assumption causes major rework.
 - TypeScript everywhere. Keep files focused. Do not add dependencies without explaining why.
-- Before marking work done: typecheck, lint, run relevant tests.
+- Before marking work done: typecheck, lint, **run relevant tests yourself** (smoke scripts, validate.sh) — do not only list manual test steps for the user.

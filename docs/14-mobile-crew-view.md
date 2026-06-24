@@ -9,7 +9,7 @@ Simple, mobile-first view of today's work. Responsive web in MVP (not native).
 Time · customer name · address · service · status · crew-safe customer notes · internal crew notes · checklist · photo upload · complete button.
 
 ## Worker Actions
-View assigned jobs · open details · mark in progress · complete checklist items · upload photos · add completion note · mark complete.
+View assigned jobs · open details · start job · **check in (on-site timer)** · mark in progress · complete checklist items · upload photos · add completion note · mark complete.
 
 ## Permissions
 Worker sees only assigned jobs; cannot see full payment details; cannot edit pricing; cannot manage customers except allowed job notes.

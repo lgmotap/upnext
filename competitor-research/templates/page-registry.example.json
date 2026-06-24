@@ -1,0 +1,237 @@
+{
+  "target": "convertlabs",
+  "displayName": "ConvertLabs",
+  "publicBaseUrl": "https://convertlabs.io",
+  "appBaseUrl": "https://convertlabs.io/get-started",
+  "appLoginUrl": "https://convertlabs.io/get-started",
+  "helpBaseUrl": "https://help.convertlabs.io/en",
+  "crawlDelayMs": 2000,
+  "phases": [
+    {
+      "id": "phase-01-public",
+      "name": "Public marketing & pricing",
+      "description": "No auth. Run first to validate tooling."
+    },
+    {
+      "id": "phase-02-help-center",
+      "name": "Help center documentation",
+      "description": "Public help articles — expand as you discover categories."
+    },
+    {
+      "id": "phase-03-onboarding",
+      "name": "Signup & onboarding",
+      "description": "Requires trial account. Add steps as you discover wizard screens."
+    },
+    {
+      "id": "phase-04-owner-nav",
+      "name": "Owner dashboard navigation",
+      "description": "Requires owner storage state. Expand after manual nav pass."
+    },
+    {
+      "id": "phase-05-bookings",
+      "name": "Bookings & scheduling",
+      "description": "Deep dive — add every tab and modal."
+    },
+    {
+      "id": "phase-06-services",
+      "name": "Services & availability"
+    },
+    {
+      "id": "phase-07-customers",
+      "name": "Customers & CRM"
+    },
+    {
+      "id": "phase-08-team",
+      "name": "Team & permissions"
+    },
+    {
+      "id": "phase-09-payments",
+      "name": "Payments & billing"
+    },
+    {
+      "id": "phase-10-notifications",
+      "name": "Notifications & campaigns"
+    },
+    {
+      "id": "phase-11-website",
+      "name": "Website & booking widget"
+    },
+    {
+      "id": "phase-12-integrations",
+      "name": "Integrations"
+    },
+    {
+      "id": "phase-13-customer-portal",
+      "name": "Customer portal",
+      "description": "Use your trial subdomain — update URLs after setup."
+    },
+    {
+      "id": "phase-15-settings",
+      "name": "Settings exhaustive",
+      "description": "Every settings tab — add sub-routes as discovered."
+    }
+  ],
+  "roles": [
+    {
+      "id": "public",
+      "label": "Anonymous visitor",
+      "storageFile": "roles/public.storage.json"
+    },
+    {
+      "id": "owner",
+      "label": "Business owner (trial)",
+      "storageFile": "roles/owner.storage.json"
+    },
+    {
+      "id": "admin",
+      "label": "Admin account",
+      "storageFile": "roles/admin.storage.json"
+    },
+    {
+      "id": "staff",
+      "label": "Staff / dispatcher",
+      "storageFile": "roles/staff.storage.json"
+    },
+    {
+      "id": "provider",
+      "label": "Service provider (app)",
+      "storageFile": "roles/provider.storage.json"
+    },
+    {
+      "id": "customer-portal",
+      "label": "Customer portal user",
+      "storageFile": "roles/customer-portal.storage.json"
+    }
+  ],
+  "pages": [
+    {
+      "id": "marketing-home",
+      "phase": "phase-01-public",
+      "url": "https://convertlabs.io/",
+      "role": "public",
+      "source": "marketing",
+      "label": "Home",
+      "waitMs": 2000
+    },
+    {
+      "id": "marketing-features",
+      "phase": "phase-01-public",
+      "url": "https://convertlabs.io/features",
+      "role": "public",
+      "source": "marketing",
+      "label": "Features overview"
+    },
+    {
+      "id": "marketing-features-booking",
+      "phase": "phase-01-public",
+      "url": "https://convertlabs.io/features/online-booking",
+      "role": "public",
+      "source": "marketing",
+      "label": "Features — Online booking"
+    },
+    {
+      "id": "marketing-features-mobile",
+      "phase": "phase-01-public",
+      "url": "https://convertlabs.io/features/mobile-app",
+      "role": "public",
+      "source": "marketing",
+      "label": "Features — Mobile app & portals"
+    },
+    {
+      "id": "marketing-pricing",
+      "phase": "phase-01-public",
+      "url": "https://convertlabs.io/pricing",
+      "role": "public",
+      "source": "marketing",
+      "label": "Pricing"
+    },
+    {
+      "id": "marketing-signup-professional",
+      "phase": "phase-01-public",
+      "url": "https://convertlabs.io/signup/professional",
+      "role": "public",
+      "source": "marketing",
+      "label": "Sign up — Professional trial"
+    },
+    {
+      "id": "marketing-signin",
+      "phase": "phase-01-public",
+      "url": "https://convertlabs.io/login",
+      "role": "public",
+      "source": "marketing",
+      "label": "Sign in"
+    },
+    {
+      "id": "help-home",
+      "phase": "phase-02-help-center",
+      "url": "https://help.convertlabs.io/en/",
+      "role": "public",
+      "source": "help-center",
+      "label": "Help center home"
+    },
+    {
+      "id": "help-customer-portal",
+      "phase": "phase-02-help-center",
+      "url": "https://help.convertlabs.io/en/settings/customer-portal",
+      "role": "public",
+      "source": "help-center",
+      "label": "Help — Customer portal"
+    },
+    {
+      "id": "help-service-provider-app",
+      "phase": "phase-02-help-center",
+      "url": "https://help.convertlabs.io/en/service-provider-portal",
+      "role": "public",
+      "source": "help-center",
+      "label": "Help — Service provider app"
+    },
+    {
+      "id": "help-logging-in-app",
+      "phase": "phase-02-help-center",
+      "url": "https://help.convertlabs.io/en/service-provider-portal/logging-in-to-the-app",
+      "role": "public",
+      "source": "help-center",
+      "label": "Help — Provider app login"
+    },
+    {
+      "id": "owner-dashboard-entry",
+      "phase": "phase-04-owner-nav",
+      "url": "https://convertlabs.io/dashboard",
+      "role": "owner",
+      "source": "app",
+      "label": "Dashboard (post-login)",
+      "notes": "Requires npm run research:session -- --role owner first",
+      "waitMs": 3000
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow-onboarding-owner",
+      "phase": "phase-03-onboarding",
+      "role": "owner",
+      "label": "Owner signup → first dashboard",
+      "steps": [
+        {
+          "label": "Sign up form",
+          "url": "https://convertlabs.io/signup/professional"
+        },
+        {
+          "label": "Post-signup wizard — add each step URL as discovered",
+          "waitMs": 2000
+        }
+      ]
+    },
+    {
+      "id": "flow-public-booking",
+      "phase": "phase-05-bookings",
+      "role": "public",
+      "label": "Customer books via public page",
+      "steps": [
+        {
+          "label": "Replace with your trial booking URL after Phase 3",
+          "url": "https://YOUR-SLUG.convertlabs.io"
+        }
+      ]
+    }
+  ]
+}

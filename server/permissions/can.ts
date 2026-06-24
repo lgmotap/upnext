@@ -21,3 +21,25 @@ export function canManageTeam(session: AppSession): boolean {
 export function canManageBilling(session: AppSession): boolean {
   return session.role === "owner";
 }
+
+export function canManageBookings(session: AppSession): boolean {
+  return session.role === "owner" || session.role === "admin" || session.role === "dispatcher";
+}
+
+export function canViewAllJobs(session: AppSession): boolean {
+  return (
+    session.role === "owner" ||
+    session.role === "admin" ||
+    session.role === "dispatcher" ||
+    session.role === "viewer"
+  );
+}
+
+export function canCompleteAssignedJob(session: AppSession): boolean {
+  return (
+    session.role === "owner" ||
+    session.role === "admin" ||
+    session.role === "dispatcher" ||
+    session.role === "worker"
+  );
+}

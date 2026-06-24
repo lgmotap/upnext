@@ -33,13 +33,50 @@ export function serverEnv() {
   return _server;
 }
 
-/** True when DB + Supabase server keys are configured (local dev / Vercel). */
+const PLACEHOLDER = /^(placeholder|changeme|your_|xxx|todo|replace_me)/i;
+
+function isRealSecret(value: string | undefined): boolean {
+  const v = value?.trim().replace(/^["']|["']$/g, "") ?? "";
+  if (v.length < 12) return false;
+  if (PLACEHOLDER.test(v)) return false;
+  return true;
+}
+
+function isRealDatabaseUrl(value: string | undefined): boolean {
+  const v = value?.trim().replace(/^["']|["']$/g, "") ?? "";
+  if (!isRealSecret(v)) return false;
+  try {
+    const url = new URL(v);
+    return url.protocol === "postgresql:" || url.protocol === "postgres:";
+  } catch {
+    return false;
+  }
+}
+
+/** True when DB + Supabase server keys are configured with real (non-placeholder) values. */
 export function isBackendConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY &&
-      process.env.DATABASE_URL &&
-      process.env.DIRECT_URL,
+      isRealSecret(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) &&
+      isRealSecret(process.env.SUPABASE_SERVICE_ROLE_KEY) &&
+      isRealDatabaseUrl(process.env.DATABASE_URL) &&
+      isRealDatabaseUrl(process.env.DIRECT_URL),
   );
+}
+
+/** Human-readable env status for local setup checks (no secret values). */
+export function getBackendConfigStatus(): Record<string, "ok" | "missing" | "placeholder"> {
+  const check = (value: string | undefined, db = false): "ok" | "missing" | "placeholder" => {
+    if (!value?.trim()) return "missing";
+    if (db ? !isRealDatabaseUrl(value) : !isRealSecret(value)) return "placeholder";
+    return "ok";
+  };
+
+  return {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "ok" : "missing",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: check(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+    SUPABASE_SERVICE_ROLE_KEY: check(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    DATABASE_URL: check(process.env.DATABASE_URL, true),
+    DIRECT_URL: check(process.env.DIRECT_URL, true),
+  };
 }

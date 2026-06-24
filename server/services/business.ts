@@ -1,12 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
 import type { BusinessSetupInput } from "@/server/validators/onboarding";
+import type { BusinessSettingsInput } from "@/server/validators/business";
 
-/**
- * Apply onboarding business setup. Updates organization-level settings
- * (timezone, currency) and the public-facing BusinessProfile in one
- * transaction. Caller must have verified org membership + canManageBusiness.
- */
-export async function updateBusinessSetup(organizationId: string, input: BusinessSetupInput) {
+export async function updateBusinessSettings(organizationId: string, input: BusinessSettingsInput) {
   return prisma.$transaction(async (tx) => {
     const organization = await tx.organization.update({
       where: { id: organizationId },
@@ -23,6 +19,7 @@ export async function updateBusinessSetup(organizationId: string, input: Busines
         displayName: input.displayName,
         serviceArea: input.serviceArea || null,
         phone: input.phone || null,
+        email: input.email || null,
         description: input.description || null,
       },
     });
@@ -31,7 +28,12 @@ export async function updateBusinessSetup(organizationId: string, input: Busines
   });
 }
 
-/** The org + public profile for the signed-in user's workspace (onboarding prefill). */
+/** Onboarding uses the same shape without profile email. */
+export async function updateBusinessSetup(organizationId: string, input: BusinessSetupInput) {
+  return updateBusinessSettings(organizationId, { ...input, email: "" });
+}
+
+/** The org + public profile for the signed-in user's workspace. */
 export async function getBusinessSetup(organizationId: string) {
   return prisma.organization.findUnique({
     where: { id: organizationId },

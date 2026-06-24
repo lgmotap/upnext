@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/test-results
 
 # next.js
 /.next/
@@ -41,6 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 data/
+
+# competitor research — captured data stays local only (scripts/templates are committed)
+competitor-research/targets/
+competitor-research/.storage/
 
 # prisma 7 generated client (regenerated via postinstall / db:generate)
 /generated/prisma

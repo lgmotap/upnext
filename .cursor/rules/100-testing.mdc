@@ -1,5 +1,17 @@
 ---
-description: Testing rules
-globs: ["tests/**", "**/*.test.ts", "**/*.spec.ts"]
+description: Testing rules — agent must run tests, not only suggest them
+globs: ["tests/**", "**/*.test.ts", "**/*.spec.ts", "scripts/smoke*.ts", "server/**", "app/**"]
+alwaysApply: true
 ---
-Vitest for unit/integration, Playwright for e2e. Add/update tests with any business-logic change. Cover authorization paths and critical flows (onboarding, booking→job, crew completion, payments). Run scripts/ai/validate.sh before done.
+Vitest for unit/integration, Playwright for e2e. Add/update tests with any business-logic change.
+
+## Agent obligation (required before marking work done)
+- **Run tests yourself** in the terminal — do not tell the user to test unless blocked (missing secrets, manual OAuth, etc.).
+- Minimum for feature work: `npm run db:validate`, relevant smoke script (`npm run smoke:e2e`, `npm run smoke:booking`), and typecheck/lint on touched paths.
+- If Stripe/Resend keys are missing, still run DB smoke + document what could not be exercised.
+- Report exact commands run and pass/fail in the handoff summary.
+
+## Coverage priorities
+Authorization paths and critical flows: onboarding, booking→job, crew completion, payments (manual + Stripe webhook when configured).
+
+Run `scripts/ai/validate.sh` when the full suite is green; otherwise run the closest applicable smoke scripts and fix failures.

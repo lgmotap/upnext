@@ -1,0 +1,8 @@
+# All competitor captures stay on this machine — never commit
+targets/
+.storage/
+*.storage.json
+.credentials.local.json
+.provider-portal.local.json
+.wordpress.local.json
+.customer-portal.local.json
