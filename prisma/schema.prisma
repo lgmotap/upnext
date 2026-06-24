@@ -397,10 +397,14 @@ enum NotificationTemplate {
   new_booking_request
   booking_accepted
   booking_declined
+  booking_rescheduled
   booking_reminder_24h
   booking_reminder_2h
   crew_job_assigned
   job_completed
+  job_rescheduled
+  job_on_the_way
+  job_running_late
   payment_request
   team_invite
 }

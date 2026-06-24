@@ -387,6 +387,159 @@ export async function notifyPaymentRequest(
   });
 }
 
+export async function notifyBookingRescheduled(
+  organizationId: string,
+  bookingRequestId: string,
+): Promise<void> {
+  const booking = await prisma.bookingRequest.findFirst({
+    where: { id: bookingRequestId, organizationId },
+    include: { customer: true, service: true, addons: true },
+  });
+  if (!booking || !booking.customer.email) return;
+
+  const ctx = await getOrgDisplayContext(organizationId);
+  if (!ctx) return;
+
+  const serviceName =
+    booking.addons.length > 0
+      ? `${booking.service.name} + ${booking.addons.map((a) => a.name).join(", ")}`
+      : booking.service.name;
+  const when = formatDisplayDateTime(booking.requestedStartAt, ctx.timeZone);
+  const name = `${booking.customer.firstName} ${booking.customer.lastName}`.trim();
+
+  await sendAndLogEmail({
+    organizationId,
+    to: booking.customer.email,
+    recipientType: "customer",
+    template: "booking_rescheduled",
+    relatedType: "booking_request",
+    relatedId: bookingRequestId,
+    subject: `Appointment updated — ${ctx.businessName}`,
+    text: [
+      `Hi ${name},`,
+      "",
+      `Your booking request with ${ctx.businessName} has been moved.`,
+      "",
+      `Service: ${serviceName}`,
+      `New time: ${when}`,
+      "",
+      contactFooter(ctx.phone, ctx.email),
+    ].join("\n"),
+  });
+}
+
+export async function notifyJobRescheduled(organizationId: string, jobId: string): Promise<void> {
+  const job = await prisma.job.findFirst({
+    where: { id: jobId, organizationId },
+    include: { customer: true },
+  });
+  if (!job || !job.customer.email) return;
+
+  const ctx = await getOrgDisplayContext(organizationId);
+  if (!ctx) return;
+
+  const when = formatDisplayDateTime(job.scheduledStartAt, ctx.timeZone);
+  const name = `${job.customer.firstName} ${job.customer.lastName}`.trim();
+
+  await sendAndLogEmail({
+    organizationId,
+    to: job.customer.email,
+    recipientType: "customer",
+    template: "job_rescheduled",
+    relatedType: "job",
+    relatedId: jobId,
+    subject: `Appointment rescheduled — ${ctx.businessName}`,
+    text: [
+      `Hi ${name},`,
+      "",
+      `Your ${job.title} appointment with ${ctx.businessName} has been rescheduled.`,
+      "",
+      `New time: ${when}`,
+      "",
+      contactFooter(ctx.phone, ctx.email),
+    ].join("\n"),
+  });
+}
+
+export async function notifyJobOnTheWay(organizationId: string, jobId: string): Promise<void> {
+  const job = await prisma.job.findFirst({
+    where: { id: jobId, organizationId },
+    include: { customer: true },
+  });
+  if (!job || !job.customer.email) return;
+
+  const already = await wasNotificationSent({
+    organizationId,
+    template: "job_on_the_way",
+    relatedId: jobId,
+    recipientEmail: job.customer.email,
+  });
+  if (already) return;
+
+  const ctx = await getOrgDisplayContext(organizationId);
+  if (!ctx) return;
+
+  const when = formatDisplayDateTime(job.scheduledStartAt, ctx.timeZone);
+  const name = `${job.customer.firstName} ${job.customer.lastName}`.trim();
+
+  await sendAndLogEmail({
+    organizationId,
+    to: job.customer.email,
+    recipientType: "customer",
+    template: "job_on_the_way",
+    relatedType: "job",
+    relatedId: jobId,
+    subject: `On the way — ${ctx.businessName}`,
+    text: [
+      `Hi ${name},`,
+      "",
+      `Your ${ctx.businessName} crew is on the way for your ${job.title} appointment (${when}).`,
+      "",
+      contactFooter(ctx.phone, ctx.email),
+    ].join("\n"),
+  });
+}
+
+export async function notifyJobRunningLate(
+  organizationId: string,
+  jobId: string,
+  etaMinutes?: number,
+): Promise<void> {
+  const job = await prisma.job.findFirst({
+    where: { id: jobId, organizationId },
+    include: { customer: true },
+  });
+  if (!job || !job.customer.email) return;
+
+  const ctx = await getOrgDisplayContext(organizationId);
+  if (!ctx) return;
+
+  const when = formatDisplayDateTime(job.scheduledStartAt, ctx.timeZone);
+  const name = `${job.customer.firstName} ${job.customer.lastName}`.trim();
+  const etaLine = etaMinutes
+    ? `We expect to arrive in about ${etaMinutes} minutes.`
+    : "We are running a bit behind schedule and will update you soon.";
+
+  await sendAndLogEmail({
+    organizationId,
+    to: job.customer.email,
+    recipientType: "customer",
+    template: "job_running_late",
+    relatedType: "job",
+    relatedId: jobId,
+    subject: `Running late — ${ctx.businessName}`,
+    text: [
+      `Hi ${name},`,
+      "",
+      `We're running late for your ${job.title} appointment scheduled for ${when}.`,
+      "",
+      etaLine,
+      "",
+      contactFooter(ctx.phone, ctx.email),
+    ].join("\n"),
+  });
+}
+
 export async function sendJobReminderIfDue(
   organizationId: string,
   jobId: string,
