@@ -102,22 +102,24 @@ Automated: `npm run smoke:launch` (onboarding → book → crew complete → pay
 
 Vercel Production backend env verified ✓ (`VERCEL_ENV_TARGET=production npm run check:env:vercel`). Legal: `/privacy` · `/terms`.
 
-## Sprint marathon (autonomous mode)
+## Sprint marathon — **PAUSED** (user request)
 
-Paste to start or resume without "should I continue?" prompts:
+Auto-continue hook **disabled** in `.cursor/hooks.json` (2026-06-24). The agent will no longer auto-resume on stop.
+
+**Resume manually** when ready (paste into chat):
 
 ```
 Run the UpNext sprint marathon per .cursor/rules/090-autonomous-sprint-execution.mdc
-and upnext-sprint-marathon skill. Start at the first unchecked item in sprint 07.
-Do not ask to continue. Do not commit. Fix tests yourself. Stop only on documented
-blockers (missing secrets, ambiguous product). Continue through sprint 08 and
-launch-checklist until done or blocked.
+and upnext-sprint-marathon skill. Read tasks/mvp-traceability.md and HANDOFF.md,
+find the first unchecked - [ ] item in launch-checklist, implement via upnext-feature-loop,
+run smoke tests, mark [x], update HANDOFF.md. Do not commit unless asked.
 ```
+
+To re-enable auto-continue, restore the `stop` hook in `.cursor/hooks.json` (see git history or `.cursor/hooks/sprint-marathon-continue.sh`).
 
 - **Rule:** `.cursor/rules/090-autonomous-sprint-execution.mdc`
 - **Skill:** `.claude/skills/upnext-sprint-marathon/SKILL.md`
-- **Hook:** `.cursor/hooks/sprint-marathon-continue.sh` (auto-resume on agent stop; `loop_limit: 50`)
-- Restart Cursor after first hook install; verify in Settings → Hooks.
+- **Remaining:** Resend prod domain (`tasks/launch-checklist.md` line 17) — DNS verify `upnext.app` in Resend, then `VERCEL_ENV_TARGET=production npm run check:resend:production`
 
 **PO decision (2026-06-24):** Competitor research is done. Run `tasks/mvp-traceability.md` — not more crawls — before coding.
 

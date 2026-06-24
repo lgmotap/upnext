@@ -34,7 +34,8 @@ launch-checklist until done or blocked.
 Open the next sprint file and repeat until launch checklist core items are done or a **documented blocker** stops you.
 
 ## Current resume (2026-06-24)
-- **Launch checklist** — 1 item left: Resend prod domain (`tasks/launch-checklist.md`).
+- **PAUSED** — user disabled auto-continue hook. Resume manually via kickoff prompt.
+- **Launch checklist** — 1 item left: Resend prod domain (`tasks/launch-checklist.md` line 17).
 
 ## Blocker format (only valid stop)
 ```
