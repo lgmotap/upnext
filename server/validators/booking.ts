@@ -50,6 +50,7 @@ export const manualBookingSchema = z
     postalCode: z.string().max(20).trim().optional().or(z.literal("")),
     customerNotes: z.string().max(2000).trim().optional().or(z.literal("")),
     assignMembershipId: z.string().optional().or(z.literal("")),
+    frequency: z.enum(["one_time", "weekly", "biweekly", "monthly"]).default("one_time"),
   })
   .superRefine((data, ctx) => {
     const hasExisting = Boolean(data.customerId?.trim());

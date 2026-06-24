@@ -10,6 +10,7 @@ const steps = [
   "scripts/smoke-launch-crew.ts",
   "scripts/smoke-launch-payment.ts",
   "scripts/smoke-stripe-payments.ts",
+  "scripts/smoke-global-search.ts",
 ];
 
 console.log("▶ Launch checklist smoke suite\n");

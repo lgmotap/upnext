@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, CalendarClock, MapPin, Clock, Mail, Phone, Briefcase } from "lucide-react";
+import { ArrowLeft, CalendarClock, MapPin, Clock, Mail, Phone, Briefcase, Repeat } from "lucide-react";
 import { Card, CardHeader, AppButton } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
+import { frequencyLabel } from "@/lib/booking/frequency";
 import { formatDisplayDateTime, formatTimeHmInTimezone, formatYmdInTimezone } from "@/lib/datetime/timezone";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
 import { formatMoney } from "@/lib/money/format";
@@ -124,6 +125,9 @@ export default async function BookingDetailPage({
                 <Detail icon={CalendarClock} label="Requested date" value={schedule.date} />
                 <Detail icon={Clock} label="Requested time" value={schedule.time} />
                 <Detail icon={Clock} label="Service" value={booking.service.name} />
+                {booking.frequency && booking.frequency !== "one_time" && (
+                  <Detail icon={Repeat} label="Frequency" value={frequencyLabel(booking.frequency)} />
+                )}
                 <Detail
                   icon={Briefcase}
                   label="Source"

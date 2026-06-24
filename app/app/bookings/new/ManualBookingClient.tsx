@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, Clock, Plus, UserPlus } from "lucide-react";
+import { Check, Clock, Plus, UserPlus, Repeat } from "lucide-react";
 import { BookingMonthCalendar } from "@/components/booking/BookingMonthCalendar";
+import { BOOKING_FREQUENCY_OPTIONS } from "@/lib/booking/frequency";
 import { formatMoney } from "@/lib/money/format";
 import { monthKeyFromYmd, type BookableDay } from "@/lib/availability/calendar-ui";
 import { submitManualBookingAction } from "@/server/actions/manual-booking";
@@ -10,6 +11,7 @@ import {
   fetchManualAvailableDaysAction,
   fetchManualSlotsForDayAction,
 } from "@/server/actions/manual-booking-slots";
+import type { BookingFrequency } from "@/generated/prisma/client";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
@@ -79,6 +81,7 @@ export function ManualBookingClient({
       : (customers[0]?.id ?? ""),
   );
   const [serviceId, setServiceId] = useState(initialServiceId);
+  const [frequency, setFrequency] = useState<BookingFrequency>("one_time");
   const [addonIds, setAddonIds] = useState<string[]>([]);
   const [days, setDays] = useState<BookableDay[]>(initialDays);
   const [slots, setSlots] = useState(initialSlots);
@@ -157,6 +160,7 @@ export function ManualBookingClient({
       <input type="hidden" name="serviceId" value={serviceId} />
       <input type="hidden" name="date" value={date} />
       <input type="hidden" name="time" value={time} />
+      <input type="hidden" name="frequency" value={frequency} />
       {customerMode === "existing" && customerId ? (
         <input type="hidden" name="customerId" value={customerId} />
       ) : null}
@@ -276,7 +280,30 @@ export function ManualBookingClient({
         </p>
       </Section>
 
-      <Section title="Date & time" step="3">
+      <Section title="How often?" step="3">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {BOOKING_FREQUENCY_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setFrequency(opt.value)}
+              className={`rounded-2xl border p-3 text-left transition ${
+                frequency === opt.value
+                  ? "border-brand-400 bg-brand-50 ring-1 ring-brand-400"
+                  : "border-ink-200 bg-white hover:border-brand-300"
+              }`}
+            >
+              <p className="flex items-center gap-1.5 font-semibold text-ink-950">
+                <Repeat className="size-3.5 text-brand-600" />
+                {opt.label}
+              </p>
+              <p className="mt-0.5 text-xs text-ink-500">{opt.description}</p>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Date & time" step="4">
         {days.length === 0 ? (
           <p className="text-sm text-ink-500">No available slots for this service. Check availability settings.</p>
         ) : (
@@ -313,7 +340,7 @@ export function ManualBookingClient({
         )}
       </Section>
 
-      <Section title="Notes & assignment" step="4">
+      <Section title="Notes & assignment" step="5">
         <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
           Customer notes
         </label>

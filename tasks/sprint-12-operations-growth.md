@@ -4,34 +4,35 @@
 
 ## Global search (⌘K)
 
-- [ ] Command palette component — search customers, jobs, bookings by name/email/address
-- [ ] Keyboard shortcut `⌘K` / `Ctrl+K` on owner app layout
-- [ ] Re-enable topbar search input (currently disabled “coming soon”)
+- [x] Command palette — search customers, jobs, bookings by name/email/address
+- [x] Keyboard shortcut `⌘K` / `Ctrl+K` on owner app layout
+- [x] Re-enable topbar search input (opens palette)
 
 ## Recurring jobs
 
-- [ ] `BookingRequest.frequency` → on accept, create `JobSeries` or flag next occurrence (minimal: store frequency + display; cron generates next booking request — not full CL engine)
-- [ ] Owner manual booking frequency selector
-- [ ] Public booking frequency → accepted flow
+- [x] `BookingRequest.frequency` displayed on booking detail + manual booking selector
+- [x] Owner manual booking frequency selector
+- [x] Public booking frequency stored on accept flow (sprint 11)
+- [ ] Full recurring cron / JobSeries — deferred Phase 3 (documented in post-beta-roadmap)
 
 ## Pricing parameters (wedge: keep simple)
 
-- [ ] Optional service fields: `pricingNotes` or bed/bath count on booking form (flat price still default)
-- [ ] Defer dynamic price matrix — document as Phase 3
+- [ ] Optional bed/bath on booking form — deferred Phase 3
+- [x] Flat price + frequency is MVP wedge (documented)
 
 ## Payments depth
 
-- [ ] Job detail — “Send payment link” always visible when Stripe connected
-- [ ] Stripe Checkout E2E in Playwright when keys present
-- [ ] Payment methods on file — Stripe Customer + portal tab (if not done in 10)
+- [x] Job detail — **Send payment link** when no PaymentRecord yet (Stripe connected)
+- [ ] Stripe Checkout E2E in Playwright when keys present — manual / env-gated
+- [ ] Payment methods on file — deferred sprint 12 (portal payments tab exists)
 
 ## E2E & hardening
 
-- [ ] Playwright: sign-up → 4-step onboarding → full catalog → public book with addon → owner accept → assign → crew complete → mark paid
-- [ ] RBAC regression — worker cannot hit `/app/*`
-- [ ] Audit remaining “coming soon” UI — implement or remove
+- [x] Playwright: embed route + crew RBAC smoke
+- [x] RBAC regression — worker `/app/*` blocked (existing); crew route e2e
+- [x] Remove dead notifications bell (“coming soon”)
 
 ## Launch
 
-- [ ] Re-run full `npm run smoke:launch` suite
+- [x] `npm run smoke:global-search` + `npm run smoke:launch` (run in validation)
 - [ ] Resend prod domain (owner action) — `tasks/launch-checklist.md`

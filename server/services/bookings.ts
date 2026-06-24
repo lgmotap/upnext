@@ -13,7 +13,7 @@ import {
   type AvailableSlot,
 } from "@/lib/availability/slots";
 import type { PublicBookingInput, ManualBookingInput } from "@/server/validators/booking";
-import { publicBookingSchema } from "@/server/validators/booking";
+import { publicBookingSchema, manualBookingSchema } from "@/server/validators/booking";
 import {
   findCustomerByEmail,
   createCustomerWithAddress,
@@ -231,7 +231,8 @@ export async function getOrgSlotsForDay(
   return getSlotsForDate(loaded.slotInput, dateYmd);
 }
 
-export async function createManualBooking(organizationId: string, input: ManualBookingInput) {
+export async function createManualBooking(organizationId: string, raw: ManualBookingInput) {
+  const input = manualBookingSchema.parse(raw);
   const loaded = await loadOrgSlotContext(organizationId, input.serviceId, input.addonServiceIds);
   if (!loaded) return { ok: false as const, error: "Service not found" };
 
@@ -283,6 +284,7 @@ export async function createManualBooking(organizationId: string, input: ManualB
     requestedEndAt: slot.endAt,
     customerNotes: input.customerNotes || null,
     source: "manual",
+    frequency: input.frequency,
     addons: loaded.addons.map((a) => ({
       serviceId: a.id,
       name: a.name,

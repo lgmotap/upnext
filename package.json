@@ -33,6 +33,7 @@
     "smoke:portal-links": "tsx scripts/smoke-portal-links.ts",
     "smoke:customer-portal": "tsx scripts/smoke-customer-portal.ts",
     "smoke:public-booking-parity": "tsx scripts/smoke-public-booking-parity.ts",
+    "smoke:global-search": "tsx scripts/smoke-global-search.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "smoke:stripe": "tsx scripts/smoke-stripe-payments.ts",

@@ -38,4 +38,16 @@ test.describe("Product shell", () => {
     await page.goto("/app/dashboard");
     await expect(page).toHaveURL(/sign-in/);
   });
+
+  test("crew route does not redirect to owner sign-in", async ({ page }) => {
+    await page.goto("/crew");
+    await expect(page).not.toHaveURL(/\/app\//);
+  });
+});
+
+test.describe("Public booking embed", () => {
+  test("embed route loads for smoke-test-co", async ({ page }) => {
+    await page.goto("/book/smoke-test-co/embed");
+    await expect(page.getByText(/book online|choose your service/i).first()).toBeVisible();
+  });
 });

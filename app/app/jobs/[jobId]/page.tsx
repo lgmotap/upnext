@@ -268,7 +268,31 @@ export default async function JobDetailPage({
               )}
             </>
           ) : (
-            <p className="text-sm text-ink-500">No payment record for this job.</p>
+            <div className="space-y-3">
+              <p className="text-sm text-ink-500">
+                {formatMoney(job.priceCents, job.currency)} · not yet invoiced
+              </p>
+              {canEdit && stripeReady && (
+                <form action={requestJobPaymentLinkAction}>
+                  <input type="hidden" name="jobId" value={job.id} />
+                  <button
+                    type="submit"
+                    className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                  >
+                    Send payment link
+                  </button>
+                </form>
+              )}
+              {canEdit && !stripeReady && (
+                <p className="text-xs text-ink-400">
+                  Connect Stripe in{" "}
+                  <Link href="/app/settings/billing" className="font-semibold text-brand-700 hover:underline">
+                    Settings → Billing
+                  </Link>{" "}
+                  to send Checkout links.
+                </p>
+              )}
+            </div>
           )}
         </div>
       </Card>

@@ -73,6 +73,7 @@ Accept booking → job; jobs list/detail; calendar week view; customers CRM.
 npm run smoke:booking   # DB + slot engine check
 npm run smoke:e2e       # full seed → book → accept → job
 npm run smoke:manual-booking  # owner manual booking → job (source=manual)
+npm run smoke:global-search     # ⌘K search service smoke
 npm run smoke:launch          # full launch checklist suite
 npm run smoke:launch-onboarding
 npm run smoke:launch-crew
@@ -139,12 +140,21 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 | Team | Invite submit loading state |
 | Settings | Copy booking link button |
 
-**Still P1 vs ConvertLabs:** recurring bookings, pricing parameters, customer portal, ⌘K search.
+**Still P1 vs ConvertLabs:** recurring engine (cron), pricing parameters.
 
 **Batch 3 (2026-06-25):** Job + pending booking reschedule (calendar modal, conflict-aware slots, customer email). Crew **On the way** / **Running late** with customer notifications. `npm run smoke:scheduling`.
 
 **Batch 4 (2026-06-25):** Full **industry service catalogs** — onboarding seeds all primary services + add-ons per trade (e.g. residential cleaning: 4 services + 9 CL-style extras). Services page grouped; **Load suggested catalog** for existing orgs. `npm run smoke:industry-catalog`.
 
-**Sprint planning (2026-06-25):** `tasks/post-beta-roadmap.md` — sprints **09–12**. Sprint 09–10 done. **Sprint 11 done** — booking frequency, `/embed`, query prefill, confirmation ICS + portal link. `npm run smoke:public-booking-parity`.
+**Sprint planning (2026-06-25):** `tasks/post-beta-roadmap.md` — sprints **09–12** complete.
 
-**Validation:** `npm run typecheck` ✓ · `npm run smoke:public-booking-parity` ✓ · `npm run smoke:e2e` ✓
+| Sprint | Summary |
+|--------|---------|
+| 09 | BookingLinkCard, Settings → Portals, `smoke:portal-links` |
+| 10 | Customer portal v1 (`/my/[slug]`), magic link, `smoke:customer-portal` |
+| 11 | Booking frequency, `/embed`, query prefill, ICS, `smoke:public-booking-parity` |
+| 12 | ⌘K global search, manual booking frequency, job payment link, `smoke:global-search` |
+
+**Deferred (Phase 3):** recurring cron/JobSeries, bed/bath pricing params, Stripe Checkout Playwright E2E.
+
+**Validation:** `npm run typecheck` ✓ · `npm run smoke:global-search` ✓ · `npm run smoke:manual-booking` ✓

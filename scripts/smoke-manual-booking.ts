@@ -42,6 +42,7 @@ async function main() {
     addonServiceIds: [],
     date: days[0].date,
     time: slots[0].time,
+    frequency: "one_time",
     firstName: "Manual",
     lastName: "Smoke",
     email: `manual-smoke+${Date.now()}@upnext.local`,
@@ -64,6 +65,7 @@ async function main() {
   });
   if (!booking) throw new Error("Booking not found");
   if (booking.source !== "manual") throw new Error(`Expected source=manual, got ${booking.source}`);
+  if (booking.frequency !== "one_time") throw new Error(`Expected frequency=one_time, got ${booking.frequency}`);
   if (booking.status !== "accepted") throw new Error(`Expected accepted, got ${booking.status}`);
   if (!booking.job || booking.job.status !== "scheduled") throw new Error("Job not scheduled");
 
