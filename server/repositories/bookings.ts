@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import type { BookingFrequency, BookingRequestStatus } from "@/generated/prisma/client";
+import type { BookingFrequency, BookingRequestStatus, PricingParameterType } from "@/generated/prisma/client";
 
 export function listBookingRequestsForOrg(organizationId: string, status?: BookingRequestStatus) {
   return prisma.bookingRequest.findMany({
@@ -9,6 +9,7 @@ export function listBookingRequestsForOrg(organizationId: string, status?: Booki
       customer: { include: { addresses: { where: { isDefault: true }, take: 1 } } },
       service: true,
       addons: true,
+      parameters: true,
     },
   });
 }
@@ -24,7 +25,8 @@ export function getBookingRequestForOrg(organizationId: string, bookingRequestId
       },
       service: true,
       addons: true,
-      job: { select: { id: true, status: true } },
+      parameters: true,
+      job: { select: { id: true, status: true, jobSeriesId: true } },
     },
   });
 }
@@ -51,8 +53,9 @@ export function createBookingRequest(data: {
   requestedStartAt: Date;
   requestedEndAt: Date;
   customerNotes?: string | null;
-  source?: "public_booking" | "manual";
+  source?: "public_booking" | "manual" | "recurring";
   frequency?: BookingFrequency;
+  parameters?: Array<{ parameterType: PricingParameterType; units: number }>;
   addons?: Array<{
     serviceId: string;
     name: string;
@@ -70,6 +73,16 @@ export function createBookingRequest(data: {
       customerNotes: data.customerNotes || null,
       source: data.source ?? "public_booking",
       frequency: data.frequency ?? "one_time",
+      ...(data.parameters?.length
+        ? {
+            parameters: {
+              create: data.parameters.map((p) => ({
+                parameterType: p.parameterType,
+                units: p.units,
+              })),
+            },
+          }
+        : {}),
       ...(data.addons?.length
         ? {
             addons: {

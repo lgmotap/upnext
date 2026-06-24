@@ -13,10 +13,46 @@ import {
 } from "@/server/services/services";
 import { replaceChecklistTemplateForService } from "@/server/services/checklists";
 import { seedIndustryCatalog } from "@/server/services/industry-catalog";
+import { replaceServicePricingParameters } from "@/server/repositories/pricing-parameters";
 import { prisma } from "@/lib/db/prisma";
+import type { PricingParameterConfig } from "@/lib/pricing/parameters";
 
 function redirectWithError(path: string, error: string): never {
   redirect(`${path}?error=${encodeURIComponent(error)}`);
+}
+
+function parsePricingParametersFromForm(formData: FormData): PricingParameterConfig[] {
+  if (formData.get("enableBedBathPricing") !== "on") return [];
+  if (formData.get("isAddon") === "on") return [];
+
+  const bedroomUnit = Math.round(Number(formData.get("bedroomUnitPrice")) * 100);
+  const bathroomUnit = Math.round(Number(formData.get("bathroomUnitPrice")) * 100);
+  const bedroomIncluded = Number(formData.get("bedroomIncluded"));
+  const bathroomIncluded = Number(formData.get("bathroomIncluded"));
+
+  if (
+    !Number.isFinite(bedroomUnit) ||
+    !Number.isFinite(bathroomUnit) ||
+    !Number.isInteger(bedroomIncluded) ||
+    !Number.isInteger(bathroomIncluded)
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      parameterType: "bedrooms",
+      unitPriceCents: Math.max(0, bedroomUnit),
+      includedUnits: Math.max(0, bedroomIncluded),
+      maxUnits: 10,
+    },
+    {
+      parameterType: "bathrooms",
+      unitPriceCents: Math.max(0, bathroomUnit),
+      includedUnits: Math.max(0, bathroomIncluded),
+      maxUnits: 8,
+    },
+  ];
 }
 
 export async function createServiceAction(formData: FormData): Promise<void> {

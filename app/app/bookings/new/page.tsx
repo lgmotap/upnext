@@ -4,10 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { Card, PageHeader } from "@/components/app/ui";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
-import {
-  listActivePrimaryServicesForOrg,
-  listActiveAddonServicesForOrg,
-} from "@/server/repositories/services";
+import { listActivePrimaryServicesForOrg, listActiveAddonServicesForOrg } from "@/server/repositories/services";
+import { listPricingParametersForServices } from "@/server/repositories/pricing-parameters";
 import { listCustomersForOrg } from "@/server/repositories/customers";
 import { getAssignableMembers } from "@/server/repositories/team";
 import { getOrgAvailableDays, getOrgSlotsForDay } from "@/server/services/bookings";
@@ -44,6 +42,30 @@ export default async function NewManualBookingPage({
     listCustomersForOrg(orgId),
     getAssignableMembers(orgId),
   ]);
+
+  const serviceIds = [...primaryServices, ...addonServices].map((s) => s.id);
+  const paramRows = await listPricingParametersForServices(serviceIds);
+  const paramsByService = new Map(
+    serviceIds.map((id) => [id, [] as { parameterType: "bedrooms" | "bathrooms"; unitPriceCents: number; includedUnits: number; maxUnits: number }[]]),
+  );
+  for (const row of paramRows) {
+    paramsByService.get(row.serviceId)?.push({
+      parameterType: row.parameterType,
+      unitPriceCents: row.unitPriceCents,
+      includedUnits: row.includedUnits,
+      maxUnits: row.maxUnits,
+    });
+  }
+
+  const mapServiceOption = (s: (typeof primaryServices)[number]) => ({
+    id: s.id,
+    name: s.name,
+    durationMinutes: s.durationMinutes,
+    basePriceCents: s.basePriceCents,
+    currency: s.currency,
+    description: s.description,
+    pricingParameters: paramsByService.get(s.id) ?? [],
+  });
 
   const timeZone = org?.timezone ?? "America/New_York";
   const initialServiceId = primaryServices[0]?.id ?? "";
@@ -117,22 +139,8 @@ export default async function NewManualBookingPage({
       <Card className="p-4 sm:p-6">
         <ManualBookingClient
           timeZone={timeZone}
-          primaryServices={primaryServices.map((s) => ({
-            id: s.id,
-            name: s.name,
-            durationMinutes: s.durationMinutes,
-            basePriceCents: s.basePriceCents,
-            currency: s.currency,
-            description: s.description,
-          }))}
-          addonServices={addonServices.map((s) => ({
-            id: s.id,
-            name: s.name,
-            durationMinutes: s.durationMinutes,
-            basePriceCents: s.basePriceCents,
-            currency: s.currency,
-            description: s.description,
-          }))}
+          primaryServices={primaryServices.map(mapServiceOption)}
+          addonServices={addonServices.map(mapServiceOption)}
           customers={customerOptions}
           assignableMembers={memberOptions}
           initialDays={initialDays}

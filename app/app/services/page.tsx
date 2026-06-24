@@ -9,6 +9,7 @@ import { getAppSession } from "@/server/permissions/session";
 import { canManageServices } from "@/server/permissions/can";
 import { listServicesForOrg } from "@/server/repositories/services";
 import { listChecklistTemplateForService } from "@/server/repositories/checklists";
+import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
 import { toggleServiceAction, seedSuggestedCatalogAction } from "@/server/actions/services";
 import { prisma } from "@/lib/db/prisma";
 import { ServiceForm } from "./ServiceForm";
@@ -90,6 +91,9 @@ export default async function ServicesPage({
         .map((item) => item.label)
         .join("\n")
     : "";
+  const editingPricingParams = editing
+    ? await listPricingParametersForService(editing.id)
+    : [];
 
   const businessType = profile?.businessType ?? "";
   const catalog = businessType ? catalogStats(businessType) : null;
@@ -149,7 +153,16 @@ export default async function ServicesPage({
       {showNew && canEdit && (
         <Card className="mb-6 p-5">
           <h2 className="mb-4 text-sm font-bold text-ink-950">{editing ? "Edit service" : "New service"}</h2>
-          <ServiceForm service={editing ?? undefined} checklistItems={editingChecklist} />
+          <ServiceForm
+            service={editing ?? undefined}
+            checklistItems={editingChecklist}
+            pricingParameters={editingPricingParams.map((p) => ({
+              parameterType: p.parameterType,
+              unitPriceCents: p.unitPriceCents,
+              includedUnits: p.includedUnits,
+              maxUnits: p.maxUnits,
+            }))}
+          />
         </Card>
       )}
 

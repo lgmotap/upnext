@@ -11,7 +11,13 @@ import {
   fetchManualAvailableDaysAction,
   fetchManualSlotsForDayAction,
 } from "@/server/actions/manual-booking-slots";
-import type { BookingFrequency } from "@/generated/prisma/client";
+import type { BookingFrequency, PricingParameterType } from "@/generated/prisma/client";
+import { PricingParametersFields } from "@/components/booking/PricingParametersFields";
+import {
+  bookingPriceCents,
+  defaultParameterValues,
+  type PricingParameterConfig,
+} from "@/lib/pricing/parameters";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
@@ -23,6 +29,7 @@ type ServiceOption = {
   basePriceCents: number;
   currency: string;
   description: string | null;
+  pricingParameters: PricingParameterConfig[];
 };
 
 type CustomerOption = {
@@ -40,9 +47,15 @@ type MemberOption = {
 
 type SlotOption = { date: string; time: string; label: string };
 
-function computeTotals(primary: ServiceOption | undefined, addons: ServiceOption[]) {
+function computeTotals(
+  primary: ServiceOption | undefined,
+  addons: ServiceOption[],
+  paramConfigs: PricingParameterConfig[],
+  paramValues: Partial<Record<PricingParameterType, number>>,
+) {
   if (!primary) return { priceCents: 0, durationMinutes: 0, currency: "USD" };
-  const priceCents = primary.basePriceCents + addons.reduce((s, a) => s + a.basePriceCents, 0);
+  const addonTotal = addons.reduce((s, a) => s + a.basePriceCents, 0);
+  const priceCents = bookingPriceCents(primary.basePriceCents, addonTotal, paramConfigs, paramValues);
   const durationMinutes = primary.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
   return { priceCents, durationMinutes, currency: primary.currency };
 }
@@ -96,10 +109,18 @@ export function ManualBookingClient({
 
   const selectedPrimary = primaryServices.find((s) => s.id === serviceId);
   const selectedAddons = addonServices.filter((a) => addonIds.includes(a.id));
-  const totals = useMemo(
-    () => computeTotals(selectedPrimary, selectedAddons),
-    [selectedPrimary, selectedAddons],
+  const paramConfigs = selectedPrimary?.pricingParameters ?? [];
+  const [paramValues, setParamValues] = useState<Record<PricingParameterType, number>>(() =>
+    defaultParameterValues(paramConfigs) as Record<PricingParameterType, number>,
   );
+  const totals = useMemo(
+    () => computeTotals(selectedPrimary, selectedAddons, paramConfigs, paramValues),
+    [selectedPrimary, selectedAddons, paramConfigs, paramValues],
+  );
+
+  useEffect(() => {
+    setParamValues(defaultParameterValues(paramConfigs) as Record<PricingParameterType, number>);
+  }, [serviceId, paramConfigs.length]);
 
   useEffect(() => {
     if (!serviceId) return;
@@ -268,6 +289,17 @@ export function ManualBookingClient({
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {paramConfigs.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-sm font-medium text-ink-700">Home size</p>
+            <PricingParametersFields
+              configs={paramConfigs}
+              values={paramValues}
+              onChange={(type, units) => setParamValues((prev) => ({ ...prev, [type]: units }))}
+            />
           </div>
         )}
 

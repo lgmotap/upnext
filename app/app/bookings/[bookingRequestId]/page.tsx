@@ -7,6 +7,8 @@ import { frequencyLabel } from "@/lib/booking/frequency";
 import { formatDisplayDateTime, formatTimeHmInTimezone, formatYmdInTimezone } from "@/lib/datetime/timezone";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
 import { formatMoney } from "@/lib/money/format";
+import { bookingPriceCents, PRICING_PARAMETER_LABELS } from "@/lib/pricing/parameters";
+import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { getBookingRequestForOrg } from "@/server/repositories/bookings";
@@ -46,7 +48,30 @@ export default async function BookingDetailPage({
   const submitted = formatDisplayDateTime(booking.createdAt, timeZone);
   const schedule = formatJobSchedule(booking.requestedStartAt, booking.requestedEndAt, timeZone);
   const addonTotal = booking.addons.reduce((sum, a) => sum + a.priceCents, 0);
-  const priceCents = booking.service.basePriceCents + addonTotal;
+  const paramConfigs = await listPricingParametersForService(booking.serviceId);
+  const paramValues = Object.fromEntries(booking.parameters.map((p) => [p.parameterType, p.units]));
+  const priceCents = bookingPriceCents(
+    booking.service.basePriceCents,
+    addonTotal,
+    paramConfigs,
+    paramValues,
+  );
+
+  let recurringSeries: { id: string; nextOccurrenceAt: Date; status: string } | null = null;
+  if (booking.job) {
+    if (booking.job.jobSeriesId) {
+      recurringSeries = await prisma.jobSeries.findFirst({
+        where: { id: booking.job.jobSeriesId, organizationId: session.organizationId },
+        select: { id: true, nextOccurrenceAt: true, status: true },
+      });
+    } else if (booking.frequency !== "one_time") {
+      recurringSeries = await prisma.jobSeries.findFirst({
+        where: { anchorJobId: booking.job.id, organizationId: session.organizationId },
+        select: { id: true, nextOccurrenceAt: true, status: true },
+      });
+    }
+  }
+
   const canRespond = booking.status === "pending" && canManageBookings(session);
 
   let reschedule:
@@ -128,6 +153,13 @@ export default async function BookingDetailPage({
                 {booking.frequency && booking.frequency !== "one_time" && (
                   <Detail icon={Repeat} label="Frequency" value={frequencyLabel(booking.frequency)} />
                 )}
+                {recurringSeries && recurringSeries.status === "active" && (
+                  <Detail
+                    icon={Repeat}
+                    label="Next recurring visit"
+                    value={formatDisplayDateTime(recurringSeries.nextOccurrenceAt, timeZone)}
+                  />
+                )}
                 <Detail
                   icon={Briefcase}
                   label="Source"
@@ -148,6 +180,24 @@ export default async function BookingDetailPage({
                         <span className="text-ink-800">{addon.name}</span>
                         <span className="font-medium text-ink-600">
                           {formatMoney(addon.priceCents, booking.service.currency)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {booking.parameters.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Home size</p>
+                  <ul className="space-y-1.5">
+                    {booking.parameters.map((p) => (
+                      <li
+                        key={p.id}
+                        className="flex items-center justify-between rounded-lg bg-ink-50 px-3 py-2 text-sm"
+                      >
+                        <span className="text-ink-800">
+                          {PRICING_PARAMETER_LABELS[p.parameterType]}: {p.units}
                         </span>
                       </li>
                     ))}

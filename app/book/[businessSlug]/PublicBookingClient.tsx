@@ -12,24 +12,37 @@ import {
   fetchSlotsForDayAction,
 } from "@/server/actions/public-booking-slots";
 import type { PublicBusiness, PublicService, SlotDay, SlotOption } from "./types";
-import type { BookingFrequency } from "@/generated/prisma/client";
+import type { BookingFrequency, PricingParameterType } from "@/generated/prisma/client";
+import { PricingParametersFields } from "@/components/booking/PricingParametersFields";
+import {
+  bookingPriceCents,
+  defaultParameterValues,
+  type PricingParameterConfig,
+} from "@/lib/pricing/parameters";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
 
-function computeTotals(primary: PublicService | undefined, addons: PublicService[]) {
+function computeTotals(
+  primary: PublicService | undefined,
+  addons: PublicService[],
+  paramConfigs: PricingParameterConfig[],
+  paramValues: Partial<Record<PricingParameterType, number>>,
+) {
   if (!primary) return { priceCents: 0, durationMinutes: 0, currency: "USD" };
-  const priceCents = primary.basePriceCents + addons.reduce((s, a) => s + a.basePriceCents, 0);
+  const addonTotal = addons.reduce((s, a) => s + a.basePriceCents, 0);
+  const priceCents = bookingPriceCents(primary.basePriceCents, addonTotal, paramConfigs, paramValues);
   const durationMinutes = primary.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
   return { priceCents, durationMinutes, currency: primary.currency };
 }
 
-function buildSteps(hasAddons: boolean) {
+function buildSteps(hasAddons: boolean, hasParams: boolean) {
   let n = 1;
   const next = () => String(n++);
   return {
     service: next(),
     addons: hasAddons ? next() : null,
+    params: hasParams ? next() : null,
     frequency: next(),
     date: next(),
     time: next(),
@@ -91,15 +104,27 @@ export function PublicBookingClient({
   );
   const [pending, startTransition] = useTransition();
 
-  const steps = useMemo(() => buildSteps(addonServices.length > 0), [addonServices.length]);
-  const addonKey = addonIds.slice().sort().join(",");
-
   const selectedPrimary = primaryServices.find((s) => s.id === serviceId);
   const selectedAddons = addonServices.filter((a) => addonIds.includes(a.id));
-  const totals = useMemo(
-    () => computeTotals(selectedPrimary, selectedAddons),
-    [selectedPrimary, selectedAddons],
+  const paramConfigs = selectedPrimary?.pricingParameters ?? [];
+  const [paramValues, setParamValues] = useState<Record<PricingParameterType, number>>(() =>
+    defaultParameterValues(paramConfigs) as Record<PricingParameterType, number>,
   );
+
+  const steps = useMemo(
+    () => buildSteps(addonServices.length > 0, paramConfigs.length > 0),
+    [addonServices.length, paramConfigs.length],
+  );
+  const addonKey = addonIds.slice().sort().join(",");
+
+  const totals = useMemo(
+    () => computeTotals(selectedPrimary, selectedAddons, paramConfigs, paramValues),
+    [selectedPrimary, selectedAddons, paramConfigs, paramValues],
+  );
+
+  useEffect(() => {
+    setParamValues(defaultParameterValues(paramConfigs) as Record<PricingParameterType, number>);
+  }, [serviceId, paramConfigs.length]);
 
   useEffect(() => {
     startTransition(async () => {
@@ -272,6 +297,19 @@ export function PublicBookingClient({
                   );
                 })}
               </div>
+            </Section>
+          )}
+
+          {steps.params && paramConfigs.length > 0 && (
+            <Section step={steps.params} title="Home size">
+              <p className="mb-3 text-sm text-ink-500">
+                Your base price includes some bedrooms and bathrooms; extra units are added to the total.
+              </p>
+              <PricingParametersFields
+                configs={paramConfigs}
+                values={paramValues}
+                onChange={(type, units) => setParamValues((prev) => ({ ...prev, [type]: units }))}
+              />
             </Section>
           )}
 

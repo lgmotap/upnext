@@ -59,6 +59,7 @@ model Organization {
   customers         Customer[]
   bookingRequests   BookingRequest[]
   jobs              Job[]
+  jobSeries         JobSeries[]
   paymentRecords    PaymentRecord[]
   stripeWebhookEvents StripeWebhookEvent[]
   notificationLogs  NotificationLog[]
@@ -148,7 +149,9 @@ model Service {
   bookingRequests BookingRequest[]
   bookingAddons   BookingRequestAddon[]
   jobs            Job[]
+  jobSeries       JobSeries[]
   checklistTemplates ChecklistTemplate[]
+  pricingParameters ServicePricingParameter[]
 
   @@index([organizationId])
   @@index([organizationId, isActive, isPublic])
@@ -215,6 +218,7 @@ model Customer {
   addresses      CustomerAddress[]
   bookingRequests BookingRequest[]
   jobs           Job[]
+  jobSeries      JobSeries[]
   paymentRecords PaymentRecord[]
   portalTokens   CustomerPortalToken[]
 
@@ -260,6 +264,7 @@ model BookingRequest {
   service          Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   job              Job?
   addons           BookingRequestAddon[]
+  parameters       BookingRequestParameter[]
 
   @@index([organizationId])
   @@index([organizationId, status])
@@ -304,6 +309,9 @@ model Job {
   paymentRecord     PaymentRecord?
   checklistItems    JobChecklistItem[]
   photos            JobPhoto[]
+  jobSeriesId       String?
+  jobSeries         JobSeries? @relation("SeriesJobs", fields: [jobSeriesId], references: [id], onDelete: SetNull)
+  anchorForSeries   JobSeries? @relation("SeriesAnchor")
 
   @@index([organizationId])
   @@index([organizationId, status])
@@ -335,6 +343,39 @@ model BookingRequestAddon {
   bookingRequest   BookingRequest @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
   service          Service        @relation(fields: [serviceId], references: [id], onDelete: Restrict)
 
+  @@index([bookingRequestId])
+}
+
+enum PricingParameterType {
+  bedrooms
+  bathrooms
+}
+
+model ServicePricingParameter {
+  id             String               @id @default(cuid())
+  serviceId      String
+  parameterType  PricingParameterType
+  unitPriceCents Int
+  includedUnits  Int                  @default(0)
+  maxUnits       Int                  @default(10)
+  sortOrder      Int                  @default(0)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  service        Service              @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, parameterType])
+  @@index([serviceId])
+}
+
+model BookingRequestParameter {
+  id               String               @id @default(cuid())
+  bookingRequestId String
+  parameterType    PricingParameterType
+  units            Int
+  createdAt        DateTime             @default(now())
+  bookingRequest   BookingRequest       @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingRequestId, parameterType])
   @@index([bookingRequestId])
 }
 
@@ -421,6 +462,7 @@ enum NotificationTemplate {
   team_invite
   customer_portal_link
   booking_cancelled_by_customer
+  recurring_job_scheduled
 }
 
 model NotificationLog {
@@ -518,6 +560,40 @@ model TeamInvite {
 }
 
 /// Magic-link tokens for customer portal sign-in (15 min TTL).
+enum JobSeriesStatus {
+  active
+  paused
+  cancelled
+}
+
+/// Recurring schedule spawned from an accepted booking with frequency != one_time.
+model JobSeries {
+  id                 String            @id @default(cuid())
+  organizationId     String
+  customerId         String
+  serviceId          String
+  customerAddressId  String?
+  frequency          BookingFrequency
+  anchorJobId        String?           @unique
+  preferredTimeHm    String
+  durationMinutes    Int
+  priceCents         Int
+  currency           String            @default("USD")
+  nextOccurrenceAt   DateTime
+  assignMembershipId String?
+  status             JobSeriesStatus   @default(active)
+  customerNotes      String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer           Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service            Service           @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  anchorJob          Job?              @relation("SeriesAnchor", fields: [anchorJobId], references: [id], onDelete: SetNull)
+  jobs               Job[]             @relation("SeriesJobs")
+
+  @@index([organizationId, status, nextOccurrenceAt])
+}
+
 model CustomerPortalToken {
   id             String       @id @default(cuid())
   organizationId String

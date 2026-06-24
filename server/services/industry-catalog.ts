@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getIndustryCatalog, listCatalogServices } from "@/lib/onboarding/industry-catalog";
 import { saveWeeklyAvailability } from "@/server/services/availability";
 import { defaultWeeklyRules } from "@/server/validators/availability";
+import { replaceServicePricingParameters } from "@/server/repositories/pricing-parameters";
 
 export type SeedCatalogResult = {
   seeded: boolean;
@@ -72,6 +73,17 @@ export async function seedIndustryCatalog(
       }),
     ),
   );
+
+  for (const item of toCreate) {
+    if (!item.pricingParameters?.length) continue;
+    const created = await prisma.service.findFirst({
+      where: { organizationId, name: item.name },
+      select: { id: true },
+    });
+    if (created) {
+      await replaceServicePricingParameters(created.id, item.pricingParameters);
+    }
+  }
 
   const rules = await prisma.availabilityRule.count({ where: { organizationId } });
   if (rules === 0) {

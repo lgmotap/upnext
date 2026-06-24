@@ -21,13 +21,15 @@ import { getAssignableMembers } from "@/server/repositories/team";
 import { canAssignJobs } from "@/server/permissions/job-access";
 import { isStripeConfigured } from "@/server/services/payments";
 import { prisma } from "@/lib/db/prisma";
+import { JobSeriesPanel } from "@/components/app/JobSeriesPanel";
+import { getJobSeriesByAnchorJob } from "@/server/repositories/job-series";
 
 export default async function JobDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ jobId: string }>;
-  searchParams: Promise<{ error?: string; payment?: string; cancelled?: string; rescheduled?: string }>;
+  searchParams: Promise<{ error?: string; payment?: string; cancelled?: string; rescheduled?: string; series?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in");
@@ -56,6 +58,7 @@ export default async function JobDetailPage({
   const payment = job.paymentRecord;
   const stripeReady = isStripeConfigured() && Boolean(org?.stripeConnectChargesEnabled);
   const photos = await getJobPhotosWithUrls(session.organizationId, jobId);
+  const series = job.jobSeries ?? (await getJobSeriesByAnchorJob(session.organizationId, jobId));
 
   let reschedule:
     | {
@@ -122,6 +125,35 @@ export default async function JobDetailPage({
         <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
           Job rescheduled. The customer was notified by email.
         </p>
+      )}
+      {query.series === "paused" && (
+        <p className="mb-4 rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900 ring-1 ring-amber-100">
+          Recurring schedule paused.
+        </p>
+      )}
+      {query.series === "resumed" && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Recurring schedule resumed.
+        </p>
+      )}
+      {query.series === "cancelled" && (
+        <p className="mb-4 rounded-xl bg-ink-50 px-3.5 py-2.5 text-sm text-ink-700 ring-1 ring-ink-200">
+          Recurring schedule cancelled.
+        </p>
+      )}
+
+      {series && (
+        <div className="mb-4">
+          <JobSeriesPanel
+            seriesId={series.id}
+            jobId={job.id}
+            frequency={series.frequency}
+            status={series.status}
+            nextOccurrenceAt={series.nextOccurrenceAt}
+            timeZone={timeZone}
+            canEdit={canEdit}
+          />
+        </div>
       )}
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">

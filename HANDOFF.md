@@ -140,24 +140,16 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 | Team | Invite submit loading state |
 | Settings | Copy booking link button |
 
-**Still P1 vs ConvertLabs:** recurring engine (cron), pricing parameters.
+**Still P1 vs ConvertLabs:** Stripe saved cards in portal, CSV import, per-worker availability.
 
-**Batch 3 (2026-06-25):** Job + pending booking reschedule (calendar modal, conflict-aware slots, customer email). Crew **On the way** / **Running late** with customer notifications. `npm run smoke:scheduling`.
-
-**Batch 4 (2026-06-25):** Full **industry service catalogs** — onboarding seeds all primary services + add-ons per trade (e.g. residential cleaning: 4 services + 9 CL-style extras). Services page grouped; **Load suggested catalog** for existing orgs. `npm run smoke:industry-catalog`.
-
-**Sprint planning (2026-06-25):** `tasks/post-beta-roadmap.md` — sprints **09–12** complete.
+**Sprints 14–16 (2026-06-25):**
 
 | Sprint | Summary |
 |--------|---------|
-| 09 | BookingLinkCard, Settings → Portals, `smoke:portal-links` |
-| 10 | Customer portal v1 (`/my/[slug]`), magic link, `smoke:customer-portal` |
-| 11 | Booking frequency, `/embed`, query prefill, ICS, `smoke:public-booking-parity` |
-| 12 | ⌘K global search, manual booking frequency, job payment link, `smoke:global-search` |
-| 13 | Reporting v1 (`/app/reports`), browser audit fixes (portal + calendar) |
+| 14 | Recurring jobs — `JobSeries`, cron, pause/cancel, `smoke:recurring` |
+| 15 | Bed/bath pricing params — public + manual book, catalog seeds, `smoke:pricing-params` |
+| 16 | Portal cancel policy (`minNoticeHours`), accepted booking fix, `smoke:portal-cancel` |
 
-**Browser audit (2026-06-25):** Fixed customer portal showing "Portal not found" when `customerPortalEnabled` was undefined in Prisma runtime; fixed calendar subtitle (`Mon – Sun, Jun 28, 11:59 PM` → `Jun 22 – Jun 28, 2026`); added `/my/` to public proxy routes.
+**Resume:** Sprint **16** saved cards → `tasks/sprint-16-portal-depth.md` → Saved payment methods
 
-**Deferred (Phase 3):** recurring cron/JobSeries, bed/bath pricing params, Stripe Checkout Playwright E2E.
-
-**Validation:** `npm run typecheck` ✓ · `npm run smoke:customer-portal` ✓ · `npm run smoke:reports` ✓
+**Deferred (Phase 3):** Stripe Checkout Playwright E2E, read API v1.

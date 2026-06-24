@@ -17,6 +17,11 @@ import {
 import { getBusinessProfileBySlug } from "@/server/repositories/services";
 import { updateBookingRequestStatus } from "@/server/repositories/bookings";
 import { updateJobStatus } from "@/server/services/jobs";
+import { pauseJobSeries } from "@/server/services/recurring-jobs";
+import {
+  canCustomerCancelBooking,
+  portalCancelBlockedMessage,
+} from "@/lib/portal/cancel-policy";
 import {
   notifyBookingCancelledByCustomer,
   notifyCustomerPortalLink,
@@ -222,11 +227,18 @@ export async function getPortalDashboardData(session: PortalSession) {
     listCustomerOutstandingPayments(session.organizationId, session.customerId),
   ]);
 
+  const minNoticeHours = profile.minNoticeHours ?? 24;
+  const bookingsWithPolicy = bookings.map((b) => ({
+    ...b,
+    canCancel: canCustomerCancelBooking(b, minNoticeHours),
+  }));
+
   return {
     businessName: profile.displayName,
     customerName: `${customer.firstName} ${customer.lastName}`.trim(),
-    bookings,
+    bookings: bookingsWithPolicy,
     payments,
+    minNoticeHours,
     prefill: customerToPrefill(customer),
     bookAgainUrl: createPrefillLink(profile.publicSlug, customer.id, session.organizationId),
   };
@@ -236,28 +248,48 @@ export async function cancelBookingFromPortal(
   session: PortalSession,
   bookingRequestId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const profile = await getBusinessProfileBySlug(session.businessSlug);
+  if (!profile || profile.organizationId !== session.organizationId) {
+    return { ok: false, error: "Portal not available." };
+  }
+
+  const minNoticeHours = profile.minNoticeHours ?? 24;
+
   const booking = await prisma.bookingRequest.findFirst({
     where: {
       id: bookingRequestId,
       organizationId: session.organizationId,
       customerId: session.customerId,
     },
-    include: { job: true },
+    include: { job: { select: { id: true, status: true, jobSeriesId: true } } },
   });
 
   if (!booking) return { ok: false, error: "Booking not found." };
-  if (!["pending", "accepted"].includes(booking.status)) {
-    return { ok: false, error: "This booking can no longer be cancelled online." };
+  if (!canCustomerCancelBooking(booking, minNoticeHours)) {
+    return { ok: false, error: portalCancelBlockedMessage(minNoticeHours) };
   }
 
-  if (booking.requestedStartAt < new Date()) {
-    return { ok: false, error: "Past bookings cannot be cancelled here. Contact the business." };
+  if (booking.status === "pending") {
+    await updateBookingRequestStatus(session.organizationId, bookingRequestId, "cancelled");
+  } else {
+    await prisma.bookingRequest.update({
+      where: { id: bookingRequestId },
+      data: { status: "cancelled" },
+    });
   }
-
-  await updateBookingRequestStatus(session.organizationId, bookingRequestId, "cancelled");
 
   if (booking.job && !["completed", "cancelled"].includes(booking.job.status)) {
     await updateJobStatus(session.organizationId, booking.job.id, "cancelled");
+  }
+
+  if (booking.job?.jobSeriesId) {
+    await pauseJobSeries(session.organizationId, booking.job.jobSeriesId);
+  } else if (booking.frequency !== "one_time" && booking.job) {
+    const series = await prisma.jobSeries.findFirst({
+      where: { organizationId: session.organizationId, anchorJobId: booking.job.id },
+      select: { id: true },
+    });
+    if (series) await pauseJobSeries(session.organizationId, series.id);
   }
 
   await notifyBookingCancelledByCustomer(session.organizationId, bookingRequestId);

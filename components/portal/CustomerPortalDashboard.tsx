@@ -12,6 +12,7 @@ type PortalBooking = {
   id: string;
   status: string;
   requestedStartAt: Date | string;
+  canCancel?: boolean;
   service: { name: string };
   addons: { name: string }[];
   job: {
@@ -144,9 +145,7 @@ export function CustomerPortalDashboard({
                     ? `${addr.line1}, ${addr.city}, ${addr.region} ${addr.postalCode}`
                     : "—";
                   const services = [b.service.name, ...b.addons.map((a) => a.name)].join(", ");
-                  const canCancel =
-                    ["pending", "accepted"].includes(b.status) &&
-                    new Date(b.requestedStartAt) > new Date();
+                  const canCancel = b.canCancel ?? false;
 
                   return (
                     <li key={b.id} className="p-4">

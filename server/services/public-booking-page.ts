@@ -13,6 +13,8 @@ import {
   type PublicBookingPrefillFields,
 } from "@/lib/booking/public-prefill";
 import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
+import { listPricingParametersForServices } from "@/server/repositories/pricing-parameters";
+import type { PricingParameterConfig } from "@/lib/pricing/parameters";
 
 function formatTime12h(hm: string): string {
   const [h, m] = hm.split(":").map(Number);
@@ -21,15 +23,18 @@ function formatTime12h(hm: string): string {
   return `${hour12}:${String(m).padStart(2, "0")} ${suffix}`;
 }
 
-function mapService(s: {
-  id: string;
-  name: string;
-  description: string | null;
-  durationMinutes: number;
-  basePriceCents: number;
-  currency: string;
-  isAddon: boolean;
-}) {
+function mapService(
+  s: {
+    id: string;
+    name: string;
+    description: string | null;
+    durationMinutes: number;
+    basePriceCents: number;
+    currency: string;
+    isAddon: boolean;
+  },
+  pricingParameters: PricingParameterConfig[],
+) {
   return {
     id: s.id,
     name: s.name,
@@ -38,6 +43,7 @@ function mapService(s: {
     basePriceCents: s.basePriceCents,
     currency: s.currency,
     isAddon: s.isAddon,
+    pricingParameters,
   };
 }
 
@@ -123,6 +129,20 @@ export async function loadPublicBookingPage(
     listPublicAddonServicesForOrg(profile.organizationId),
   ]);
 
+  const allIds = [...primaryServices, ...addonServices].map((s) => s.id);
+  const paramRows = await listPricingParametersForServices(allIds);
+  const paramsByService = new Map<string, PricingParameterConfig[]>();
+  for (const row of paramRows) {
+    const list = paramsByService.get(row.serviceId) ?? [];
+    list.push({
+      parameterType: row.parameterType,
+      unitPriceCents: row.unitPriceCents,
+      includedUnits: row.includedUnits,
+      maxUnits: row.maxUnits,
+    });
+    paramsByService.set(row.serviceId, list);
+  }
+
   if (primaryServices.length === 0) {
     return { kind: "empty", businessName: profile.displayName };
   }
@@ -150,8 +170,8 @@ export async function loadPublicBookingPage(
       email: profile.email,
       customerPortalEnabled: isCustomerPortalEnabled(profile),
     },
-    primaryServices: primaryServices.map(mapService),
-    addonServices: addonServices.map(mapService),
+    primaryServices: primaryServices.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
+    addonServices: addonServices.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
     initialDays: days,
     initialSlots: rawSlots.map((s) => ({
       date: s.date,

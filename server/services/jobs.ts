@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import { getBookingRequestForOrg } from "@/server/repositories/bookings";
+import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
+import { bookingPriceCents } from "@/lib/pricing/parameters";
+import type { PricingParameterType } from "@/generated/prisma/client";
 import { notifyBookingAccepted, notifyJobCompleted } from "@/server/services/notifications";
+import { createJobSeriesFromAcceptedJob } from "@/server/services/recurring-jobs";
 import { seedJobChecklistItems } from "@/server/services/checklists";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
@@ -14,6 +18,16 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
 
   const address = booking.customer.addresses[0] ?? null;
   const addonTotal = (booking.addons ?? []).reduce((sum, a) => sum + a.priceCents, 0);
+  const paramConfigs = await listPricingParametersForService(booking.serviceId);
+  const paramValues = Object.fromEntries(
+    (booking.parameters ?? []).map((p) => [p.parameterType, p.units]),
+  ) as Partial<Record<PricingParameterType, number>>;
+  const priceCents = bookingPriceCents(
+    booking.service.basePriceCents,
+    addonTotal,
+    paramConfigs,
+    paramValues,
+  );
   const title =
     booking.addons && booking.addons.length > 0
       ? `${booking.service.name} + ${booking.addons.map((a) => a.name).join(", ")}`
@@ -31,7 +45,7 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
         scheduledStartAt: booking.requestedStartAt,
         scheduledEndAt: booking.requestedEndAt,
         status: "scheduled",
-        priceCents: booking.service.basePriceCents + addonTotal,
+        priceCents,
         currency: booking.service.currency,
         customerNotes: booking.customerNotes,
       },
@@ -47,7 +61,7 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
         organizationId,
         jobId: created.id,
         customerId: booking.customerId,
-        amountCents: booking.service.basePriceCents + addonTotal,
+        amountCents: priceCents,
         currency: booking.service.currency,
         status: "not_requested",
         provider: "manual",
@@ -60,6 +74,7 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
   });
 
   await notifyBookingAccepted(organizationId, bookingRequestId);
+  await createJobSeriesFromAcceptedJob(organizationId, job.id);
 
   captureServerEvent(organizationId, AnalyticsEvents.bookingAccepted, {
     bookingRequestId,

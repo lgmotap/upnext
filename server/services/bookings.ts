@@ -27,6 +27,12 @@ import { assignJobToMember } from "@/server/repositories/assignments";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
 import type { Service } from "@/generated/prisma/client";
+import type { PricingParameterConfig } from "@/lib/pricing/parameters";
+import {
+  bookingPriceCents,
+  parseParameterInput,
+} from "@/lib/pricing/parameters";
+import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
 
 export type PublicBookingContext = {
   organizationId: string;
@@ -115,14 +121,42 @@ async function loadSlotContext(
   };
 }
 
-export function bookingTotals(service: Service, addons: Service[]) {
-  const priceCents = service.basePriceCents + addons.reduce((s, a) => s + a.basePriceCents, 0);
+export function bookingTotals(
+  service: Service,
+  addons: Service[],
+  paramConfigs: PricingParameterConfig[] = [],
+  paramValues: Record<string, number> = {},
+) {
+  const addonTotal = addons.reduce((s, a) => s + a.basePriceCents, 0);
+  const priceCents = bookingPriceCents(service.basePriceCents, addonTotal, paramConfigs, paramValues);
   const durationMinutes = service.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
   const label =
     addons.length > 0
       ? `${service.name} + ${addons.map((a) => a.name).join(", ")}`
       : service.name;
   return { priceCents, durationMinutes, label, currency: service.currency };
+}
+
+async function resolveParameterValues(
+  serviceId: string,
+  raw: { bedrooms?: unknown; bathrooms?: unknown },
+): Promise<
+  | { ok: true; configs: PricingParameterConfig[]; values: Record<"bedrooms" | "bathrooms", number> }
+  | { ok: false; error: string }
+> {
+  const rows = await listPricingParametersForService(serviceId);
+  const configs: PricingParameterConfig[] = rows.map((r) => ({
+    parameterType: r.parameterType,
+    unitPriceCents: r.unitPriceCents,
+    includedUnits: r.includedUnits,
+    maxUnits: r.maxUnits,
+  }));
+  if (configs.length === 0) {
+    return { ok: true, configs, values: {} as Record<"bedrooms" | "bathrooms", number> };
+  }
+  const parsed = parseParameterInput(configs, raw);
+  if (!parsed.ok) return parsed;
+  return { ok: true, configs, values: parsed.values };
 }
 
 export async function getPublicAvailableDays(
@@ -239,6 +273,12 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
   const slot = isSlotAvailable(loaded.slotInput, input.date, input.time);
   if (!slot) return { ok: false as const, error: "Selected time is no longer available" };
 
+  const paramResult = await resolveParameterValues(loaded.service.id, {
+    bedrooms: input.bedrooms,
+    bathrooms: input.bathrooms,
+  });
+  if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
+
   let customerId: string;
 
   if (input.customerId?.trim()) {
@@ -285,6 +325,10 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
     customerNotes: input.customerNotes || null,
     source: "manual",
     frequency: input.frequency,
+    parameters: Object.entries(paramResult.values).map(([parameterType, units]) => ({
+      parameterType: parameterType as "bedrooms" | "bathrooms",
+      units,
+    })),
     addons: loaded.addons.map((a) => ({
       serviceId: a.id,
       name: a.name,
@@ -326,6 +370,12 @@ export async function createPublicBooking(raw: PublicBookingInput) {
   const slot = isSlotAvailable(loaded.slotInput, input.date, input.time);
   if (!slot) return { ok: false as const, error: "Selected time is no longer available" };
 
+  const paramResult = await resolveParameterValues(loaded.service.id, {
+    bedrooms: input.bedrooms,
+    bathrooms: input.bathrooms,
+  });
+  if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
+
   let customer = await findCustomerByEmail(loaded.profile.organizationId, input.email);
 
   if (customer) {
@@ -349,7 +399,7 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     });
   }
 
-  const totals = bookingTotals(loaded.service, loaded.addons);
+  const totals = bookingTotals(loaded.service, loaded.addons, paramResult.configs, paramResult.values);
 
   const booking = await createBookingRequest({
     organizationId: loaded.profile.organizationId,
@@ -359,6 +409,10 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     requestedEndAt: slot.endAt,
     customerNotes: input.customerNotes || null,
     frequency: input.frequency,
+    parameters: Object.entries(paramResult.values).map(([parameterType, units]) => ({
+      parameterType: parameterType as "bedrooms" | "bathrooms",
+      units,
+    })),
     addons: loaded.addons.map((a) => ({
       serviceId: a.id,
       name: a.name,

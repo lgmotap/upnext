@@ -14,7 +14,7 @@
 | **Owner daily ops** | ~75% | Strong; missing drag scheduler, quotes, dispatch board |
 | **Crew web** | **Ahead** on checklist + photos | CL web portal thinner than UpNext `/crew` |
 | **Customer portal** | ~70% | v1 shipped (magic link); no saved cards, password login |
-| **Public booking** | ~85% | Frequency + embed; no pay-at-booking, no pricing params |
+| **Public booking** | ~90% | Frequency + embed + bed/bath pricing params |
 | **Platform / API** | ~15% | Intentionally deferred |
 | **Website / marketing** | 0% | Intentionally out of scope |
 
@@ -32,8 +32,8 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 |------------|-----|--------|--------|
 | Public multi-step booking | 10-section scroll form | `/book/[slug]` + `/embed` | ✅ |
 | Service catalog + add-ons | Service Studio | Industry catalogs + addons | ✅ **W** (faster setup) |
-| Frequency / recurring | How Often? + discounts | Stored on booking; **no cron/JobSeries** | 🟡 |
-| Pricing parameters (bed/bath) | Unit ranges | Flat price per service | ❌ P1 |
+| Frequency / recurring | How Often? + discounts | JobSeries + daily cron | ✅ |
+| Pricing parameters (bed/bath) | Unit ranges | ServicePricingParameter + booking flows | ✅ |
 | Availability + slots | Rules + provider carry-over | Org rules + blackouts | ✅ (no per-worker) |
 | Booking inbox accept/decline | `/booking/bookings` | `/app/bookings` | ✅ |
 | Owner manual booking | 10-tab wizard | `/app/bookings/new` + frequency | 🟡 (slimmer, no payment tab) |

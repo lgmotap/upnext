@@ -1,5 +1,6 @@
 import type { Service } from "@/generated/prisma/client";
 import { createServiceAction, updateServiceAction } from "@/server/actions/services";
+import type { PricingParameterConfig } from "@/lib/pricing/parameters";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
@@ -7,12 +8,17 @@ const input =
 export function ServiceForm({
   service,
   checklistItems = "",
+  pricingParameters = [],
 }: {
   service?: Service;
   checklistItems?: string;
+  pricingParameters?: PricingParameterConfig[];
 }) {
   const action = service ? updateServiceAction : createServiceAction;
   const priceDollars = service ? (service.basePriceCents / 100).toFixed(2) : "";
+  const bedroom = pricingParameters.find((p) => p.parameterType === "bedrooms");
+  const bathroom = pricingParameters.find((p) => p.parameterType === "bathrooms");
+  const hasPricingParams = pricingParameters.length > 0;
 
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-2">
@@ -75,6 +81,66 @@ export function ServiceForm({
         <input type="checkbox" name="isAddon" defaultChecked={service?.isAddon ?? false} className="rounded" />
         Add-on service (optional extra — not a main booking service)
       </label>
+      <div className="sm:col-span-2 rounded-2xl bg-ink-50 p-4 ring-1 ring-ink-100">
+        <label className="flex items-center gap-2 text-sm font-semibold text-ink-800">
+          <input
+            type="checkbox"
+            name="enableBedBathPricing"
+            defaultChecked={hasPricingParams}
+            className="rounded"
+          />
+          Bedroom / bathroom pricing (cleaning)
+        </label>
+        <p className="mt-1 text-xs text-ink-500">
+          Base price covers included units; customers pay extra per bedroom/bathroom above that on booking.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Bedrooms</p>
+            <div className="grid gap-2">
+              <input
+                name="bedroomUnitPrice"
+                type="number"
+                min={0}
+                step={1}
+                defaultValue={bedroom ? (bedroom.unitPriceCents / 100).toFixed(0) : "15"}
+                placeholder="Extra $/bedroom"
+                className={input}
+              />
+              <input
+                name="bedroomIncluded"
+                type="number"
+                min={0}
+                defaultValue={bedroom?.includedUnits ?? 2}
+                placeholder="Included"
+                className={input}
+              />
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">Bathrooms</p>
+            <div className="grid gap-2">
+              <input
+                name="bathroomUnitPrice"
+                type="number"
+                min={0}
+                step={1}
+                defaultValue={bathroom ? (bathroom.unitPriceCents / 100).toFixed(0) : "20"}
+                placeholder="Extra $/bathroom"
+                className={input}
+              />
+              <input
+                name="bathroomIncluded"
+                type="number"
+                min={0}
+                defaultValue={bathroom?.includedUnits ?? 1}
+                placeholder="Included"
+                className={input}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="sm:col-span-2">
         <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
           Crew checklist (one item per line)

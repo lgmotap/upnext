@@ -8,7 +8,19 @@ export type CatalogService = {
   durationMinutes: number;
   basePriceCents: number;
   isAddon: boolean;
+  pricingParameters?: Array<{
+    parameterType: "bedrooms" | "bathrooms";
+    unitPriceCents: number;
+    includedUnits: number;
+    maxUnits: number;
+  }>;
 };
+
+/** Default bed/bath pricing for residential cleaning primary services. */
+export const RESIDENTIAL_CLEANING_PRICING_PARAMS: NonNullable<CatalogService["pricingParameters"]> = [
+  { parameterType: "bedrooms", unitPriceCents: 1500, includedUnits: 2, maxUnits: 10 },
+  { parameterType: "bathrooms", unitPriceCents: 2000, includedUnits: 1, maxUnits: 8 },
+];
 
 export type IndustryCatalog = {
   label: string;
@@ -22,8 +34,9 @@ function svc(
   durationMinutes: number,
   basePriceCents: number,
   isAddon = false,
+  pricingParameters?: CatalogService["pricingParameters"],
 ): CatalogService {
-  return { name, description, durationMinutes, basePriceCents, isAddon };
+  return { name, description, durationMinutes, basePriceCents, isAddon, pricingParameters };
 }
 
 /** ConvertLabs-style catalogs: multiple bookable services + extras per vertical. */
@@ -36,24 +49,32 @@ const catalogs: Record<ServiceType, IndustryCatalog> = {
         "Regular maintenance clean for homes and apartments.",
         120,
         15000,
+        false,
+        RESIDENTIAL_CLEANING_PRICING_PARAMS,
       ),
       svc(
         "Deep Cleaning",
         "Detailed top-to-bottom clean — kitchens, baths, and high-touch areas.",
         180,
         22000,
+        false,
+        RESIDENTIAL_CLEANING_PRICING_PARAMS,
       ),
       svc(
         "Move In / Move Out Cleaning",
         "Empty-home clean for move-in or move-out turnovers.",
         240,
         30000,
+        false,
+        RESIDENTIAL_CLEANING_PRICING_PARAMS,
       ),
       svc(
         "Post-Construction Clean",
         "Dust and debris removal after renovations or new builds.",
         300,
         35000,
+        false,
+        RESIDENTIAL_CLEANING_PRICING_PARAMS,
       ),
     ],
     addons: [

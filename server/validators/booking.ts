@@ -11,6 +11,11 @@ function parseAddonIds(value: unknown): string[] {
   return s.split(",").map((id) => id.trim()).filter(Boolean);
 }
 
+const optionalInt = z.preprocess(
+  (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
+  z.number().int().min(0).max(20).optional(),
+);
+
 export const publicBookingSchema = z.object({
   businessSlug: z.string().min(1).max(80),
   serviceId: z.string().min(1),
@@ -28,6 +33,8 @@ export const publicBookingSchema = z.object({
   postalCode: z.string().min(1).max(20).trim(),
   customerNotes: z.string().max(2000).trim().optional().or(z.literal("")),
   frequency: z.enum(["one_time", "weekly", "biweekly", "monthly"]).default("one_time"),
+  bedrooms: optionalInt,
+  bathrooms: optionalInt,
 });
 
 export type PublicBookingInput = z.input<typeof publicBookingSchema>;
@@ -51,6 +58,8 @@ export const manualBookingSchema = z
     customerNotes: z.string().max(2000).trim().optional().or(z.literal("")),
     assignMembershipId: z.string().optional().or(z.literal("")),
     frequency: z.enum(["one_time", "weekly", "biweekly", "monthly"]).default("one_time"),
+    bedrooms: optionalInt,
+    bathrooms: optionalInt,
   })
   .superRefine((data, ctx) => {
     const hasExisting = Boolean(data.customerId?.trim());

@@ -1,3 +1,5 @@
+import type { PricingParameterConfig } from "@/lib/pricing/parameters";
+
 export type PublicService = {
   id: string;
   name: string;
@@ -6,6 +8,7 @@ export type PublicService = {
   basePriceCents: number;
   currency: string;
   isAddon: boolean;
+  pricingParameters: PricingParameterConfig[];
 };
 
 export type PublicBusiness = {

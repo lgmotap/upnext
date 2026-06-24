@@ -39,6 +39,7 @@ export function getJobForOrg(organizationId: string, jobId: string) {
       assignments: { include: { membership: { include: { user: true } } } },
       paymentRecord: true,
       checklistItems: { orderBy: { sortOrder: "asc" } },
+      jobSeries: true,
     },
   });
 }

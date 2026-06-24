@@ -270,6 +270,52 @@ export async function notifyBookingDeclined(organizationId: string, bookingReque
   });
 }
 
+export async function notifyRecurringJobScheduled(
+  organizationId: string,
+  jobId: string,
+  frequency: import("@/generated/prisma/client").BookingFrequency,
+): Promise<void> {
+  const job = await prisma.job.findFirst({
+    where: { id: jobId, organizationId },
+    include: { customer: true, service: true },
+  });
+  if (!job || !job.customer.email) return;
+
+  const ctx = await getOrgDisplayContext(organizationId);
+  if (!ctx) return;
+
+  const when = formatDisplayDateTime(job.scheduledStartAt, ctx.timeZone);
+  const name = `${job.customer.firstName} ${job.customer.lastName}`.trim();
+  const freq =
+    frequency === "weekly"
+      ? "Weekly"
+      : frequency === "biweekly"
+        ? "Bi-weekly"
+        : frequency === "monthly"
+          ? "Monthly"
+          : "Recurring";
+
+  await sendAndLogEmail({
+    organizationId,
+    to: job.customer.email,
+    recipientType: "customer",
+    template: "recurring_job_scheduled",
+    relatedType: "job",
+    relatedId: jobId,
+    subject: `Upcoming ${freq.toLowerCase()} visit — ${ctx.businessName}`,
+    text: [
+      `Hi ${name},`,
+      "",
+      `Your next ${freq.toLowerCase()} appointment with ${ctx.businessName} is scheduled.`,
+      "",
+      `Service: ${job.service.name}`,
+      `When: ${when}`,
+      "",
+      contactFooter(ctx.phone, ctx.email),
+    ].join("\n"),
+  });
+}
+
 export async function notifyJobAssigned(organizationId: string, jobId: string, membershipId: string): Promise<void> {
   const assignment = await prisma.jobAssignment.findFirst({
     where: { jobId, membershipId, job: { organizationId } },
