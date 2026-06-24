@@ -124,3 +124,21 @@ To re-enable auto-continue, restore the `stop` hook in `.cursor/hooks.json` (see
 **PO decision (2026-06-24):** Competitor research is done. Run `tasks/mvp-traceability.md` — not more crawls — before coding.
 
 Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/gap-analysis.md`
+
+## Portal product review — batch 2 (2026-06-24, pushed)
+
+**Commits:** `068e485` (shared modals) · `3074212` (action panels + server) · `72a07e1` (page wiring)
+
+| Area | What shipped |
+|------|----------------|
+| Dashboard | Getting Started checklist (% complete), decline confirm on pending requests |
+| Bookings | List + detail decline confirm modals; accept with loading state |
+| Jobs | Assign modal, cancel confirm, start/complete with loading |
+| Customers | Notes + add address modals; Book again / New booking; real booking link copy |
+| Calendar | Week prev/next + Today navigation |
+| Team | Invite submit loading state |
+| Settings | Copy booking link button |
+
+**Still P1 vs ConvertLabs:** recurring bookings, pricing parameters, customer portal, ⌘K search, On The Way / Running Late.
+
+**Validation:** `npm run typecheck` ✓ · `db:validate` needs Node ≥ 20.19 (use `nvm use` / Node 22).

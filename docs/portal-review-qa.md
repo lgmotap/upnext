@@ -43,7 +43,7 @@ A: Works via Resend/Supabase; submit now shows loading state.
 | Google Places location | — | Step 2: street, city, state, ZIP |
 | Business name + AI suggestions | Partial (name only) | Step 3: name, TZ, currency, phone |
 | SaaS billing card (skippable) | — | Skipped (not our model) |
-| Getting Started checklist | — | Still missing (P1) |
+| Getting Started checklist | — | **Fixed** — dashboard checklist with progress bar |
 | Seed service catalog | Auto from industry | Step 4: suggested service + booking link |
 
 **Q: Why was onboarding only 2 steps?**  
@@ -127,7 +127,7 @@ Reference: `competitor-research/targets/convertlabs/reports/gap-analysis.md`, `u
 
 | Gap | CL evidence |
 |-----|-------------|
-| Getting Started checklist (% complete) | `/get-started` |
+| Getting Started checklist (% complete) | `/get-started` | **Fixed** — `GettingStartedChecklist` on dashboard |
 | Recurring / frequency bookings | "How Often?" step |
 | Pricing parameters (beds, sq ft) | Service Studio |
 | Customer portal (Book Again, history) | `customer-portal.md` |
@@ -152,8 +152,8 @@ Website builder, marketing campaigns, quotes, invoices, gift cards, multi-locati
 ## Recommended next sprint items
 
 1. Set `NEXT_PUBLIC_APP_URL` on Vercel + Supabase auth URLs  
-2. Getting Started checklist on dashboard empty state (4–5 tasks)  
-3. Booking detail page — full accept/decline/reschedule UX  
+2. ~~Getting Started checklist on dashboard empty state (4–5 tasks)~~ — done  
+3. Booking reschedule UX (ConvertLabs frequency / reschedule modals)  
 4. Crew "On the way" email button  
 5. Playwright E2E: sign-up → onboarding → book → accept → crew complete  
 
