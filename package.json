@@ -38,6 +38,7 @@
     "smoke:recurring": "tsx scripts/smoke-recurring.ts",
     "smoke:pricing-params": "tsx scripts/smoke-pricing-params.ts",
     "smoke:portal-cancel": "tsx scripts/smoke-portal-cancel.ts",
+    "smoke:portal-saved-card": "tsx scripts/smoke-portal-saved-card.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "smoke:stripe": "tsx scripts/smoke-stripe-payments.ts",

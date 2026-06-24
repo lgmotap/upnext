@@ -7,6 +7,8 @@ import type { BookingPrefillDetails } from "@/lib/portal/prefill-token";
 import { formatMoney } from "@/lib/money/format";
 import { cancelPortalBookingAction, portalLogoutAction } from "@/server/actions/customer-portal";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
+import { PortalPaymentsPanel } from "@/components/portal/PortalPaymentsPanel";
+import type { SavedPaymentMethod } from "@/lib/portal/saved-payment-methods";
 
 type PortalBooking = {
   id: string;
@@ -66,6 +68,9 @@ export function CustomerPortalDashboard({
   payments,
   bookAgainUrl,
   prefill,
+  stripePaymentsEnabled = false,
+  savedPaymentMethods = [],
+  initialTab = "history",
   flash,
 }: {
   businessSlug: string;
@@ -75,9 +80,12 @@ export function CustomerPortalDashboard({
   payments: PortalPayment[];
   bookAgainUrl: string;
   prefill: BookingPrefillDetails;
-  flash?: { error?: string; cancelled?: boolean };
+  stripePaymentsEnabled?: boolean;
+  savedPaymentMethods?: SavedPaymentMethod[];
+  initialTab?: Tab;
+  flash?: { error?: string; cancelled?: boolean; cardAdded?: boolean; paid?: boolean };
 }) {
-  const [tab, setTab] = useState<Tab>("history");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [cancelId, setCancelId] = useState<string | null>(null);
 
   return (
@@ -130,6 +138,16 @@ export function CustomerPortalDashboard({
         {flash?.cancelled && (
           <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900">
             Your booking was cancelled.
+          </p>
+        )}
+        {flash?.cardAdded && (
+          <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900">
+            Card saved successfully.
+          </p>
+        )}
+        {flash?.paid && (
+          <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900">
+            Payment received — thank you!
           </p>
         )}
 
@@ -219,37 +237,12 @@ export function CustomerPortalDashboard({
         )}
 
         {tab === "payments" && (
-          <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-ink-100">
-            {payments.length === 0 ? (
-              <p className="p-8 text-center text-sm text-ink-500">No outstanding payments.</p>
-            ) : (
-              <ul className="divide-y divide-ink-100">
-                {payments.map((p) => (
-                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-                    <div>
-                      <p className="font-semibold text-ink-950">{p.job.title}</p>
-                      <p className="text-sm text-ink-500">{formatWhen(p.job.scheduledStartAt)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-ink-950">{formatMoney(p.amountCents, p.currency)}</p>
-                      {p.paymentUrl ? (
-                        <a
-                          href={p.paymentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-brand-700 hover:underline"
-                        >
-                          Pay now
-                        </a>
-                      ) : (
-                        <p className="text-xs text-ink-400">Awaiting payment link</p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <PortalPaymentsPanel
+            businessSlug={businessSlug}
+            payments={payments}
+            savedPaymentMethods={savedPaymentMethods}
+            stripePaymentsEnabled={stripePaymentsEnabled}
+          />
         )}
       </main>
 

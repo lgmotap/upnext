@@ -8,7 +8,7 @@ export default async function CustomerPortalDashboardPage({
   searchParams,
 }: {
   params: Promise<{ businessSlug: string }>;
-  searchParams: Promise<{ error?: string; cancelled?: string }>;
+  searchParams: Promise<{ error?: string; cancelled?: string; tab?: string; card?: string; paid?: string }>;
 }) {
   const { businessSlug } = await params;
   const query = await searchParams;
@@ -23,6 +23,11 @@ export default async function CustomerPortalDashboardPage({
     redirect(`/my/${businessSlug}?error=${encodeURIComponent("Session expired. Sign in again.")}`);
   }
 
+  const initialTab =
+    query.tab === "payments" || query.tab === "book" || query.tab === "history"
+      ? query.tab
+      : "history";
+
   return (
     <CustomerPortalDashboard
       businessSlug={businessSlug}
@@ -32,9 +37,14 @@ export default async function CustomerPortalDashboardPage({
       payments={data.payments}
       bookAgainUrl={data.bookAgainUrl}
       prefill={data.prefill}
+      stripePaymentsEnabled={data.stripePaymentsEnabled}
+      savedPaymentMethods={data.savedPaymentMethods}
+      initialTab={initialTab}
       flash={{
         error: query.error ? decodeURIComponent(query.error) : undefined,
         cancelled: query.cancelled === "1",
+        cardAdded: query.card === "added",
+        paid: query.paid === "1",
       }}
     />
   );

@@ -28,6 +28,10 @@ import {
 } from "@/server/services/notifications";
 import type { PortalSession } from "@/lib/portal/session";
 import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
+import {
+  isPortalStripePaymentsEnabled,
+  listSavedPaymentMethods,
+} from "@/server/services/portal-payments";
 
 const MAGIC_LINK_TTL_MS = 15 * 60 * 1000;
 
@@ -228,6 +232,11 @@ export async function getPortalDashboardData(session: PortalSession) {
   ]);
 
   const minNoticeHours = profile.minNoticeHours ?? 24;
+  const stripePaymentsEnabled = await isPortalStripePaymentsEnabled(session.organizationId);
+  const savedPaymentMethods = stripePaymentsEnabled
+    ? await listSavedPaymentMethods(session.organizationId, session.customerId)
+    : [];
+
   const bookingsWithPolicy = bookings.map((b) => ({
     ...b,
     canCancel: canCustomerCancelBooking(b, minNoticeHours),
@@ -239,6 +248,8 @@ export async function getPortalDashboardData(session: PortalSession) {
     bookings: bookingsWithPolicy,
     payments,
     minNoticeHours,
+    stripePaymentsEnabled,
+    savedPaymentMethods,
     prefill: customerToPrefill(customer),
     bookAgainUrl: createPrefillLink(profile.publicSlug, customer.id, session.organizationId),
   };

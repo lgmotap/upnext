@@ -148,8 +148,8 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 |--------|---------|
 | 14 | Recurring jobs — `JobSeries`, cron, pause/cancel, `smoke:recurring` |
 | 15 | Bed/bath pricing params — public + manual book, catalog seeds, `smoke:pricing-params` |
-| 16 | Portal cancel policy (`minNoticeHours`), accepted booking fix, `smoke:portal-cancel` |
+| 16 | Portal cancel + saved Stripe cards (`smoke:portal-cancel`, `smoke:portal-saved-card`) |
 
-**Resume:** Sprint **16** saved cards → `tasks/sprint-16-portal-depth.md` → Saved payment methods
+**Resume:** Sprint **17** → `tasks/sprint-17-crm-import.md` (CSV customer import)
 
 **Deferred (Phase 3):** Stripe Checkout Playwright E2E, read API v1.

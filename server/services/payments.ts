@@ -6,6 +6,7 @@ import {
   markWebhookEventProcessed,
   wasWebhookEventProcessed,
 } from "@/server/repositories/payments";
+import { markPaymentPaidFromStripe } from "@/server/services/portal-payments";
 import { notifyPaymentRequest } from "@/server/services/notifications";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
@@ -182,16 +183,37 @@ export async function handleStripeWebhookEvent(event: Stripe.Event) {
     const organizationId = session.metadata?.organizationId;
 
     if (paymentRecordId && session.payment_status === "paid") {
-      await prisma.paymentRecord.updateMany({
-        where: { id: paymentRecordId, organizationId: organizationId ?? undefined },
-        data: {
-          status: "paid",
-          provider: "stripe",
-          paidAt: new Date(),
-          stripePaymentIntentId:
-            typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id ?? null,
-        },
-      });
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id ?? null;
+
+      if (paymentIntentId && organizationId) {
+        await markPaymentPaidFromStripe(paymentRecordId, organizationId, paymentIntentId);
+      } else {
+        await prisma.paymentRecord.updateMany({
+          where: { id: paymentRecordId, organizationId: organizationId ?? undefined },
+          data: {
+            status: "paid",
+            provider: "stripe",
+            paidAt: new Date(),
+            stripePaymentIntentId: paymentIntentId,
+          },
+        });
+      }
+    }
+
+    await markWebhookEventProcessed(event.id, event.type, organizationId);
+    return { ok: true as const };
+  }
+
+  if (event.type === "payment_intent.succeeded") {
+    const intent = event.data.object as Stripe.PaymentIntent;
+    const paymentRecordId = intent.metadata?.paymentRecordId;
+    const organizationId = intent.metadata?.organizationId;
+
+    if (paymentRecordId && organizationId) {
+      await markPaymentPaidFromStripe(paymentRecordId, organizationId, intent.id);
     }
 
     await markWebhookEventProcessed(event.id, event.type, organizationId);

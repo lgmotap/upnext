@@ -96,4 +96,4 @@ Per `.cursor/rules/090-autonomous-sprint-execution.mdc` + `upnext-sprint-maratho
 4. Continue to next sprint without asking.
 5. Stop only on **BLOCKER** (secrets, ambiguous product).
 
-**Resume:** Sprint **16** → `tasks/sprint-16-portal-depth.md` (saved Stripe cards)
+**Resume:** Sprint **17** → `tasks/sprint-17-crm-import.md`

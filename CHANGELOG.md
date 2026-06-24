@@ -7,6 +7,7 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 - **Sprint 14 recurring jobs**: `JobSeries` model, daily cron `/api/cron/recurring-jobs`, owner pause/cancel on job detail, `recurring_job_scheduled` email. `npm run smoke:recurring`. See `docs/16-recurring-jobs.md`.
 - **Sprint 15 pricing parameters**: bed/bath surcharges on services, public + manual booking, residential cleaning catalog defaults. `npm run smoke:pricing-params`. See `docs/17-pricing-parameters.md`.
 - **Sprint 16 portal cancel**: `minNoticeHours` policy, fix accepted-booking cancel, pause recurring series. `npm run smoke:portal-cancel`.
+- **Sprint 16 saved cards**: Stripe Customer on `Customer`, portal add/list cards, pay with saved card. `npm run smoke:portal-saved-card`. See `docs/18-portal-saved-cards.md`.
 - **Full product roadmap**: `tasks/full-product-roadmap.md` (sprints 14→21).
 - **Sprint 09 portal reliability**: `BookingLinkCard`, Settings → Portals, `npm run smoke:portal-links`.
 - **Sprint 11 booking parity**: frequency step (one-time/weekly/bi-weekly/monthly), `/book/[slug]/embed`, query prefill params, confirmation ICS + portal link, OG meta. `npm run smoke:public-booking-parity`.

@@ -48,7 +48,7 @@ npm run smoke:stripe   # Connect checkout + webhook route → paid
 
 1. Add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_APP_URL` to Vercel (not set yet as of 2026-06-24).
 2. Create a **Dashboard** webhook: `https://<your-domain>/api/webhooks/stripe`
-3. Events: `checkout.session.completed`, `account.updated`
+3. Events: `checkout.session.completed`, `payment_intent.succeeded`, `account.updated`
 4. Use that endpoint’s signing secret as `STRIPE_WEBHOOK_SECRET` on Vercel (not the CLI `whsec`).
 
 ## Manual UI test flow

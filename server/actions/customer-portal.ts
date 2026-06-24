@@ -15,6 +15,10 @@ import {
   requestCustomerPortalMagicLink,
   verifyCustomerPortalMagicLink,
 } from "@/server/services/customer-portal";
+import {
+  createSaveCardCheckoutSession,
+  payPortalPaymentWithSavedCard,
+} from "@/server/services/portal-payments";
 import { portalEmailSchema } from "@/server/validators/customer-portal";
 
 export async function requestPortalMagicLinkAction(formData: FormData): Promise<void> {
@@ -67,4 +71,40 @@ export async function establishPortalSession(businessSlug: string, token: string
   if (!result.ok) return result;
   await setPortalSessionCookie(result.session);
   return { ok: true as const };
+}
+
+export async function addPortalCardAction(formData: FormData): Promise<void> {
+  const businessSlug = String(formData.get("businessSlug") ?? "");
+  const session = await getPortalSessionFromCookies();
+
+  if (!session || session.businessSlug !== businessSlug) {
+    redirect(`/my/${businessSlug}?error=${encodeURIComponent("Please sign in again.")}`);
+  }
+
+  const result = await createSaveCardCheckoutSession(session);
+  if (!result.ok) {
+    redirect(
+      `/my/${businessSlug}/dashboard?tab=payments&error=${encodeURIComponent(result.error)}`,
+    );
+  }
+
+  redirect(result.url);
+}
+
+export async function payWithSavedCardAction(formData: FormData): Promise<void> {
+  const businessSlug = String(formData.get("businessSlug") ?? "");
+  const paymentRecordId = String(formData.get("paymentRecordId") ?? "");
+  const paymentMethodId = String(formData.get("paymentMethodId") ?? "");
+  const session = await getPortalSessionFromCookies();
+
+  if (!session || session.businessSlug !== businessSlug) {
+    redirect(`/my/${businessSlug}?error=${encodeURIComponent("Please sign in again.")}`);
+  }
+
+  const result = await payPortalPaymentWithSavedCard(session, paymentRecordId, paymentMethodId);
+  const param = result.ok
+    ? "paid=1"
+    : `error=${encodeURIComponent(result.error)}`;
+  revalidatePath(`/my/${businessSlug}/dashboard`);
+  redirect(`/my/${businessSlug}/dashboard?tab=payments&${param}`);
 }

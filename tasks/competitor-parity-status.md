@@ -13,7 +13,7 @@
 | **Core loop** (book → job → crew → pay) | ~90% | **Shipped** — smokes green |
 | **Owner daily ops** | ~75% | Strong; missing drag scheduler, quotes, dispatch board |
 | **Crew web** | **Ahead** on checklist + photos | CL web portal thinner than UpNext `/crew` |
-| **Customer portal** | ~70% | v1 shipped (magic link); no saved cards, password login |
+| **Customer portal** | ~80% | v1 + cancel policy + saved Stripe cards |
 | **Public booking** | ~90% | Frequency + embed + bed/bath pricing params |
 | **Platform / API** | ~15% | Intentionally deferred |
 | **Website / marketing** | 0% | Intentionally out of scope |
