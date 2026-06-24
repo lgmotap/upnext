@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, PageHeader, AppButton } from "@/components/app/ui";
+import { CalendarWeekNav } from "@/components/app/CalendarWeekNav";
 import { getWeekRange } from "@/lib/datetime/calendar";
-import { formatTimeHmInTimezone } from "@/lib/datetime/timezone";
+import { formatTimeHmInTimezone, localDateTimeToUtc } from "@/lib/datetime/timezone";
 import { getAppSession } from "@/server/permissions/session";
 import { listJobsInRange } from "@/server/repositories/jobs";
 import { prisma } from "@/lib/db/prisma";
@@ -14,17 +15,25 @@ const statusColor: Record<string, string> = {
   completed: "border-brand-500 bg-brand-100 text-brand-800",
 };
 
-export default async function CalendarPage() {
+export default async function CalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ week?: string }>;
+}) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/calendar");
 
+  const params = await searchParams;
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
     select: { timezone: true },
   });
   const timeZone = org?.timezone ?? "America/New_York";
 
-  const { days, rangeStart, rangeEnd, weekLabel } = getWeekRange(timeZone);
+  const anchor = params.week ? localDateTimeToUtc(params.week, "12:00", timeZone) : new Date();
+  const { days, rangeStart, rangeEnd, weekLabel, todayYmd } = getWeekRange(timeZone, anchor);
+  const weekStartYmd = days[0]?.date ?? "";
+  const isCurrentWeek = weekStartYmd <= todayYmd && days[6]?.date >= todayYmd;
   const jobs = await listJobsInRange(session.organizationId, rangeStart, rangeEnd);
 
   const jobsByDate = Object.fromEntries(
@@ -39,7 +48,12 @@ export default async function CalendarPage() {
       <PageHeader
         title="Calendar"
         subtitle={weekLabel}
-        action={<AppButton href="/app/jobs">View all jobs</AppButton>}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <CalendarWeekNav weekStartYmd={weekStartYmd} isCurrentWeek={isCurrentWeek} />
+            <AppButton href="/app/jobs">View all jobs</AppButton>
+          </div>
+        }
       />
 
       <Card className="overflow-x-auto p-3">

@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Check, X, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Card, PageHeader, AppButton } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
+import { BookingListActions } from "@/components/app/BookingListActions";
 import { formatDisplayDateTime } from "@/lib/datetime/timezone";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { listBookingRequestsForOrg } from "@/server/repositories/bookings";
-import { acceptBookingAction, declineBookingAction } from "@/server/actions/bookings";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function BookingsPage({
@@ -98,24 +98,7 @@ export default async function BookingsPage({
 
                   {b.status === "pending" && canRespond && (
                     <div className="flex items-center gap-2">
-                      <form action={acceptBookingAction}>
-                        <input type="hidden" name="bookingRequestId" value={b.id} />
-                        <button
-                          type="submit"
-                          className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-3.5 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
-                        >
-                          <Check className="size-4" /> Accept
-                        </button>
-                      </form>
-                      <form action={declineBookingAction}>
-                        <input type="hidden" name="bookingRequestId" value={b.id} />
-                        <button
-                          type="submit"
-                          className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold text-ink-600 ring-1 ring-ink-200 hover:bg-ink-100"
-                        >
-                          <X className="size-4" /> Decline
-                        </button>
-                      </form>
+                      <BookingListActions bookingRequestId={b.id} />
                     </div>
                   )}
                   <span className="self-center text-xs text-ink-400">Submitted {submitted}</span>

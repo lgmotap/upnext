@@ -54,6 +54,7 @@ export function ManualBookingClient({
   initialDays,
   initialSlots,
   initialServiceId,
+  initialCustomerId = "",
   initialDate,
   initialTime,
 }: {
@@ -65,13 +66,18 @@ export function ManualBookingClient({
   initialDays: BookableDay[];
   initialSlots: SlotOption[];
   initialServiceId: string;
+  initialCustomerId?: string;
   initialDate: string;
   initialTime: string;
 }) {
   const [customerMode, setCustomerMode] = useState<"existing" | "new">(
     customers.length > 0 ? "existing" : "new",
   );
-  const [customerId, setCustomerId] = useState(customers[0]?.id ?? "");
+  const [customerId, setCustomerId] = useState(
+    initialCustomerId && customers.some((c) => c.id === initialCustomerId)
+      ? initialCustomerId
+      : (customers[0]?.id ?? ""),
+  );
   const [serviceId, setServiceId] = useState(initialServiceId);
   const [addonIds, setAddonIds] = useState<string[]>([]);
   const [days, setDays] = useState<BookableDay[]>(initialDays);

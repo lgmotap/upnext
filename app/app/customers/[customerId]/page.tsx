@@ -5,7 +5,9 @@ import { Card, CardHeader, StatCard, Avatar } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatMoney } from "@/lib/money/format";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
+import { CustomerDetailActions } from "@/components/app/CustomerDetailActions";
 import { getAppSession } from "@/server/permissions/session";
+import { canManageBookings } from "@/server/permissions/can";
 import {
   getCustomerForOrg,
   getCustomerLifetimeCents,
@@ -15,21 +17,28 @@ import { prisma } from "@/lib/db/prisma";
 
 export default async function CustomerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ customerId: string }>;
+  searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in");
 
   const { customerId } = await params;
+  const query = await searchParams;
   const customer = await getCustomerForOrg(session.organizationId, customerId);
   if (!customer) notFound();
 
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
-    select: { timezone: true },
+    select: { timezone: true, businessProfile: { select: { publicSlug: true } } },
   });
   const timeZone = org?.timezone ?? "America/New_York";
+  const slug = org?.businessProfile?.publicSlug ?? "";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const bookAgainHref = slug ? `${appUrl}/book/${slug}` : "/app/bookings/new";
+  const canEdit = canManageBookings(session);
 
   const [history, lifetimeCents] = await Promise.all([
     listJobsForCustomer(session.organizationId, customerId),
@@ -47,6 +56,17 @@ export default async function CustomerDetailPage({
       >
         <ArrowLeft className="size-4" /> Back to customers
       </Link>
+
+      {query.error && (
+        <p className="mb-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 ring-1 ring-rose-100">
+          {decodeURIComponent(query.error)}
+        </p>
+      )}
+      {query.saved && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          {query.saved === "notes" ? "Notes saved." : "Address added."}
+        </p>
+      )}
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -68,6 +88,12 @@ export default async function CustomerDetailPage({
             )}
           </div>
         </div>
+        <CustomerDetailActions
+          customerId={customerId}
+          notes={customer.notes ?? ""}
+          bookAgainHref={bookAgainHref}
+          canEdit={canEdit}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -125,6 +151,21 @@ export default async function CustomerDetailPage({
               <p className="flex items-start gap-2">
                 <MapPin className="size-4 shrink-0 text-ink-400" /> {formatAddressLine(defaultAddress)}
               </p>
+            )}
+            {customer.addresses.length > 1 && (
+              <div className="space-y-2 border-t border-ink-100 pt-3">
+                <p className="text-xs font-semibold uppercase text-ink-400">All addresses</p>
+                {customer.addresses.map((a) => (
+                  <p key={a.id} className="text-xs text-ink-600">
+                    {formatAddressLine(a)}
+                    {a.isDefault && (
+                      <span className="ml-1.5 rounded bg-ink-100 px-1.5 py-0.5 text-[10px] font-semibold text-ink-500">
+                        Default
+                      </span>
+                    )}
+                  </p>
+                ))}
+              </div>
             )}
             {customer.notes && <p className="text-xs text-ink-500">{customer.notes}</p>}
           </div>

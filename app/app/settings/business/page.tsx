@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, CardHeader } from "@/components/app/ui";
+import { CopyBookingLink } from "@/components/app/CopyBookingLink";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBusiness } from "@/server/permissions/can";
 import { getBusinessSetup } from "@/server/services/business";
@@ -43,7 +44,9 @@ export default async function BusinessSettingsPage({
       <Card className="mb-4 p-5">
         <h2 className="text-sm font-bold text-ink-950">Public booking link</h2>
         <p className="mt-1 text-sm text-ink-500">Share this link so customers can request appointments.</p>
-        <p className="mt-3 break-all rounded-xl bg-ink-50 px-3 py-2.5 font-mono text-sm text-ink-800">{bookingUrl}</p>
+        <div className="mt-3">
+          <CopyBookingLink url={bookingUrl} />
+        </div>
         <Link href={bookingUrl} target="_blank" className="mt-3 inline-block text-sm font-semibold text-brand-700">
           Preview booking page →
         </Link>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Check, X, CalendarClock, MapPin, Clock, Mail, Phone, Briefcase } from "lucide-react";
+import { ArrowLeft, CalendarClock, MapPin, Clock, Mail, Phone, Briefcase } from "lucide-react";
 import { Card, CardHeader, AppButton } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatDisplayDateTime } from "@/lib/datetime/timezone";
@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/money/format";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { getBookingRequestForOrg } from "@/server/repositories/bookings";
-import { acceptBookingAction, declineBookingAction } from "@/server/actions/bookings";
+import { BookingRespondPanel } from "@/components/app/BookingRespondPanel";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function BookingDetailPage({
@@ -161,28 +161,8 @@ export default async function BookingDetailPage({
           {canRespond && (
             <Card>
               <CardHeader title="Respond" />
-              <div className="space-y-2.5 p-5">
-                <form action={acceptBookingAction}>
-                  <input type="hidden" name="bookingRequestId" value={booking.id} />
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
-                  >
-                    <Check className="size-4" /> Accept &amp; create job
-                  </button>
-                </form>
-                <form action={declineBookingAction}>
-                  <input type="hidden" name="bookingRequestId" value={booking.id} />
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-semibold text-rose-600 ring-1 ring-rose-200 hover:bg-rose-50"
-                  >
-                    <X className="size-4" /> Decline
-                  </button>
-                </form>
-                <p className="pt-1 text-center text-xs text-ink-400">
-                  Accepting creates a scheduled job and opens it for assignment.
-                </p>
+              <div className="p-5">
+                <BookingRespondPanel bookingRequestId={booking.id} />
               </div>
             </Card>
           )}

@@ -2,14 +2,24 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Mail, Phone } from "lucide-react";
 import { Card, PageHeader, Avatar, AppButton } from "@/components/app/ui";
+import { CopyBookingLink } from "@/components/app/CopyBookingLink";
 import { formatMoney } from "@/lib/money/format";
 import { formatAddressLine } from "@/lib/datetime/calendar";
 import { getAppSession } from "@/server/permissions/session";
 import { listCustomersForOrg, getCustomerLifetimeCents } from "@/server/repositories/customers";
+import { prisma } from "@/lib/db/prisma";
 
 export default async function CustomersPage() {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/customers");
+
+  const org = await prisma.organization.findUnique({
+    where: { id: session.organizationId },
+    select: { businessProfile: { select: { publicSlug: true } } },
+  });
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const slug = org?.businessProfile?.publicSlug ?? "";
+  const bookingUrl = slug ? `${appUrl}/book/${slug}` : null;
 
   const customers = await listCustomersForOrg(session.organizationId);
   const lifetimeByCustomer = await Promise.all(
@@ -25,7 +35,13 @@ export default async function CustomersPage() {
       <PageHeader
         title="Customers"
         subtitle="Profiles, history, and lifetime value."
-        action={<AppButton href="/book">Share booking page</AppButton>}
+        action={
+          bookingUrl ? (
+            <CopyBookingLink url={bookingUrl} label="Share booking page" />
+          ) : (
+            <AppButton href="/app/settings/business">Set up booking page</AppButton>
+          )
+        }
       />
 
       {customers.length === 0 ? (

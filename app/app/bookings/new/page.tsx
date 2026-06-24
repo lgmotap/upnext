@@ -25,7 +25,7 @@ function formatTime12h(hm: string): string {
 export default async function NewManualBookingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; customerId?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/bookings/new");
@@ -85,6 +85,11 @@ export default async function NewManualBookingPage({
     role: m.role,
   }));
 
+  const initialCustomerId =
+    params.customerId && customerOptions.some((c) => c.id === params.customerId)
+      ? params.customerId
+      : (customerOptions[0]?.id ?? "");
+
   return (
     <>
       <Link
@@ -133,6 +138,7 @@ export default async function NewManualBookingPage({
           initialDays={initialDays}
           initialSlots={initialSlots}
           initialServiceId={initialServiceId}
+          initialCustomerId={initialCustomerId}
           initialDate={initialDate}
           initialTime={initialTime}
         />

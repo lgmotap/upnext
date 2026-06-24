@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight, Check, X } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Card, CardHeader, PageHeader, StatCard, Avatar, AppButton } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
+import { GettingStartedChecklist } from "@/components/app/GettingStartedChecklist";
+import { BookingQuickActions } from "@/components/app/BookingQuickActions";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { getDashboardData } from "@/server/services/dashboard";
-import { acceptBookingAction, declineBookingAction } from "@/server/actions/bookings";
+import { getGettingStartedTasks } from "@/server/services/getting-started";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function DashboardPage() {
@@ -15,17 +17,27 @@ export default async function DashboardPage() {
 
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
-    select: { timezone: true, currency: true },
+    select: {
+      timezone: true,
+      currency: true,
+      businessProfile: { select: { publicSlug: true } },
+    },
   });
   const timeZone = org?.timezone ?? "America/New_York";
   const currency = org?.currency ?? "USD";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const slug = org?.businessProfile?.publicSlug ?? "";
+  const bookingUrl = slug ? `${appUrl}/book/${slug}` : "";
 
-  const data = await getDashboardData(
-    session.organizationId,
-    timeZone,
-    currency,
-    session.name ?? session.email.split("@")[0],
-  );
+  const [data, gettingStarted] = await Promise.all([
+    getDashboardData(
+      session.organizationId,
+      timeZone,
+      currency,
+      session.name ?? session.email.split("@")[0],
+    ),
+    getGettingStartedTasks(session.organizationId, bookingUrl || "Set up your booking page in Settings"),
+  ]);
   const canRespond = canManageBookings(session);
 
   return (
@@ -35,6 +47,14 @@ export default async function DashboardPage() {
         subtitle={`${data.dateLabel} · here's what's happening today.`}
         action={<AppButton href="/app/calendar">View calendar</AppButton>}
       />
+
+      {bookingUrl && (
+        <GettingStartedChecklist
+          tasks={gettingStarted.tasks}
+          percent={gettingStarted.percent}
+          bookingUrl={bookingUrl}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {data.stats.map((s) => (
@@ -104,30 +124,7 @@ export default async function DashboardPage() {
                         {b.serviceName} · {b.requestedLabel}
                       </p>
                     </Link>
-                    {canRespond && (
-                      <>
-                        <form action={acceptBookingAction}>
-                          <input type="hidden" name="bookingRequestId" value={b.id} />
-                          <button
-                            type="submit"
-                            aria-label="Accept"
-                            className="flex size-7 items-center justify-center rounded-lg bg-brand-400 text-brand-950 hover:bg-brand-300"
-                          >
-                            <Check className="size-4" />
-                          </button>
-                        </form>
-                        <form action={declineBookingAction}>
-                          <input type="hidden" name="bookingRequestId" value={b.id} />
-                          <button
-                            type="submit"
-                            aria-label="Decline"
-                            className="flex size-7 items-center justify-center rounded-lg bg-ink-100 text-ink-500 hover:bg-ink-200"
-                          >
-                            <X className="size-4" />
-                          </button>
-                        </form>
-                      </>
-                    )}
+                    {canRespond && <BookingQuickActions bookingRequestId={b.id} />}
                   </div>
                 </li>
               ))}

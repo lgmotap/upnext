@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Card, PageHeader, Avatar } from "@/components/app/ui";
+import { FormSubmitButton } from "@/components/app/FormSubmitButton";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageTeam } from "@/server/permissions/can";
 import { listTeamMembers } from "@/server/repositories/team";
@@ -80,12 +81,7 @@ export default async function TeamPage({
                 <option value="dispatcher">Dispatcher</option>
               </select>
             </div>
-            <button
-              type="submit"
-              className="rounded-full bg-brand-400 px-5 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
-            >
-              Send invite
-            </button>
+            <FormSubmitButton loadingLabel="Sending…">Send invite</FormSubmitButton>
           </form>
         </Card>
       )}

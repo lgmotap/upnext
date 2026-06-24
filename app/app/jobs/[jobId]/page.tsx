@@ -6,18 +6,14 @@ import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatMoney } from "@/lib/money/format";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
 import { formatElapsedDuration } from "@/lib/datetime/duration";
+import { JobDetailActions } from "@/components/app/JobDetailActions";
 import { JobChecklist } from "@/components/crew/JobChecklist";
 import { JobPhotoGallery } from "@/components/crew/JobPhotos";
 import { getJobPhotosWithUrls } from "@/server/services/job-photos";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { getJobForOrg } from "@/server/repositories/jobs";
-import { markJobCompleteAction, markJobInProgressAction, assignJobAction } from "@/server/actions/jobs";
-import {
-  markJobPaymentOverdueAction,
-  markJobPaymentPaidAction,
-  requestJobPaymentLinkAction,
-} from "@/server/actions/payments";
+import { markJobPaymentOverdueAction, markJobPaymentPaidAction, requestJobPaymentLinkAction } from "@/server/actions/payments";
 import { getAssignableMembers } from "@/server/repositories/team";
 import { canAssignJobs } from "@/server/permissions/job-access";
 import { isStripeConfigured } from "@/server/services/payments";
@@ -28,7 +24,7 @@ export default async function JobDetailPage({
   searchParams,
 }: {
   params: Promise<{ jobId: string }>;
-  searchParams: Promise<{ error?: string; payment?: string }>;
+  searchParams: Promise<{ error?: string; payment?: string; cancelled?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in");
@@ -49,6 +45,10 @@ export default async function JobDetailPage({
   const canEdit = canManageBookings(session);
   const canAssign = canAssignJobs(session);
   const assignable = canAssign ? await getAssignableMembers(session.organizationId) : [];
+  const assignableOptions = assignable.map((m) => ({
+    id: m.id,
+    label: `${m.user.name ?? m.user.email} (${m.role})`,
+  }));
   const assignee = job.assignments[0]?.membership;
   const payment = job.paymentRecord;
   const stripeReady = isStripeConfigured() && Boolean(org?.stripeConnectChargesEnabled);
@@ -79,6 +79,12 @@ export default async function JobDetailPage({
         </p>
       )}
 
+      {query.cancelled === "1" && (
+        <p className="mb-4 rounded-xl bg-ink-50 px-3.5 py-2.5 text-sm text-ink-700 ring-1 ring-ink-200">
+          Job cancelled.
+        </p>
+      )}
+
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-3">
@@ -90,30 +96,14 @@ export default async function JobDetailPage({
             {job.service.name} · {schedule.date} at {schedule.shortTime}
           </p>
         </div>
-        {canEdit && job.status !== "completed" && job.status !== "cancelled" && (
-          <div className="flex gap-2">
-            {job.status === "scheduled" && (
-              <form action={markJobInProgressAction}>
-                <input type="hidden" name="jobId" value={job.id} />
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold ring-1 ring-ink-200 text-ink-800 hover:ring-brand-400"
-                >
-                  Start job
-                </button>
-              </form>
-            )}
-            <form action={markJobCompleteAction}>
-              <input type="hidden" name="jobId" value={job.id} />
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
-              >
-                Mark complete
-              </button>
-            </form>
-          </div>
-        )}
+        <JobDetailActions
+          jobId={job.id}
+          status={job.status}
+          canEdit={canEdit}
+          canAssign={canAssign}
+          assignable={assignableOptions}
+          currentAssigneeId={assignee?.id}
+        />
       </div>
 
       <Card>
@@ -155,38 +145,9 @@ export default async function JobDetailPage({
               <span className="ml-2 text-xs font-normal capitalize text-ink-500">{assignee.role}</span>
             </p>
           ) : (
-            <p className="text-sm text-ink-500">No one assigned yet.</p>
-          )}
-          {canAssign && assignable.length > 0 && (
-            <form action={assignJobAction} className="mt-4 flex flex-wrap items-end gap-2">
-              <input type="hidden" name="jobId" value={job.id} />
-              <div className="min-w-[12rem] flex-1">
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
-                  Assign to
-                </label>
-                <select
-                  name="membershipId"
-                  defaultValue={assignee?.id ?? ""}
-                  className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-ink-200"
-                  required
-                >
-                  <option value="" disabled>
-                    Select team member
-                  </option>
-                  {assignable.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {(m.user.name ?? m.user.email) + ` (${m.role})`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                type="submit"
-                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
-              >
-                Save assignment
-              </button>
-            </form>
+            <p className="text-sm text-ink-500">
+              No one assigned yet.{canAssign && assignable.length > 0 ? " Use Assign above." : ""}
+            </p>
           )}
         </div>
       </Card>

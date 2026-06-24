@@ -20,7 +20,7 @@ export default async function OnboardingPage({
   const setup = await getBusinessSetup(session.organizationId);
   const profile = setup?.businessProfile;
   if (profile?.onboardingCompletedAt) {
-    redirect("/app/dashboard");
+    redirect("/api/onboarding/sync-cookie?next=/app/dashboard");
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
