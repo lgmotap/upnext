@@ -19,3 +19,6 @@ Deny by default · authenticate server-side · authorize every org-owned resourc
 
 ## Non-stop build loop
 Read docs → inspect code → short plan → smallest safe implementation → validate → fix → repeat → self-review → update docs → summarize how to test.
+
+## Sprint marathon (remaining MVP)
+Use skill **`upnext-sprint-marathon`** + rule **`.cursor/rules/090-autonomous-sprint-execution.mdc`**. Do not ask to continue between sprints 07 → 08 → launch checklist. `.cursor/hooks/sprint-marathon-continue.sh` auto-resumes on agent stop when unchecked tasks remain.

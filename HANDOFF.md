@@ -5,40 +5,28 @@ Snapshot of where the project stands and exactly how to keep going. Pairs with
 
 ## TL;DR
 - **Marketing landing page** (`/`) — done (Pluto-style green). Untouched by product work.
-- **Product app** (`/app/*`) — Pluto-styled UI shell on **mock data** (`lib/mock/`), navigable.
+- **Product app** (`/app/*`) — sprints 02–08 complete. **Launch checklist** — only Resend prod domain remains.
 - **Auth** (Supabase) + **Prisma 7** backend — wired; DB schema migrated (User, Organization,
   Membership, BusinessProfile).
 - **Onboarding wizard** (`/app/onboarding`) — built and building green; runs once real DB env is set.
 - Stack is green on **Node 22 / Prisma 7**: `db:validate`, `db:generate`, `typecheck`, `lint`, `build`.
 
-## ⚠️ The one thing blocking live runtime: 3 secrets
-`.env.local` has real **public** Supabase values; these 3 **secrets** are placeholders:
+## Phase A — Live runtime (done)
 
-| Var | Source (Supabase dashboard, project `upnext-saas-supa`) |
-|---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → `service_role` key |
-| `DATABASE_URL` | Connect → ORMs/Prisma → **pooled** URL (port 6543) |
-| `DIRECT_URL` | Connect → ORMs/Prisma → **direct** URL (port 5432) |
-
-Best practice (already half-set-up): keep secrets in **Vercel** and pull locally.
-```bash
-# Add the 3 secrets in Vercel → upnext-saas → Settings → Environment Variables (all envs), then:
-vercel env pull .env.local        # project is already linked (.vercel/)
-# verify:
-node -e "require('dotenv').config({path:'.env.local'}); console.log(require('tsx/cjs') && 0)" 2>/dev/null
-```
-Public `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are already set in Vercel
-(Production/Preview/Development) and in `.env.local`.
+### Done via agent / MCP
+- **RLS enabled** on tenant tables (Supabase MCP).
+- **Env green**: `npm run check:env` passes; Prisma connects to Supabase.
+- **Vercel-first local dev**: `npm run dev` uses `vercel env run`.
 
 ## Run locally
 ```bash
 nvm use                 # Node 22 (.nvmrc)
 npm install             # if engine EPERM, see note below
+npm run check:env       # verify secrets before dev
 npm run dev             # http://localhost:3000
 ```
-- `/` landing · `/app/dashboard` product shell (mock) · `/sign-in` · `/app/onboarding`.
-- Until the 3 secrets are real, `/app/*` redirects to `/sign-in` and auth shows
-  "Server is not configured".
+- `/` landing · `/app/dashboard` (real data) · `/sign-in` · `/app/onboarding`.
+- Until secrets are real, auth shows **"Server is not configured"** — run `npm run check:env`.
 
 ### macOS Prisma engine `EPERM` workaround
 `prisma generate` may fail copying `node_modules/@prisma/engines/schema-engine-darwin-arm64`
@@ -57,29 +45,80 @@ Not an issue on Linux CI / Vercel.
 4. Verify with the Supabase connector / SQL: `Organization.timezone/currency` and
    `BusinessProfile.serviceArea/phone/description` updated for your org.
 
-## Security: enable RLS (decision pending)
-Supabase reports **Row Level Security disabled** on all 4 tables. The app reads via Prisma
-(direct connection, bypasses RLS), so enabling it is safe:
-```sql
-ALTER TABLE public."User" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public."Organization" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public."Membership" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public."BusinessProfile" ENABLE ROW LEVEL SECURITY;
-```
+## Security: RLS (done)
+RLS is **enabled** on `User`, `Organization`, `Membership`, `BusinessProfile`; `anon`/`authenticated` revoked. Prisma uses the direct postgres connection (bypasses RLS). No client-side Supabase table access in MVP.
 
 ## Architecture quick map (follow these patterns)
 - `server/validators/*` — Zod input schemas
 - `server/permissions/{session,can}.ts` — auth session + RBAC (deny by default)
-- `server/services/*` — business logic + Prisma writes (repositories come in Sprint 02+)
+- `server/services/*` — business logic + Prisma writes
+- `server/repositories/*` — org-scoped queries
 - `server/actions/*` — `"use server"` actions: session → permission → validate → service
-- `app/app/*` — product UI (currently mock data except onboarding)
-- `lib/mock/data.ts` — mock data to be replaced by real queries
+- `app/app/*` — product UI (real data on most routes)
+- `tasks/mvp-traceability.md` — **MVP scope ↔ sprint audit** (run before each sprint)
+- `.cursor/rules/090-autonomous-sprint-execution.mdc` — sprint marathon: do not ask to continue
+- `.claude/skills/upnext-sprint-marathon/SKILL.md` — orchestrates 07 → 08 → launch checklist
 
-## Next steps (Sprint 02)
-1. Add `Service`, `AvailabilityRule`, `BlackoutDate` models (`docs/07`) + migration.
-2. Services CRUD + availability settings (replace mock `/app/services`, settings).
-3. Wire `/app/dashboard`, `/app/bookings`, etc. to real data via `server/services` +
-   `server/repositories` (introduce the repo layer here — multiple queries per entity now).
-4. Public booking `/book/[slug]` → real availability + create BookingRequest.
+## Sprint 02 — done
+Services CRUD, availability settings, public booking profile + services.
 
-See `tasks/sprint-02-services-availability.md` and onward.
+## Sprint 03 — done
+Public booking with real slots, booking requests, inbox accept/decline.
+
+## Sprint 04 — done
+Accept booking → job; jobs list/detail; calendar week view; customers CRM.
+
+## Test scripts
+```bash
+npm run smoke:booking   # DB + slot engine check
+npm run smoke:e2e       # full seed → book → accept → job
+npm run smoke:manual-booking  # owner manual booking → job (source=manual)
+npm run smoke:launch          # full launch checklist suite
+npm run smoke:launch-onboarding
+npm run smoke:launch-crew
+npm run smoke:launch-payment
+npm run test:e2e              # Playwright UI smoke (needs dev server on :3000)
+```
+
+## Sprint 05 — done
+Job assignments, team list, crew view with worker auth.
+
+## Sprint 06 — done
+Payments, Stripe Connect + webhooks, booking detail wired, 8 notification types + NotificationLog + reminder cron, crew check-in timer + checklist + photos, team invite flow.
+
+**Before production:** verify a sending domain on the **UpNext** Resend account and update `EMAIL_FROM` / remove `RESEND_SANDBOX_TO` — checklist in `docs/13-notifications.md` and `tasks/launch-checklist.md`.
+
+## Sprint 07 — done
+Dashboard real data · owner manual booking at `/app/bookings/new` (customer pick/create, service, addons, slot, optional worker assign, auto-accept → job, `source=manual`) · business settings wired · notification toggles persisted on `BusinessProfile` and honored by senders · billing Stripe Connect UI · dashboard/settings loading + error boundaries.
+
+## Sprint 08 — done
+App-wide error boundaries (`ErrorFallback`, `global-error`, per-route `error.tsx`) · PostHog provider + server events (booking, job, payment) · Sentry instrumentation (optional via `SENTRY_DSN`) · skip link + focus-visible a11y · Playwright e2e (`tests/e2e/critical-flows.spec.ts`) · security review (`tasks/sprint-08-security-review.md`).
+
+## Launch checklist — almost done
+Automated: `npm run smoke:launch` (onboarding → book → crew complete → payment dashboard → Stripe).
+
+**Remaining (production gate — needs owner action):**
+1. **Resend domain** — verify sending domain on UpNext Resend account; set `EMAIL_FROM` on Vercel Production; remove `RESEND_SANDBOX_TO` (`docs/13-notifications.md`).
+
+Vercel Production backend env verified ✓ (`VERCEL_ENV_TARGET=production npm run check:env:vercel`). Legal: `/privacy` · `/terms`.
+
+## Sprint marathon (autonomous mode)
+
+Paste to start or resume without "should I continue?" prompts:
+
+```
+Run the UpNext sprint marathon per .cursor/rules/090-autonomous-sprint-execution.mdc
+and upnext-sprint-marathon skill. Start at the first unchecked item in sprint 07.
+Do not ask to continue. Do not commit. Fix tests yourself. Stop only on documented
+blockers (missing secrets, ambiguous product). Continue through sprint 08 and
+launch-checklist until done or blocked.
+```
+
+- **Rule:** `.cursor/rules/090-autonomous-sprint-execution.mdc`
+- **Skill:** `.claude/skills/upnext-sprint-marathon/SKILL.md`
+- **Hook:** `.cursor/hooks/sprint-marathon-continue.sh` (auto-resume on agent stop; `loop_limit: 50`)
+- Restart Cursor after first hook install; verify in Settings → Hooks.
+
+**PO decision (2026-06-24):** Competitor research is done. Run `tasks/mvp-traceability.md` — not more crawls — before coding.
+
+Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/gap-analysis.md`

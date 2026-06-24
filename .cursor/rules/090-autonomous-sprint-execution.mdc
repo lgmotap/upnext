@@ -1,0 +1,39 @@
+---
+description: Continue through MVP sprints without asking to proceed
+alwaysApply: true
+---
+
+# Autonomous sprint execution
+
+When working on UpNext MVP sprints, **never** ask:
+- "Should I continue?"
+- "Want me to proceed?"
+- "Shall I move to the next sprint?"
+
+Instead:
+1. Read `tasks/mvp-traceability.md` → current sprint file → next unchecked `- [ ]` item.
+2. Apply `upnext-feature-loop` (or `upnext-sprint-marathon`) for that item.
+3. Mark the checkbox `[x]`, update `HANDOFF.md` + `CHANGELOG.md` when sprint scope changes.
+4. **Immediately** start the next unchecked item in the **same turn** when context allows.
+5. Sprint order: **07 → 08 → `tasks/launch-checklist.md`** (sprints 00–06 are done).
+
+## Only stop and ask the user when
+- Missing secrets/env block tests (OAuth, Stripe live keys, Resend domain).
+- A product decision would cause major rework and docs are silent.
+- User explicitly said stop, or asked for commit/push/PR.
+- Context or hook `loop_limit` is exhausted — report blocker + exact resume point, not a generic "continue?".
+
+## Never stop for
+- Sprint boundaries (08 after 07, launch checklist after 08).
+- "Large diff" — keep going in smaller chunks; validate each chunk.
+- Routine test failures — fix and retry until green or a real external blocker.
+
+## Git
+Do **not** commit or push unless the user explicitly asked. Keep building across sprints without commits.
+
+## Blocker format (only valid stop)
+```
+BLOCKER: <what>
+RESUME: Read tasks/<sprint-file>.md → "<exact unchecked line>"
+COMMANDS TRIED: <list>
+```

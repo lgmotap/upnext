@@ -1,0 +1,417 @@
+"use client";
+
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { Check, Clock, Plus, UserPlus } from "lucide-react";
+import { BookingMonthCalendar } from "@/components/booking/BookingMonthCalendar";
+import { formatMoney } from "@/lib/money/format";
+import { monthKeyFromYmd, type BookableDay } from "@/lib/availability/calendar-ui";
+import { submitManualBookingAction } from "@/server/actions/manual-booking";
+import {
+  fetchManualAvailableDaysAction,
+  fetchManualSlotsForDayAction,
+} from "@/server/actions/manual-booking-slots";
+
+const input =
+  "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
+
+type ServiceOption = {
+  id: string;
+  name: string;
+  durationMinutes: number;
+  basePriceCents: number;
+  currency: string;
+  description: string | null;
+};
+
+type CustomerOption = {
+  id: string;
+  label: string;
+  email: string;
+  addressLine: string;
+};
+
+type MemberOption = {
+  id: string;
+  label: string;
+  role: string;
+};
+
+type SlotOption = { date: string; time: string; label: string };
+
+function computeTotals(primary: ServiceOption | undefined, addons: ServiceOption[]) {
+  if (!primary) return { priceCents: 0, durationMinutes: 0, currency: "USD" };
+  const priceCents = primary.basePriceCents + addons.reduce((s, a) => s + a.basePriceCents, 0);
+  const durationMinutes = primary.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
+  return { priceCents, durationMinutes, currency: primary.currency };
+}
+
+export function ManualBookingClient({
+  timeZone,
+  primaryServices,
+  addonServices,
+  customers,
+  assignableMembers,
+  initialDays,
+  initialSlots,
+  initialServiceId,
+  initialDate,
+  initialTime,
+}: {
+  timeZone: string;
+  primaryServices: ServiceOption[];
+  addonServices: ServiceOption[];
+  customers: CustomerOption[];
+  assignableMembers: MemberOption[];
+  initialDays: BookableDay[];
+  initialSlots: SlotOption[];
+  initialServiceId: string;
+  initialDate: string;
+  initialTime: string;
+}) {
+  const [customerMode, setCustomerMode] = useState<"existing" | "new">(
+    customers.length > 0 ? "existing" : "new",
+  );
+  const [customerId, setCustomerId] = useState(customers[0]?.id ?? "");
+  const [serviceId, setServiceId] = useState(initialServiceId);
+  const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [days, setDays] = useState<BookableDay[]>(initialDays);
+  const [slots, setSlots] = useState(initialSlots);
+  const [date, setDate] = useState(initialDate);
+  const [time, setTime] = useState(initialTime);
+  const [viewMonth, setViewMonth] = useState(
+    () => initialDays[0]?.monthKey ?? monthKeyFromYmd(new Date().toISOString().slice(0, 10)),
+  );
+  const [pending, startTransition] = useTransition();
+
+  const addonKey = addonIds.slice().sort().join(",");
+
+  const selectedPrimary = primaryServices.find((s) => s.id === serviceId);
+  const selectedAddons = addonServices.filter((a) => addonIds.includes(a.id));
+  const totals = useMemo(
+    () => computeTotals(selectedPrimary, selectedAddons),
+    [selectedPrimary, selectedAddons],
+  );
+
+  useEffect(() => {
+    if (!serviceId) return;
+    startTransition(async () => {
+      const { days: nextDays, timeZone: tz } = await fetchManualAvailableDaysAction(
+        serviceId,
+        addonKey || undefined,
+      );
+      setDays(nextDays);
+      const nextDate = nextDays.find((d) => d.date === date)?.date ?? nextDays[0]?.date ?? "";
+      setDate(nextDate);
+      if (nextDate) {
+        setViewMonth(monthKeyFromYmd(nextDate));
+        const { slots: nextSlots } = await fetchManualSlotsForDayAction(
+          serviceId,
+          nextDate,
+          addonKey || undefined,
+        );
+        setSlots(nextSlots);
+        setTime(nextSlots.find((s) => s.time === time)?.time ?? nextSlots[0]?.time ?? "");
+      } else {
+        setSlots([]);
+        setTime("");
+      }
+      void tz;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch when service or addons change
+  }, [serviceId, addonKey]);
+
+  function selectDate(nextDate: string) {
+    setDate(nextDate);
+    setViewMonth(monthKeyFromYmd(nextDate));
+    startTransition(async () => {
+      const { slots: nextSlots } = await fetchManualSlotsForDayAction(
+        serviceId,
+        nextDate,
+        addonKey || undefined,
+      );
+      setSlots(nextSlots);
+      setTime(nextSlots[0]?.time ?? "");
+    });
+  }
+
+  function toggleAddon(id: string) {
+    setAddonIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  if (primaryServices.length === 0) {
+    return (
+      <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-100">
+        Add at least one active service before creating a manual booking.
+      </p>
+    );
+  }
+
+  return (
+    <form action={submitManualBookingAction} className="space-y-4">
+      <input type="hidden" name="serviceId" value={serviceId} />
+      <input type="hidden" name="date" value={date} />
+      <input type="hidden" name="time" value={time} />
+      {customerMode === "existing" && customerId ? (
+        <input type="hidden" name="customerId" value={customerId} />
+      ) : null}
+      {addonIds.map((id) => (
+        <input key={id} type="hidden" name="addonServiceIds" value={id} />
+      ))}
+
+      <Section title="Customer" step="1">
+        <div className="mb-4 flex flex-wrap gap-2">
+          <ModeButton
+            active={customerMode === "existing"}
+            onClick={() => setCustomerMode("existing")}
+            disabled={customers.length === 0}
+          >
+            Existing customer
+          </ModeButton>
+          <ModeButton active={customerMode === "new"} onClick={() => setCustomerMode("new")}>
+            <UserPlus className="size-4" /> New customer
+          </ModeButton>
+        </div>
+
+        {customerMode === "existing" ? (
+          customers.length === 0 ? (
+            <p className="text-sm text-ink-500">No customers yet — add a new customer below.</p>
+          ) : (
+            <select
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+              className={input}
+              required
+            >
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label} · {c.email}
+                </option>
+              ))}
+            </select>
+          )
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="First name" name="firstName" required />
+            <Field label="Last name" name="lastName" required />
+            <div className="sm:col-span-2">
+              <Field label="Email" name="email" type="email" required />
+            </div>
+            <Field label="Phone" name="phone" />
+            <div className="sm:col-span-2">
+              <Field label="Street address" name="line1" required />
+            </div>
+            <Field label="Apt / suite" name="line2" />
+            <Field label="City" name="city" required />
+            <Field label="State / region" name="region" required />
+            <Field label="Postal code" name="postalCode" required />
+          </div>
+        )}
+      </Section>
+
+      <Section title="Service" step="2">
+        <div className="grid gap-2.5">
+          {primaryServices.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setServiceId(s.id)}
+              className={`flex items-start justify-between rounded-2xl px-4 py-3.5 text-left ring-1 transition ${
+                serviceId === s.id
+                  ? "bg-brand-50 ring-brand-300"
+                  : "bg-white ring-ink-200 hover:ring-ink-300"
+              }`}
+            >
+              <div>
+                <p className="font-semibold text-ink-950">{s.name}</p>
+                {s.description && <p className="mt-0.5 text-sm text-ink-500">{s.description}</p>}
+                <p className="mt-1 flex items-center gap-1 text-xs text-ink-400">
+                  <Clock className="size-3.5" /> {s.durationMinutes} min
+                </p>
+              </div>
+              <span className="text-sm font-bold text-ink-800">
+                {formatMoney(s.basePriceCents, s.currency)}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {addonServices.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-sm font-medium text-ink-700">Add-ons (optional)</p>
+            <div className="flex flex-wrap gap-2">
+              {addonServices.map((a) => {
+                const selected = addonIds.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => toggleAddon(a.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ring-1 ${
+                      selected
+                        ? "bg-brand-100 text-brand-900 ring-brand-200"
+                        : "bg-white text-ink-600 ring-ink-200 hover:bg-ink-50"
+                    }`}
+                  >
+                    {selected ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+                    {a.name} (+{formatMoney(a.basePriceCents, a.currency)})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <p className="mt-3 text-sm text-ink-500">
+          Estimated total:{" "}
+          <span className="font-semibold text-ink-800">
+            {formatMoney(totals.priceCents, totals.currency)}
+          </span>{" "}
+          · {totals.durationMinutes} min
+        </p>
+      </Section>
+
+      <Section title="Date & time" step="3">
+        {days.length === 0 ? (
+          <p className="text-sm text-ink-500">No available slots for this service. Check availability settings.</p>
+        ) : (
+          <>
+            <BookingMonthCalendar
+              days={days}
+              selectedDate={date}
+              viewMonth={viewMonth}
+              timeZone={timeZone}
+              onSelectDate={selectDate}
+              onViewMonthChange={setViewMonth}
+            />
+            {slots.length > 0 ? (
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {slots.map((s) => (
+                  <button
+                    key={s.time}
+                    type="button"
+                    onClick={() => setTime(s.time)}
+                    className={`rounded-xl px-2 py-2 text-sm font-medium ring-1 ${
+                      time === s.time
+                        ? "bg-brand-400 text-brand-950 ring-brand-400"
+                        : "bg-white text-ink-700 ring-ink-200 hover:ring-brand-200"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm text-ink-500">No times available on this date.</p>
+            )}
+          </>
+        )}
+      </Section>
+
+      <Section title="Notes & assignment" step="4">
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+          Customer notes
+        </label>
+        <textarea
+          name="customerNotes"
+          rows={2}
+          placeholder="Gate code, pets, parking…"
+          className={input}
+        />
+
+        {assignableMembers.length > 0 && (
+          <div className="mt-4">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+              Assign worker (optional)
+            </label>
+            <select name="assignMembershipId" defaultValue="" className={input}>
+              <option value="">Unassigned</option>
+              {assignableMembers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label} ({m.role})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </Section>
+
+      <button
+        type="submit"
+        disabled={pending || !date || !time || days.length === 0}
+        className="w-full rounded-2xl bg-brand-400 px-4 py-3.5 text-sm font-bold text-brand-950 hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {pending ? "Creating job…" : "Create booking & schedule job"}
+      </button>
+    </form>
+  );
+}
+
+function Section({
+  step,
+  title,
+  children,
+}: {
+  step: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl bg-white p-5 ring-1 ring-ink-100 shadow-soft">
+      <h2 className="mb-4 flex items-center gap-2 text-sm font-bold text-ink-950">
+        <span className="flex size-6 items-center justify-center rounded-full bg-brand-100 text-xs text-brand-800">
+          {step}
+        </span>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function ModeButton({
+  active,
+  onClick,
+  disabled,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold ring-1 disabled:opacity-40 ${
+        active
+          ? "bg-brand-100 text-brand-900 ring-brand-200"
+          : "bg-white text-ink-600 ring-ink-200 hover:bg-ink-50"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Field({
+  label,
+  name,
+  type = "text",
+  required,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+        {label}
+      </label>
+      <input name={name} type={type} required={required} className={input} />
+    </div>
+  );
+}

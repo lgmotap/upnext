@@ -140,3 +140,9 @@ h2 {
   .spotlight-card__glow { display: none; }
   html { scroll-behavior: auto; }
 }
+
+/* Keyboard focus — visible ring on interactive elements */
+:focus-visible {
+  outline: 2px solid var(--color-brand-400);
+  outline-offset: 2px;
+}

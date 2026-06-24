@@ -27,7 +27,7 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-0.5" aria-label="Product">
+      <nav className="flex flex-1 flex-col gap-0.5" aria-label="Main navigation">
         {appNav.map(({ label, href, icon: Icon, badge }) => {
           const active = isActive(pathname, href);
           return (
