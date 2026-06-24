@@ -165,7 +165,7 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 
 | Item | Backlog | CL report |
 |------|---------|-----------|
-| Customer portal | ✅ | `customer-portal.md` |
+| Customer portal | ✅ | `customer-portal.md` | **Sprint 10** (was P1 defer) |
 | Recurring / frequency | ✅ | Service Studio Frequencies |
 | Pricing parameters | — | Service Studio |
 | On The Way / Running Late | ✅ | `provider-job-workflow.md` |
@@ -193,6 +193,10 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 Sprint 06  Wire booking detail + payments + notifications (8 types) + crew depth + team invite
 Sprint 07  Dashboard + manual booking + wire business/notifications settings + payments page
 Sprint 08  E2E + RBAC audit + Sentry + PostHog + launch checklist
+Sprint 09  Portal reliability — booking link UX, Portals settings (in progress)
+Sprint 10  Customer portal v1 — magic link, history, book again
+Sprint 11  Public booking parity — frequency, prefill, embed
+Sprint 12  Operations growth — recurring, ⌘K search, full Playwright E2E
 ```
 
-See `tasks/sprint-06-payments-notifications.md`, `sprint-07-dashboard-settings.md`, `launch-checklist.md`.
+See `tasks/post-beta-roadmap.md`, `tasks/sprint-09-portal-reliability.md` through `sprint-12-operations-growth.md`.

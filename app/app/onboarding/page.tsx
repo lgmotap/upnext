@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAppSession } from "@/server/permissions/session";
 import { getBusinessSetup } from "@/server/services/business";
 import { OnboardingWizard } from "./OnboardingWizard";
+import { getBookingPageUrl } from "@/lib/url/app";
 
 export const metadata: Metadata = {
   title: "Set up your business",
@@ -23,7 +24,6 @@ export default async function OnboardingPage({
     redirect("/api/onboarding/sync-cookie?next=/app/dashboard");
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const slug = profile?.publicSlug ?? setup?.slug ?? "";
   const { error } = await searchParams;
 
@@ -31,7 +31,7 @@ export default async function OnboardingPage({
     <div className="py-6">
       <OnboardingWizard
         error={error}
-        bookingUrl={`${appUrl}/book/${slug}`}
+        bookingUrl={getBookingPageUrl(slug)}
         defaults={{
           businessType: profile?.businessType ?? "",
           teamSize: profile?.teamSize ?? "",

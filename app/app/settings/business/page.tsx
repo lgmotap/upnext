@@ -1,12 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, CardHeader } from "@/components/app/ui";
-import { CopyBookingLink } from "@/components/app/CopyBookingLink";
+import { BookingLinkCard } from "@/components/app/BookingLinkCard";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBusiness } from "@/server/permissions/can";
 import { getBusinessSetup } from "@/server/services/business";
 import { updateBusinessSettingsAction } from "@/server/actions/settings";
 import { CURRENCIES, TIMEZONES } from "@/server/validators/onboarding";
+import { getBookingPageUrl, isBookingUrlMisconfigured } from "@/lib/url/app";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
@@ -25,8 +25,8 @@ export default async function BusinessSettingsPage({
   if (!setup || !profile) redirect("/app/onboarding");
 
   const canEdit = canManageBusiness(session);
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const bookingUrl = `${appUrl}/book/${profile.publicSlug}`;
+  const bookingUrl = getBookingPageUrl(profile.publicSlug);
+  const misconfigured = isBookingUrlMisconfigured();
 
   return (
     <>
@@ -45,11 +45,19 @@ export default async function BusinessSettingsPage({
         <h2 className="text-sm font-bold text-ink-950">Public booking link</h2>
         <p className="mt-1 text-sm text-ink-500">Share this link so customers can request appointments.</p>
         <div className="mt-3">
-          <CopyBookingLink url={bookingUrl} />
+          <BookingLinkCard
+            url={bookingUrl}
+            publicSlug={profile.publicSlug}
+            showMisconfigWarning={misconfigured}
+          />
         </div>
-        <Link href={bookingUrl} target="_blank" className="mt-3 inline-block text-sm font-semibold text-brand-700">
-          Preview booking page →
-        </Link>
+        <p className="mt-3 text-xs text-ink-400">
+          More options (embed, customer portal) in{" "}
+          <a href="/app/settings/portals" className="font-semibold text-brand-700 hover:underline">
+            Settings → Portals
+          </a>
+          .
+        </p>
       </Card>
 
       <Card>

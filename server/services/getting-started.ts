@@ -52,8 +52,8 @@ export async function getGettingStartedTasks(organizationId: string, bookingUrl:
       id: "booking-link",
       label: "Share your booking link",
       description: bookingUrl,
-      href: bookingUrl,
-      done: false,
+      href: "/app/settings/portals",
+      done: Boolean(profile?.onboardingCompletedAt && serviceCount > 0),
     },
     {
       id: "team",

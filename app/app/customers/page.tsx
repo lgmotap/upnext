@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Mail, Phone } from "lucide-react";
 import { Card, PageHeader, Avatar, AppButton } from "@/components/app/ui";
 import { CopyBookingLink } from "@/components/app/CopyBookingLink";
+import { getBookingPageUrl } from "@/lib/url/app";
 import { formatMoney } from "@/lib/money/format";
 import { formatAddressLine } from "@/lib/datetime/calendar";
 import { getAppSession } from "@/server/permissions/session";
@@ -17,9 +18,8 @@ export default async function CustomersPage() {
     where: { id: session.organizationId },
     select: { businessProfile: { select: { publicSlug: true } } },
   });
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const slug = org?.businessProfile?.publicSlug ?? "";
-  const bookingUrl = slug ? `${appUrl}/book/${slug}` : null;
+  const bookingUrl = slug ? getBookingPageUrl(slug) : null;
 
   const customers = await listCustomersForOrg(session.organizationId);
   const lifetimeByCustomer = await Promise.all(

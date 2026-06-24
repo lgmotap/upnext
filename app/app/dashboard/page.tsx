@@ -7,6 +7,7 @@ import { GettingStartedChecklist } from "@/components/app/GettingStartedChecklis
 import { BookingQuickActions } from "@/components/app/BookingQuickActions";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
+import { getBookingPageUrl } from "@/lib/url/app";
 import { getDashboardData } from "@/server/services/dashboard";
 import { getGettingStartedTasks } from "@/server/services/getting-started";
 import { prisma } from "@/lib/db/prisma";
@@ -25,9 +26,8 @@ export default async function DashboardPage() {
   });
   const timeZone = org?.timezone ?? "America/New_York";
   const currency = org?.currency ?? "USD";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const slug = org?.businessProfile?.publicSlug ?? "";
-  const bookingUrl = slug ? `${appUrl}/book/${slug}` : "";
+  const bookingUrl = slug ? getBookingPageUrl(slug) : "";
 
   const [data, gettingStarted] = await Promise.all([
     getDashboardData(

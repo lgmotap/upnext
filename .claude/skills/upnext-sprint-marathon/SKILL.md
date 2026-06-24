@@ -33,9 +33,16 @@ launch-checklist until done or blocked.
 ## Then (same session, no user prompt)
 Open the next sprint file and repeat until launch checklist core items are done or a **documented blocker** stops you.
 
-## Current resume (2026-06-24)
+## Current resume (2026-06-25)
 - **PAUSED** — user disabled auto-continue hook. Resume manually via kickoff prompt.
-- **Launch checklist** — 1 item left: Resend prod domain (`tasks/launch-checklist.md` line 17).
+- **MVP launch checklist** — Resend prod domain deferred by owner.
+- **Post-beta sprints 09–12** — see `tasks/post-beta-roadmap.md`. Sprint 09 in progress (booking link + Portals tab).
+
+## Kickoff (post-MVP)
+```
+Run sprint 09 per tasks/sprint-09-portal-reliability.md and post-beta-roadmap.md.
+Then continue 10 → 11 → 12 without asking to continue. Do not commit unless asked.
+```
 
 ## Blocker format (only valid stop)
 ```

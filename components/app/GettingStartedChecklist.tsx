@@ -48,13 +48,21 @@ export function GettingStartedChecklist({
                   )}
                 </p>
                 <p className="mt-0.5 text-xs text-ink-500">{task.description}</p>
-                {task.id === "booking-link" && !task.done && (
+                {task.id === "booking-link" && !task.done && bookingUrl && (
                   <div className="mt-2">
                     <CopyBookingLink url={bookingUrl} />
                   </div>
                 )}
               </div>
-              {task.id !== "booking-link" && (
+              {task.id === "booking-link" ? (
+                <Link
+                  href={task.href}
+                  className="inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-brand-700 hover:underline"
+                >
+                  Portals
+                  <ChevronRight className="size-3.5" />
+                </Link>
+              ) : (
                 <Link
                   href={task.href}
                   className="inline-flex shrink-0 items-center gap-0.5 text-xs font-semibold text-brand-700 hover:underline"
