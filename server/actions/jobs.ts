@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAppSession } from "@/server/permissions/session";
-import { canCompleteAssignedJob } from "@/server/permissions/can";
+import { canCompleteAssignedJob, canManageBookings } from "@/server/permissions/can";
 import { updateJobStatus, checkInToJob } from "@/server/services/jobs";
 import { assignJobToMember } from "@/server/repositories/assignments";
 import { notifyJobAssigned } from "@/server/services/notifications";
@@ -80,4 +80,21 @@ export async function assignJobAction(formData: FormData): Promise<void> {
   revalidatePath(`/app/jobs/${jobId}`);
   revalidatePath("/crew");
   redirect(`/app/jobs/${jobId}`);
+}
+
+export async function cancelJobAction(formData: FormData): Promise<void> {
+  const session = await getAppSession();
+  if (!session || !canManageBookings(session)) redirect("/app/jobs?error=denied");
+
+  const jobId = String(formData.get("jobId") ?? "");
+  if (!jobId) redirect("/app/jobs");
+
+  if (!(await requireJobAccess(session, jobId))) redirect("/app/jobs?error=denied");
+
+  await updateJobStatus(session.organizationId, jobId, "cancelled");
+  revalidatePath("/app/jobs");
+  revalidatePath(`/app/jobs/${jobId}`);
+  revalidatePath("/app/calendar");
+  revalidatePath("/app/dashboard");
+  redirect(`/app/jobs/${jobId}?cancelled=1`);
 }

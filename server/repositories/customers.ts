@@ -92,3 +92,50 @@ export async function getCustomerLifetimeCents(organizationId: string, customerI
   });
   return agg._sum.priceCents ?? 0;
 }
+
+export function addCustomerAddress(
+  organizationId: string,
+  customerId: string,
+  data: {
+    line1: string;
+    line2?: string | null;
+    city: string;
+    region: string;
+    postalCode: string;
+    country: string;
+    notes?: string | null;
+  },
+) {
+  return prisma.$transaction(async (tx) => {
+    const customer = await tx.customer.findFirst({
+      where: { id: customerId, organizationId },
+      select: { id: true },
+    });
+    if (!customer) return null;
+
+    const hasDefault = await tx.customerAddress.count({
+      where: { customerId, isDefault: true },
+    });
+
+    return tx.customerAddress.create({
+      data: {
+        customerId,
+        line1: data.line1,
+        line2: data.line2 || null,
+        city: data.city,
+        region: data.region,
+        postalCode: data.postalCode,
+        country: data.country,
+        notes: data.notes || null,
+        isDefault: hasDefault === 0,
+      },
+    });
+  });
+}
+
+export function updateCustomerNotes(organizationId: string, customerId: string, notes: string) {
+  return prisma.customer.updateMany({
+    where: { id: customerId, organizationId },
+    data: { notes: notes || null },
+  });
+}
