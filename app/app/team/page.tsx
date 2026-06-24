@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, PageHeader, Avatar } from "@/components/app/ui";
 import { FormSubmitButton } from "@/components/app/FormSubmitButton";
@@ -23,6 +24,7 @@ export default async function TeamPage({
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/team");
+  if (!canManageTeam(session)) redirect("/app/dashboard?error=Permission%20denied");
 
   const params = await searchParams;
   const [members, pendingInvites] = await Promise.all([
@@ -120,18 +122,26 @@ export default async function TeamPage({
               .slice(0, 2)
               .toUpperCase();
             return (
-              <li key={m.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
-                <Avatar initials={initials} className="size-10" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-ink-950">{name}</p>
-                  <p className="text-xs text-ink-500">{m.user.email}</p>
-                </div>
-                <span className="text-xs text-ink-500">{countMap[m.id] ?? 0} assigned jobs</span>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${roleColor[m.role] ?? roleColor.viewer}`}
+              <li key={m.id}>
+                <Link
+                  href={`/app/team/${m.id}/availability`}
+                  className="flex flex-wrap items-center gap-3 px-5 py-3.5 transition hover:bg-ink-50"
                 >
-                  {m.role}
-                </span>
+                  <Avatar initials={initials} className="size-10" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-ink-950">{name}</p>
+                    <p className="text-xs text-ink-500">{m.user.email}</p>
+                  </div>
+                  <span className="text-xs text-ink-500">{countMap[m.id] ?? 0} assigned jobs</span>
+                  <span className="rounded-full px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-200">
+                    Hours
+                  </span>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${roleColor[m.role] ?? roleColor.viewer}`}
+                  >
+                    {m.role}
+                  </span>
+                </Link>
               </li>
             );
           })}

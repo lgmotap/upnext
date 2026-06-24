@@ -9,7 +9,6 @@ import { RescheduleModal } from "@/components/app/RescheduleModal";
 import { cancelJobAction, markJobCompleteAction, markJobInProgressAction, assignJobAction } from "@/server/actions/jobs";
 import {
   rescheduleJobAction,
-  fetchJobRescheduleDaysAction,
   fetchJobRescheduleSlotsAction,
 } from "@/server/actions/scheduling";
 import type { BookableDay } from "@/lib/availability/calendar-ui";
@@ -96,7 +95,6 @@ export function JobDetailActions({
           entityId={jobId}
           idFieldName="jobId"
           formAction={rescheduleJobAction}
-          fetchDays={fetchJobRescheduleDaysAction}
           fetchSlots={fetchJobRescheduleSlotsAction}
           initialDays={reschedule.initialDays}
           initialSlots={reschedule.initialSlots}

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Check, ArrowRight, ArrowLeft, Copy, Globe, Loader2, MapPin, Briefcase } from "lucide-react";
+import { ServiceIcon } from "@/components/booking/ServiceIcon";
 import { serviceTypes, teamSizes } from "@/lib/config";
 import { catalogStats, getIndustryCatalog } from "@/lib/onboarding/industry-catalog";
 import { CURRENCIES, TIMEZONES, US_REGIONS } from "@/server/validators/onboarding";
@@ -304,11 +305,14 @@ export function OnboardingWizard({
           <div className="mt-5 max-h-56 space-y-3 overflow-y-auto rounded-xl bg-ink-50 p-4 ring-1 ring-ink-100">
             <div>
               <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-ink-400">Services</p>
-              <ul className="space-y-1">
+              <ul className="space-y-1.5">
                 {catalog.primary.map((s) => (
-                  <li key={s.name} className="text-sm text-ink-800">
-                    {s.name}
-                    <span className="ml-2 text-xs text-ink-400">{s.durationMinutes} min</span>
+                  <li key={s.name} className="flex items-center gap-2 text-sm text-ink-800">
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-700 ring-1 ring-ink-100">
+                      <ServiceIcon iconKey={s.iconKey} className="size-3.5" />
+                    </span>
+                    <span className="min-w-0 flex-1">{s.name}</span>
+                    <span className="text-xs text-ink-400">{s.durationMinutes} min</span>
                   </li>
                 ))}
               </ul>
@@ -316,10 +320,13 @@ export function OnboardingWizard({
             {catalog.addons.length > 0 && (
               <div>
                 <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-ink-400">Add-ons &amp; extras</p>
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {catalog.addons.map((s) => (
-                    <li key={s.name} className="text-sm text-ink-700">
-                      {s.name}
+                    <li key={s.name} className="flex items-center gap-2 text-sm text-ink-700">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600 ring-1 ring-ink-100">
+                        <ServiceIcon iconKey={s.iconKey} isAddon className="size-3.5" />
+                      </span>
+                      <span className="min-w-0 flex-1">{s.name}</span>
                     </li>
                   ))}
                 </ul>

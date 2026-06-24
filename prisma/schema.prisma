@@ -66,6 +66,8 @@ model Organization {
   checklistTemplates ChecklistTemplate[]
   teamInvites       TeamInvite[]
   customerPortalTokens CustomerPortalToken[]
+  apiKeys           ApiKey[]
+  webhookEndpoints  WebhookEndpoint[]
 
   /// Stripe Connect account for customer payments (not UpNext SaaS billing).
   stripeConnectAccountId   String?
@@ -88,6 +90,7 @@ model Membership {
   completedChecklistItems JobChecklistItem[] @relation("ChecklistCompletedBy")
   uploadedJobPhotos     JobPhoto[]         @relation("JobPhotoUploadedBy")
   sentTeamInvites       TeamInvite[]       @relation("TeamInviteSentBy")
+  availabilityRules     MembershipAvailabilityRule[]
 
   @@unique([organizationId, userId])
   @@index([userId])
@@ -142,6 +145,7 @@ model Service {
   isActive        Boolean      @default(true)
   isPublic        Boolean      @default(true)
   isAddon         Boolean      @default(false)
+  iconKey         String?
   sortOrder       Int          @default(0)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -171,6 +175,22 @@ model AvailabilityRule {
 
   @@unique([organizationId, dayOfWeek])
   @@index([organizationId])
+}
+
+/// Per-worker weekly hours (intersected with org AvailabilityRule for manual booking / assigned jobs).
+model MembershipAvailabilityRule {
+  id           String     @id @default(cuid())
+  membershipId String
+  dayOfWeek    Int
+  startTime    String
+  endTime      String
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, dayOfWeek])
+  @@index([membershipId])
 }
 
 model BlackoutDate {
@@ -608,4 +628,66 @@ model CustomerPortalToken {
 
   @@index([organizationId, customerId])
   @@index([expiresAt])
+}
+
+enum WebhookEventType {
+  booking_created
+  booking_accepted
+  job_completed
+  customer_created
+  payment_paid
+}
+
+enum WebhookDeliveryStatus {
+  pending
+  delivered
+  failed
+}
+
+model ApiKey {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  keyPrefix      String
+  keyHash        String       @unique
+  lastUsedAt     DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([keyHash])
+}
+
+model WebhookEndpoint {
+  id             String             @id @default(cuid())
+  organizationId String
+  url            String
+  secret         String
+  events         WebhookEventType[]
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deliveries     WebhookDelivery[]
+
+  @@index([organizationId])
+}
+
+model WebhookDelivery {
+  id                String                @id @default(cuid())
+  webhookEndpointId String
+  event             WebhookEventType
+  payload           Json
+  status            WebhookDeliveryStatus @default(pending)
+  attemptCount      Int                   @default(0)
+  lastError         String?
+  responseStatus    Int?
+  createdAt         DateTime              @default(now())
+  deliveredAt       DateTime?
+  webhookEndpoint   WebhookEndpoint       @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
+
+  @@index([webhookEndpointId, createdAt])
+  @@index([status, createdAt])
 }

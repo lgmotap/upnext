@@ -68,7 +68,11 @@ export function MobileNav({ workspace }: { workspace: WorkspaceShellData | null 
               )}
 
               <nav className="flex flex-1 flex-col gap-0.5" aria-label="Product">
-                {appNav.map(({ label, href, icon: Icon }) => {
+                {appNav
+                  .filter(
+                    (item) => !workspace || item.href !== "/app/team" || workspace.canManageTeam,
+                  )
+                  .map(({ label, href, icon: Icon }) => {
                   const active = isActive(pathname, href);
                   const badge =
                     workspace && href === "/app/bookings" && workspace.pendingBookings > 0

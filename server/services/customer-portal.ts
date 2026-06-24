@@ -14,7 +14,8 @@ import {
   purgeExpiredPortalTokens,
   updateCustomerPortalLastLogin,
 } from "@/server/repositories/customer-portal";
-import { getBusinessProfileBySlug } from "@/server/repositories/services";
+import { getBusinessProfileBySlug, listPublicPrimaryServicesForOrg } from "@/server/repositories/services";
+import { ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 import { updateBookingRequestStatus } from "@/server/repositories/bookings";
 import { updateJobStatus } from "@/server/services/jobs";
 import { pauseJobSeries } from "@/server/services/recurring-jobs";
@@ -214,9 +215,19 @@ export async function getCustomerPrefillForPortal(
   return customerToPrefill(customer);
 }
 
-export function createPrefillLink(publicSlug: string, customerId: string, organizationId: string) {
+export function createPrefillLink(
+  publicSlug: string,
+  customerId: string,
+  organizationId: string,
+  options?: { serviceId?: string },
+) {
   const token = createBookingPrefillToken(customerId, organizationId);
-  return `${getPublicAppUrl()}/book/${publicSlug}?prefill=${token}`;
+  const url = new URL(`${getPublicAppUrl()}/book/${publicSlug}`);
+  url.searchParams.set("prefill", token);
+  if (options?.serviceId) {
+    url.searchParams.set("serviceId", options.serviceId);
+  }
+  return url.toString();
 }
 
 export async function getPortalDashboardData(session: PortalSession) {
@@ -225,6 +236,12 @@ export async function getPortalDashboardData(session: PortalSession) {
 
   const customer = await getCustomerPortalProfile(session.organizationId, session.customerId);
   if (!customer) return null;
+
+  let primaryServices = await listPublicPrimaryServicesForOrg(session.organizationId);
+  if (primaryServices.length === 0) {
+    await ensureIndustryCatalogForOrg(session.organizationId);
+    primaryServices = await listPublicPrimaryServicesForOrg(session.organizationId);
+  }
 
   const [bookings, payments] = await Promise.all([
     listCustomerPortalBookings(session.organizationId, session.customerId),
@@ -252,6 +269,15 @@ export async function getPortalDashboardData(session: PortalSession) {
     savedPaymentMethods,
     prefill: customerToPrefill(customer),
     bookAgainUrl: createPrefillLink(profile.publicSlug, customer.id, session.organizationId),
+    primaryServices: primaryServices.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      durationMinutes: s.durationMinutes,
+      basePriceCents: s.basePriceCents,
+      currency: s.currency,
+      iconKey: s.iconKey,
+    })),
   };
 }
 

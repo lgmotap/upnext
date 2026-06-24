@@ -19,26 +19,32 @@ export function PricingParametersFields({
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {configs.map((config) => (
+      {configs.map((config) => {
+        const units = values[config.parameterType] ?? config.includedUnits;
+        return (
         <div key={config.parameterType}>
+          <input type="hidden" name={config.parameterType} value={units} />
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
             {PRICING_PARAMETER_LABELS[config.parameterType]}
           </label>
           <input
             type="number"
-            name={config.parameterType}
             min={0}
             max={config.maxUnits}
             required
-            value={values[config.parameterType] ?? config.includedUnits}
-            onChange={(e) => onChange(config.parameterType, Number(e.target.value))}
+            value={units}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              onChange(config.parameterType, Number.isFinite(next) ? next : 0);
+            }}
             className={input}
           />
           <p className="mt-1 text-xs text-ink-500">
             {config.includedUnits} included · +${(config.unitPriceCents / 100).toFixed(0)} each extra
           </p>
         </div>
-      ))}
+      );
+      })}
     </div>
   );
 }

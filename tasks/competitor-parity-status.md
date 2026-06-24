@@ -1,6 +1,6 @@
 # ConvertLabs parity — status snapshot
 
-**As of:** 2026-06-25 (post sprints 09–13, browser audit)  
+**As of:** 2026-06-24 (post sprint 18 worker availability)  
 **Baseline research:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (2026-06-24 — **stale**, use this doc for current status)  
 **Full audit plan:** `tasks/competitor-parity-audit-plan.md`
 
@@ -34,7 +34,7 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 | Service catalog + add-ons | Service Studio | Industry catalogs + addons | ✅ **W** (faster setup) |
 | Frequency / recurring | How Often? + discounts | JobSeries + daily cron | ✅ |
 | Pricing parameters (bed/bath) | Unit ranges | ServicePricingParameter + booking flows | ✅ |
-| Availability + slots | Rules + provider carry-over | Org rules + blackouts | ✅ (no per-worker) |
+| Availability + slots | Rules + provider carry-over | Org rules + per-worker intersection | ✅ |
 | Booking inbox accept/decline | `/booking/bookings` | `/app/bookings` | ✅ |
 | Owner manual booking | 10-tab wizard | `/app/bookings/new` + frequency | 🟡 (slimmer, no payment tab) |
 | Calendar | Week + Scheduler tab | Week view + week nav | 🟡 (no drag-drop) |
@@ -59,7 +59,7 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 | Job photos | Native app only | 1–5 upload + signed URLs | ✅ **W** |
 | On The Way / Running Late | Drawer actions | Crew buttons + email | ✅ |
 | Open Jobs self-claim | Tab exists | Dispatcher assign only | ➖ P1 |
-| Per-worker availability | Grid | Org-level only | ➖ P1 |
+| Per-worker availability | Grid | `/app/team/[id]/availability` + manual booking filter | ✅ |
 | Embedded map | In drawer | Directions link only | 🟡 |
 
 ### 3. Customer-facing

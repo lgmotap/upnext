@@ -14,6 +14,7 @@ import {
 } from "@/lib/booking/public-prefill";
 import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
 import { listPricingParametersForServices } from "@/server/repositories/pricing-parameters";
+import { ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 import type { PricingParameterConfig } from "@/lib/pricing/parameters";
 
 function formatTime12h(hm: string): string {
@@ -32,6 +33,7 @@ function mapService(
     basePriceCents: number;
     currency: string;
     isAddon: boolean;
+    iconKey: string | null;
   },
   pricingParameters: PricingParameterConfig[],
 ) {
@@ -43,6 +45,7 @@ function mapService(
     basePriceCents: s.basePriceCents,
     currency: s.currency,
     isAddon: s.isAddon,
+    iconKey: s.iconKey,
     pricingParameters,
   };
 }
@@ -124,12 +127,18 @@ export async function loadPublicBookingPage(
   const profile = await getBusinessProfileBySlug(businessSlug);
   if (!profile || !profile.bookingEnabled) return { kind: "not_found" };
 
-  const [primaryServices, addonServices] = await Promise.all([
-    listPublicPrimaryServicesForOrg(profile.organizationId),
-    listPublicAddonServicesForOrg(profile.organizationId),
-  ]);
+  let primaryServices = await listPublicPrimaryServicesForOrg(profile.organizationId);
+  let addonServices = await listPublicAddonServicesForOrg(profile.organizationId);
 
-  const allIds = [...primaryServices, ...addonServices].map((s) => s.id);
+  if (primaryServices.length === 0) {
+    await ensureIndustryCatalogForOrg(profile.organizationId);
+    primaryServices = await listPublicPrimaryServicesForOrg(profile.organizationId);
+    addonServices = await listPublicAddonServicesForOrg(profile.organizationId);
+  }
+
+  const [primaryServicesFinal, addonServicesFinal] = [primaryServices, addonServices];
+
+  const allIds = [...primaryServicesFinal, ...addonServicesFinal].map((s) => s.id);
   const paramRows = await listPricingParametersForServices(allIds);
   const paramsByService = new Map<string, PricingParameterConfig[]>();
   for (const row of paramRows) {
@@ -143,16 +152,22 @@ export async function loadPublicBookingPage(
     paramsByService.set(row.serviceId, list);
   }
 
-  if (primaryServices.length === 0) {
+  if (primaryServicesFinal.length === 0) {
     return { kind: "empty", businessName: profile.displayName };
   }
 
-  const firstService = primaryServices[0];
-  const daysResult = await getPublicAvailableDays(businessSlug, firstService.id, []);
+  const serviceIdParam =
+    typeof searchParams.serviceId === "string" ? searchParams.serviceId : undefined;
+  const initialService =
+    serviceIdParam && primaryServicesFinal.some((s) => s.id === serviceIdParam)
+      ? primaryServicesFinal.find((s) => s.id === serviceIdParam)!
+      : primaryServicesFinal[0];
+
+  const daysResult = await getPublicAvailableDays(businessSlug, initialService.id, []);
   const days = daysResult?.days ?? [];
   const firstDate = days[0]?.date ?? "";
   const rawSlots = firstDate
-    ? ((await getPublicSlotsForDay(businessSlug, firstService.id, firstDate, [])) ?? [])
+    ? ((await getPublicSlotsForDay(businessSlug, initialService.id, firstDate, [])) ?? [])
     : [];
 
   const prefill = await resolvePrefill(profile.organizationId, searchParams);
@@ -170,15 +185,15 @@ export async function loadPublicBookingPage(
       email: profile.email,
       customerPortalEnabled: isCustomerPortalEnabled(profile),
     },
-    primaryServices: primaryServices.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
-    addonServices: addonServices.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
+    primaryServices: primaryServicesFinal.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
+    addonServices: addonServicesFinal.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
     initialDays: days,
     initialSlots: rawSlots.map((s) => ({
       date: s.date,
       time: s.time,
       label: formatTime12h(s.time),
     })),
-    initialServiceId: firstService.id,
+    initialServiceId: initialService.id,
     initialDate: firstDate,
     initialTime: rawSlots[0]?.time ?? "",
     prefill,

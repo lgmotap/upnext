@@ -6,11 +6,13 @@ export type WorkspaceShellData = {
   publicSlug: string;
   ownerInitials: string;
   pendingBookings: number;
+  canManageTeam: boolean;
 };
 
 export async function getWorkspaceShellData(
   organizationId: string,
   userName: string,
+  canManageTeam: boolean,
 ): Promise<WorkspaceShellData | null> {
   const [setup, pendingBookings] = await Promise.all([
     prisma.organization.findUnique({
@@ -46,5 +48,6 @@ export async function getWorkspaceShellData(
     publicSlug: setup.businessProfile.publicSlug,
     ownerInitials: initials || "U",
     pendingBookings,
+    canManageTeam,
   };
 }

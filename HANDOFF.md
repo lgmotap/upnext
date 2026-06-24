@@ -140,16 +140,53 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 | Team | Invite submit loading state |
 | Settings | Copy booking link button |
 
-**Still P1 vs ConvertLabs:** Stripe saved cards in portal, CSV import, per-worker availability.
+**Still P1 vs ConvertLabs:** Stripe saved cards in portal (done sprint 16), CSV import (done sprint 17), per-worker availability (done sprint 18).
 
-**Sprints 14–16 (2026-06-25):**
+**Resume:** Sprint **19** → `tasks/sprint-19-parity-hardening.md`
 
-| Sprint | Summary |
-|--------|---------|
-| 14 | Recurring jobs — `JobSeries`, cron, pause/cancel, `smoke:recurring` |
-| 15 | Bed/bath pricing params — public + manual book, catalog seeds, `smoke:pricing-params` |
-| 16 | Portal cancel + saved Stripe cards (`smoke:portal-cancel`, `smoke:portal-saved-card`) |
+## Default service catalog (ConvertLabs-style)
 
-**Resume:** Sprint **17** → `tasks/sprint-17-crm-import.md` (CSV customer import)
+- New orgs get **Residential Cleaning** catalog at sign-up (4 services + 9 add-ons, icons, bed/bath pricing).
+- Legacy orgs backfill on dashboard load, public booking, and customer portal.
+- Icons on public booking, services page, onboarding preview, portal “Book” tab.
+- `Service.iconKey` migration `20250625230000_service_icon_key`.
+- Smokes: `smoke:industry-catalog`, `smoke:launch-onboarding`.
+
+## Sprint 17 — CRM import (done)
+
+- `/app/customers/import` — CSV upload, template download, row errors, dedupe by email.
+- `npm run smoke:customer-import`
+
+## Sprint 18 — Per-worker availability (done)
+
+- `MembershipAvailabilityRule` schema + org/worker rule intersection in slot engine.
+- `/app/team/[membershipId]/availability` — edit worker weekly hours; team list “Hours” link.
+- Manual booking filters slots when worker assigned; reschedule respects assignee hours.
+- Crew `/crew` shows read-only working hours.
+- `npm run smoke:worker-availability`
+
+## Sprint 19 — parity hardening (done)
+
+- Browser audit checklists consolidated in `docs/audits/browser-checklists.md`.
+- Positioning doc `docs/audits/competitor-positioning.md`; scorecard updated for per-worker availability.
+- Lint errors fixed (0 errors); `npm run build` green.
+- `tests/e2e/full-product-flow.spec.ts` + `npm run test:e2e:full` (auth tests env-gated).
+- All smokes 14–18 + `smoke:launch` green.
+
+**Resume:** Sprint **21** → `tasks/sprint-21-production-launch.md`
+
+## Sprint 20 — Read API + webhooks (done)
+
+- `ApiKey` + `WebhookEndpoint` / `WebhookDelivery` models.
+- Owner settings at `/app/settings/api` — create/revoke keys, manage webhooks.
+- `GET /api/v1/bookings|customers|services` — Bearer auth, `since` cursor, rate limited.
+- Outbound webhooks with HMAC `UpNext-Signature`, delivery log, cron retries at `/api/cron/webhook-retries`.
+- `npm run smoke:api`
+
+## Full product v1 (sprints 14–21)
+
+All product sprints complete. **Remaining production gate (owner):** Resend domain verify + remove `RESEND_SANDBOX_TO` on Production — see `tasks/launch-checklist.md` line 17.
+
+**Deferred:** Custom domain host routing (doc at `docs/custom-booking-domain.md`).
 
 **Deferred (Phase 3):** Stripe Checkout Playwright E2E, read API v1.

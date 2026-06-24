@@ -4,11 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { ExternalLink, LogOut } from "lucide-react";
 import type { BookingPrefillDetails } from "@/lib/portal/prefill-token";
-import { formatMoney } from "@/lib/money/format";
 import { cancelPortalBookingAction, portalLogoutAction } from "@/server/actions/customer-portal";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { PortalPaymentsPanel } from "@/components/portal/PortalPaymentsPanel";
+import { PublicServiceCard } from "@/components/booking/PublicServiceCard";
 import type { SavedPaymentMethod } from "@/lib/portal/saved-payment-methods";
+
+type PortalService = {
+  id: string;
+  name: string;
+  description: string | null;
+  durationMinutes: number;
+  basePriceCents: number;
+  currency: string;
+  iconKey: string | null;
+};
 
 type PortalBooking = {
   id: string;
@@ -68,6 +78,7 @@ export function CustomerPortalDashboard({
   payments,
   bookAgainUrl,
   prefill,
+  primaryServices = [],
   stripePaymentsEnabled = false,
   savedPaymentMethods = [],
   initialTab = "history",
@@ -80,6 +91,7 @@ export function CustomerPortalDashboard({
   payments: PortalPayment[];
   bookAgainUrl: string;
   prefill: BookingPrefillDetails;
+  primaryServices?: PortalService[];
   stripePaymentsEnabled?: boolean;
   savedPaymentMethods?: SavedPaymentMethod[];
   initialTab?: Tab;
@@ -203,36 +215,61 @@ export function CustomerPortalDashboard({
         )}
 
         {tab === "book" && (
-          <div className="rounded-2xl bg-white p-6 ring-1 ring-ink-100">
-            <h2 className="text-lg font-bold text-ink-950">Book again</h2>
-            <p className="mt-1 text-sm text-ink-500">
-              Your contact details and address will be prefilled on the booking form.
-            </p>
-            <dl className="mt-4 space-y-2 text-sm text-ink-700">
-              <div>
-                <dt className="text-xs font-semibold uppercase text-ink-400">Contact</dt>
-                <dd>
-                  {prefill.firstName} {prefill.lastName} · {prefill.email}
-                  {prefill.phone ? ` · ${prefill.phone}` : ""}
-                </dd>
-              </div>
-              {prefill.line1 && (
-                <div>
-                  <dt className="text-xs font-semibold uppercase text-ink-400">Address</dt>
-                  <dd>
-                    {prefill.line1}
-                    {prefill.line2 ? `, ${prefill.line2}` : ""}, {prefill.city}, {prefill.region}{" "}
-                    {prefill.postalCode}
-                  </dd>
+          <div className="space-y-6">
+            <div className="rounded-2xl bg-white p-6 ring-1 ring-ink-100">
+              <h2 className="text-lg font-bold text-ink-950">Book a service</h2>
+              <p className="mt-1 text-sm text-ink-500">
+                Choose a service below. Your contact details and address will be prefilled on the
+                booking form.
+              </p>
+              {primaryServices.length === 0 ? (
+                <p className="mt-4 text-sm text-ink-500">No services are available to book right now.</p>
+              ) : (
+                <div className="mt-4 grid gap-2.5">
+                  {primaryServices.map((s) => (
+                    <PublicServiceCard
+                      key={s.id}
+                      name={s.name}
+                      description={s.description}
+                      durationMinutes={s.durationMinutes}
+                      basePriceCents={s.basePriceCents}
+                      currency={s.currency}
+                      iconKey={s.iconKey}
+                      href={`${bookAgainUrl}&serviceId=${encodeURIComponent(s.id)}`}
+                    />
+                  ))}
                 </div>
               )}
-            </dl>
-            <Link
-              href={bookAgainUrl}
-              className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
-            >
-              Continue to booking form <ExternalLink className="size-4" />
-            </Link>
+            </div>
+
+            <div className="rounded-2xl bg-ink-50 p-5 ring-1 ring-ink-100">
+              <h3 className="text-sm font-bold text-ink-950">Your saved details</h3>
+              <dl className="mt-3 space-y-2 text-sm text-ink-700">
+                <div>
+                  <dt className="text-xs font-semibold uppercase text-ink-400">Contact</dt>
+                  <dd>
+                    {prefill.firstName} {prefill.lastName} · {prefill.email}
+                    {prefill.phone ? ` · ${prefill.phone}` : ""}
+                  </dd>
+                </div>
+                {prefill.line1 && (
+                  <div>
+                    <dt className="text-xs font-semibold uppercase text-ink-400">Address</dt>
+                    <dd>
+                      {prefill.line1}
+                      {prefill.line2 ? `, ${prefill.line2}` : ""}, {prefill.city}, {prefill.region}{" "}
+                      {prefill.postalCode}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              <Link
+                href={bookAgainUrl}
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline"
+              >
+                Open full booking form <ExternalLink className="size-4" />
+              </Link>
+            </div>
           </div>
         )}
 

@@ -4,6 +4,8 @@ import {
   listBlackoutDates,
   getBookingSettings,
 } from "@/server/repositories/availability";
+import { resolveRulesForMembership, isMembershipAvailableAtSlot } from "@/server/services/membership-availability";
+import { listMembershipAvailabilityRules } from "@/server/repositories/membership-availability";
 import { prisma } from "@/lib/db/prisma";
 import {
   getAvailableDays,
@@ -12,6 +14,7 @@ import {
   type SlotDay,
   type AvailableSlot,
 } from "@/lib/availability/slots";
+import type { WeeklyRule } from "@/lib/availability/intersect-rules";
 import type { PublicBookingInput, ManualBookingInput } from "@/server/validators/booking";
 import { publicBookingSchema, manualBookingSchema } from "@/server/validators/booking";
 import {
@@ -26,10 +29,12 @@ import { createJobFromBookingRequest } from "@/server/services/jobs";
 import { assignJobToMember } from "@/server/repositories/assignments";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
+import { emitOrgWebhook } from "@/server/services/webhooks";
 import type { Service } from "@/generated/prisma/client";
 import type { PricingParameterConfig } from "@/lib/pricing/parameters";
 import {
   bookingPriceCents,
+  defaultParameterValues,
   parseParameterInput,
 } from "@/lib/pricing/parameters";
 import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
@@ -46,7 +51,7 @@ type LoadedBookingContext = {
   addons: Service[];
   slotInput: {
     timeZone: string;
-    rules: Awaited<ReturnType<typeof listAvailabilityRules>>;
+    rules: WeeklyRule[];
     blackouts: Awaited<ReturnType<typeof listBlackoutDates>>;
     minNoticeHours: number;
     maxBookingDaysAhead: number;
@@ -154,7 +159,14 @@ async function resolveParameterValues(
   if (configs.length === 0) {
     return { ok: true, configs, values: {} as Record<"bedrooms" | "bathrooms", number> };
   }
-  const parsed = parseParameterInput(configs, raw);
+  const defaults = defaultParameterValues(configs);
+  const merged: { bedrooms?: unknown; bathrooms?: unknown } = {};
+  for (const config of configs) {
+    const rawVal = raw[config.parameterType];
+    merged[config.parameterType] =
+      rawVal !== undefined && rawVal !== null && rawVal !== "" ? rawVal : defaults[config.parameterType];
+  }
+  const parsed = parseParameterInput(configs, merged);
   if (!parsed.ok) return parsed;
   return { ok: true, configs, values: parsed.values };
 }
@@ -186,6 +198,7 @@ async function loadOrgSlotContext(
   organizationId: string,
   serviceId: string,
   addonServiceIds: string[] = [],
+  membershipId?: string,
 ): Promise<{ slotInput: SlotInput; service: Service; addons: Service[]; timeZone: string } | null> {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
@@ -219,7 +232,7 @@ async function loadOrgSlotContext(
   if (addons.length !== uniqueAddonIds.length) return null;
 
   const [rules, blackouts, booking] = await Promise.all([
-    listAvailabilityRules(organizationId),
+    resolveRulesForMembership(organizationId, membershipId),
     listBlackoutDates(organizationId),
     getBookingSettings(organizationId),
   ]);
@@ -248,8 +261,9 @@ export async function getOrgAvailableDays(
   organizationId: string,
   serviceId: string,
   addonServiceIds: string[] = [],
+  membershipId?: string,
 ): Promise<{ days: SlotDay[]; timeZone: string } | null> {
-  const loaded = await loadOrgSlotContext(organizationId, serviceId, addonServiceIds);
+  const loaded = await loadOrgSlotContext(organizationId, serviceId, addonServiceIds, membershipId);
   if (!loaded) return null;
   return { days: getAvailableDays(loaded.slotInput), timeZone: loaded.timeZone };
 }
@@ -259,8 +273,9 @@ export async function getOrgSlotsForDay(
   serviceId: string,
   dateYmd: string,
   addonServiceIds: string[] = [],
+  membershipId?: string,
 ): Promise<AvailableSlot[] | null> {
-  const loaded = await loadOrgSlotContext(organizationId, serviceId, addonServiceIds);
+  const loaded = await loadOrgSlotContext(organizationId, serviceId, addonServiceIds, membershipId);
   if (!loaded) return null;
   return getSlotsForDate(loaded.slotInput, dateYmd);
 }
@@ -272,6 +287,27 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
 
   const slot = isSlotAvailable(loaded.slotInput, input.date, input.time);
   if (!slot) return { ok: false as const, error: "Selected time is no longer available" };
+
+  const assignId = input.assignMembershipId?.trim();
+  if (assignId) {
+    const memberRules = await listMembershipAvailabilityRules(assignId);
+    if (memberRules.length > 0) {
+      const available = await isMembershipAvailableAtSlot(
+        organizationId,
+        assignId,
+        input.date,
+        input.time,
+        loaded.slotInput.serviceDurationMinutes,
+      );
+      if (!available) {
+        return {
+          ok: false as const,
+          error:
+            "Selected worker is not available at this time. Choose another slot or a different worker.",
+        };
+      }
+    }
+  }
 
   const paramResult = await resolveParameterValues(loaded.service.id, {
     bedrooms: input.bedrooms,
@@ -313,6 +349,12 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
         customerNotes: input.customerNotes || null,
       });
       customerId = customer.id;
+      emitOrgWebhook(organizationId, "customer_created", {
+        customerId: customer.id,
+        email: customer.email,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+      });
     }
   }
 
@@ -340,11 +382,11 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
   const jobResult = await createJobFromBookingRequest(organizationId, booking.id);
   if (!jobResult.ok) return jobResult;
 
-  const assignId = input.assignMembershipId?.trim();
-  if (assignId) {
-    const assigned = await assignJobToMember(jobResult.jobId, assignId, organizationId);
+  const assignIdForJob = input.assignMembershipId?.trim();
+  if (assignIdForJob) {
+    const assigned = await assignJobToMember(jobResult.jobId, assignIdForJob, organizationId);
     if (assigned) {
-      await notifyJobAssigned(organizationId, jobResult.jobId, assignId);
+      await notifyJobAssigned(organizationId, jobResult.jobId, assignIdForJob);
     }
   }
 
@@ -353,6 +395,15 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
     jobId: jobResult.jobId,
     source: "manual",
     serviceId: loaded.service.id,
+  });
+
+  emitOrgWebhook(organizationId, "booking_created", {
+    bookingRequestId: booking.id,
+    customerId,
+    serviceId: loaded.service.id,
+    status: "accepted",
+    source: "manual",
+    requestedStartAt: slot.startAt.toISOString(),
   });
 
   return {
@@ -397,6 +448,12 @@ export async function createPublicBooking(raw: PublicBookingInput) {
       postalCode: input.postalCode,
       customerNotes: input.customerNotes || null,
     });
+    emitOrgWebhook(loaded.profile.organizationId, "customer_created", {
+      customerId: customer.id,
+      email: customer.email,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+    });
   }
 
   const totals = bookingTotals(loaded.service, loaded.addons, paramResult.configs, paramResult.values);
@@ -436,6 +493,15 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     bookingRequestId: booking.id,
     source: "public_booking",
     serviceId: loaded.service.id,
+  });
+
+  emitOrgWebhook(loaded.profile.organizationId, "booking_created", {
+    bookingRequestId: booking.id,
+    customerId: customer.id,
+    serviceId: loaded.service.id,
+    status: "pending",
+    source: "public_booking",
+    requestedStartAt: slot.startAt.toISOString(),
   });
 
   return { ok: true as const, bookingRequestId: booking.id };

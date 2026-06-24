@@ -11,7 +11,7 @@ config({ path: ".env", override: false });
 const { prisma } = await import("../lib/db/prisma");
 const { createWorkspaceForNewUser } = await import("../server/services/onboarding");
 const { updateBusinessSetup } = await import("../server/services/business");
-const { seedIndustryCatalog } = await import("../server/services/industry-catalog");
+const { ensureIndustryCatalogForOrg } = await import("../server/services/industry-catalog");
 const { catalogStats } = await import("../lib/onboarding/industry-catalog");
 const { saveWeeklyAvailability } = await import("../server/services/availability");
 const { defaultWeeklyRules } = await import("../server/validators/availability");
@@ -35,6 +35,17 @@ async function main() {
   });
   console.log(`✓ Workspace provisioned (org ${organization.id})`);
 
+  const expected = catalogStats("Residential Cleaning");
+  const primaryAfterSignup = await prisma.service.count({
+    where: { organizationId: organization.id, isAddon: false },
+  });
+  if (primaryAfterSignup < expected.primaryCount) {
+    throw new Error(
+      `Expected ${expected.primaryCount} primary services at signup, got ${primaryAfterSignup}`,
+    );
+  }
+  console.log(`✓ Default catalog at signup: ${primaryAfterSignup} services`);
+
   await updateBusinessSetup(organization.id, {
     businessType: "Residential Cleaning",
     teamSize: "Just me",
@@ -53,12 +64,15 @@ async function main() {
   });
   console.log("✓ Onboarding business setup saved");
 
-  const expected = catalogStats("Residential Cleaning");
-  const seeded = await seedIndustryCatalog(organization.id, organization.currency, "Residential Cleaning");
-  if (!seeded.seeded || seeded.primaryCount !== expected.primaryCount) {
-    throw new Error("Industry catalog did not seed correctly");
+  const seeded = await ensureIndustryCatalogForOrg(organization.id);
+  const serviceCount = await prisma.service.count({ where: { organizationId: organization.id } });
+  if (serviceCount < expected.totalCount) {
+    throw new Error(`Expected ${expected.totalCount} catalog services, got ${serviceCount}`);
   }
-  console.log(`✓ Catalog seeded: ${expected.primaryCount} services + ${expected.addonCount} add-ons`);
+  console.log(
+    `✓ Catalog complete: ${expected.primaryCount} services + ${expected.addonCount} add-ons` +
+      (seeded.seeded ? " (added missing)" : ""),
+  );
 
   const service = await prisma.service.findFirst({
     where: { organizationId: organization.id, isAddon: false },
@@ -98,6 +112,8 @@ async function main() {
     region: "NY",
     postalCode: "10001",
     customerNotes: "Launch smoke booking",
+    bedrooms: 3,
+    bathrooms: 2,
   });
 
   if (!booking.ok) throw new Error(`Public booking failed: ${booking.error}`);

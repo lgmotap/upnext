@@ -7,10 +7,10 @@ import {
   type SlotDay,
 } from "@/lib/availability/slots";
 import {
-  listAvailabilityRules,
   listBlackoutDates,
   getBookingSettings,
 } from "@/server/repositories/availability";
+import { resolveRulesForMembership } from "@/server/services/membership-availability";
 import { getBookingRequestForOrg } from "@/server/repositories/bookings";
 import { getJobForOrg } from "@/server/repositories/jobs";
 import {
@@ -26,6 +26,7 @@ type SlotContext = {
 async function loadOwnerSlotContext(
   organizationId: string,
   serviceDurationMinutes: number,
+  membershipId?: string,
 ): Promise<SlotContext | null> {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
@@ -34,7 +35,7 @@ async function loadOwnerSlotContext(
   if (!org?.businessProfile) return null;
 
   const [rules, blackouts, booking] = await Promise.all([
-    listAvailabilityRules(organizationId),
+    resolveRulesForMembership(organizationId, membershipId),
     listBlackoutDates(organizationId),
     getBookingSettings(organizationId),
   ]);
@@ -98,7 +99,8 @@ export async function getRescheduleDaysForJob(
   if (!job || job.status === "completed" || job.status === "cancelled") return null;
 
   const duration = durationMinutesFromRange(job.scheduledStartAt, job.scheduledEndAt);
-  const ctx = await loadOwnerSlotContext(organizationId, duration);
+  const assigneeId = job.assignments[0]?.membershipId;
+  const ctx = await loadOwnerSlotContext(organizationId, duration, assigneeId);
   if (!ctx) return null;
 
   const days = getAvailableDays(ctx.slotInput);
@@ -114,7 +116,8 @@ export async function getRescheduleSlotsForJob(
   if (!job || job.status === "completed" || job.status === "cancelled") return null;
 
   const duration = durationMinutesFromRange(job.scheduledStartAt, job.scheduledEndAt);
-  const ctx = await loadOwnerSlotContext(organizationId, duration);
+  const assigneeId = job.assignments[0]?.membershipId;
+  const ctx = await loadOwnerSlotContext(organizationId, duration, assigneeId);
   if (!ctx) return null;
 
   const slots = getSlotsForDate(ctx.slotInput, dateYmd);
@@ -133,7 +136,8 @@ export async function rescheduleJob(
   }
 
   const duration = durationMinutesFromRange(job.scheduledStartAt, job.scheduledEndAt);
-  const ctx = await loadOwnerSlotContext(organizationId, duration);
+  const assigneeId = job.assignments[0]?.membershipId;
+  const ctx = await loadOwnerSlotContext(organizationId, duration, assigneeId);
   if (!ctx) return { ok: false as const, error: "Scheduling is not configured" };
 
   const slot = isSlotAvailable(ctx.slotInput, dateYmd, timeHm);

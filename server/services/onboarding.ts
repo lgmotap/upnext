@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { slugify, withRandomSuffix } from "@/lib/utils/slug";
+import { DEFAULT_BUSINESS_TYPE, ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 
 type CreateWorkspaceInput = {
   userId: string;
@@ -22,7 +23,7 @@ async function uniqueSlug(base: string): Promise<string> {
 export async function createWorkspaceForNewUser(input: CreateWorkspaceInput) {
   const slug = await uniqueSlug(input.businessName);
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await tx.user.upsert({
       where: { id: input.userId },
       create: {
@@ -60,9 +61,14 @@ export async function createWorkspaceForNewUser(input: CreateWorkspaceInput) {
         publicSlug: slug,
         email: input.email,
         bookingEnabled: true,
+        businessType: DEFAULT_BUSINESS_TYPE,
       },
     });
 
     return { organization, businessProfile };
   });
+
+  await ensureIndustryCatalogForOrg(result.organization.id);
+
+  return result;
 }

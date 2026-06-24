@@ -6,10 +6,11 @@ import { StatusBadge } from "@/components/app/StatusBadge";
 import { GettingStartedChecklist } from "@/components/app/GettingStartedChecklist";
 import { BookingQuickActions } from "@/components/app/BookingQuickActions";
 import { getAppSession } from "@/server/permissions/session";
-import { canManageBookings } from "@/server/permissions/can";
+import { canManageBookings, canManageBusiness } from "@/server/permissions/can";
 import { getBookingPageUrl } from "@/lib/url/app";
 import { getDashboardData } from "@/server/services/dashboard";
 import { getGettingStartedTasks } from "@/server/services/getting-started";
+import { ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function DashboardPage() {
@@ -28,6 +29,10 @@ export default async function DashboardPage() {
   const currency = org?.currency ?? "USD";
   const slug = org?.businessProfile?.publicSlug ?? "";
   const bookingUrl = slug ? getBookingPageUrl(slug) : "";
+
+  if (canManageBusiness(session)) {
+    await ensureIndustryCatalogForOrg(session.organizationId);
+  }
 
   const [data, gettingStarted] = await Promise.all([
     getDashboardData(

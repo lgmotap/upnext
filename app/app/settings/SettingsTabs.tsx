@@ -9,6 +9,7 @@ const tabs = [
   { label: "Availability", href: "/app/settings/availability" },
   { label: "Notifications", href: "/app/settings/notifications" },
   { label: "Billing", href: "/app/settings/billing" },
+  { label: "API", href: "/app/settings/api" },
 ];
 
 export function SettingsTabs() {

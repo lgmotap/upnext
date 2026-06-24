@@ -104,6 +104,7 @@ export function ManualBookingClient({
     () => initialDays[0]?.monthKey ?? monthKeyFromYmd(new Date().toISOString().slice(0, 10)),
   );
   const [pending, startTransition] = useTransition();
+  const [assignMembershipId, setAssignMembershipId] = useState("");
 
   const addonKey = addonIds.slice().sort().join(",");
 
@@ -118,9 +119,13 @@ export function ManualBookingClient({
     [selectedPrimary, selectedAddons, paramConfigs, paramValues],
   );
 
-  useEffect(() => {
-    setParamValues(defaultParameterValues(paramConfigs) as Record<PricingParameterType, number>);
-  }, [serviceId, paramConfigs.length]);
+  function selectService(nextId: string) {
+    setServiceId(nextId);
+    const next = primaryServices.find((s) => s.id === nextId);
+    setParamValues(
+      defaultParameterValues(next?.pricingParameters ?? []) as Record<PricingParameterType, number>,
+    );
+  }
 
   useEffect(() => {
     if (!serviceId) return;
@@ -128,6 +133,7 @@ export function ManualBookingClient({
       const { days: nextDays, timeZone: tz } = await fetchManualAvailableDaysAction(
         serviceId,
         addonKey || undefined,
+        assignMembershipId || undefined,
       );
       setDays(nextDays);
       const nextDate = nextDays.find((d) => d.date === date)?.date ?? nextDays[0]?.date ?? "";
@@ -138,6 +144,7 @@ export function ManualBookingClient({
           serviceId,
           nextDate,
           addonKey || undefined,
+          assignMembershipId || undefined,
         );
         setSlots(nextSlots);
         setTime(nextSlots.find((s) => s.time === time)?.time ?? nextSlots[0]?.time ?? "");
@@ -147,8 +154,8 @@ export function ManualBookingClient({
       }
       void tz;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch when service or addons change
-  }, [serviceId, addonKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch when service, addons, or worker change
+  }, [serviceId, addonKey, assignMembershipId]);
 
   function selectDate(nextDate: string) {
     setDate(nextDate);
@@ -158,6 +165,7 @@ export function ManualBookingClient({
         serviceId,
         nextDate,
         addonKey || undefined,
+        assignMembershipId || undefined,
       );
       setSlots(nextSlots);
       setTime(nextSlots[0]?.time ?? "");
@@ -245,7 +253,7 @@ export function ManualBookingClient({
             <button
               key={s.id}
               type="button"
-              onClick={() => setServiceId(s.id)}
+              onClick={() => selectService(s.id)}
               className={`flex items-start justify-between rounded-2xl px-4 py-3.5 text-left ring-1 transition ${
                 serviceId === s.id
                   ? "bg-brand-50 ring-brand-300"
@@ -388,7 +396,12 @@ export function ManualBookingClient({
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
               Assign worker (optional)
             </label>
-            <select name="assignMembershipId" defaultValue="" className={input}>
+            <select
+              name="assignMembershipId"
+              value={assignMembershipId}
+              onChange={(e) => setAssignMembershipId(e.target.value)}
+              className={input}
+            >
               <option value="">Unassigned</option>
               {assignableMembers.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -396,6 +409,11 @@ export function ManualBookingClient({
                 </option>
               ))}
             </select>
+            {assignMembershipId && (
+              <p className="mt-1.5 text-xs text-ink-500">
+                Available slots are filtered to this worker&apos;s schedule.
+              </p>
+            )}
           </div>
         )}
       </Section>

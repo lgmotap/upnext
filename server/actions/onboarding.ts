@@ -6,7 +6,7 @@ import { getAppSession } from "@/server/permissions/session";
 import { canManageBusiness } from "@/server/permissions/can";
 import { businessSetupSchema } from "@/server/validators/onboarding";
 import { updateBusinessSetup } from "@/server/services/business";
-import { seedIndustryCatalogIfEmpty } from "@/server/services/industry-catalog";
+import { ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 import { prisma } from "@/lib/db/prisma";
 import { ONBOARDING_COOKIE } from "@/lib/onboarding/constants";
 
@@ -53,11 +53,7 @@ export async function completeOnboardingAction(formData: FormData): Promise<void
 
   await updateBusinessSetup(session.organizationId, data);
 
-  const seed = await seedIndustryCatalogIfEmpty(
-    session.organizationId,
-    org.currency,
-    data.businessType,
-  );
+  const seed = await ensureIndustryCatalogForOrg(session.organizationId);
   void seed;
 
   const jar = await cookies();

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Clock, Plus, Sparkles } from "lucide-react";
 import { Card, PageHeader } from "@/components/app/ui";
 import { FormSubmitButton } from "@/components/app/FormSubmitButton";
+import { ServiceIcon } from "@/components/booking/ServiceIcon";
 import { formatMoney } from "@/lib/money/format";
 import { catalogStats } from "@/lib/onboarding/industry-catalog";
 import { getAppSession } from "@/server/permissions/session";
@@ -23,6 +24,11 @@ function ServiceCard({
 }) {
   return (
     <Card className="p-5">
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+          <ServiceIcon iconKey={s.iconKey} isAddon={s.isAddon} className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-bold text-ink-950">{s.name}</h3>
         <span
@@ -63,6 +69,8 @@ function ServiceCard({
           </form>
         </div>
       )}
+        </div>
+      </div>
     </Card>
   );
 }
@@ -169,10 +177,8 @@ export default async function ServicesPage({
       {services.length === 0 ? (
         <Card className="p-8 text-center">
           <p className="text-sm text-ink-500">
-            No services yet.
-            {businessType
-              ? " Load the suggested catalog for your industry or add a service manually."
-              : " Add your first bookable service."}
+            Services are loading from your industry template. Refresh in a moment, or add a service
+            manually.
           </p>
           {missingSuggested && (
             <form action={seedSuggestedCatalogAction} className="mt-4">

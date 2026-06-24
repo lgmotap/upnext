@@ -27,7 +27,9 @@ export function AppSidebar({ workspace }: { workspace: WorkspaceShellData }) {
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5" aria-label="Main navigation">
-        {appNav.map(({ label, href, icon: Icon }) => {
+        {appNav
+          .filter((item) => item.href !== "/app/team" || workspace.canManageTeam)
+          .map(({ label, href, icon: Icon }) => {
           const active = isActive(pathname, href);
           const badge =
             href === "/app/bookings" && workspace.pendingBookings > 0

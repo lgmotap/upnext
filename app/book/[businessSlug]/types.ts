@@ -8,6 +8,7 @@ export type PublicService = {
   basePriceCents: number;
   currency: string;
   isAddon: boolean;
+  iconKey: string | null;
   pricingParameters: PricingParameterConfig[];
 };
 

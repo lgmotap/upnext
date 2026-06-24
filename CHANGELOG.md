@@ -4,6 +4,10 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Sprint 17 CRM import**: `/app/customers/import` CSV upload, dedupe by email. `npm run smoke:customer-import`.
+- **Sprint 18 per-worker availability**: `MembershipAvailabilityRule`, org/worker hour intersection, team hours UI, crew read-only hours, manual booking slot filter. `npm run smoke:worker-availability`.
+- **Sprint 19 parity hardening**: `docs/audits/browser-checklists.md`, `docs/audits/competitor-positioning.md`, lint fixes, `tests/e2e/full-product-flow.spec.ts`, `npm run test:e2e:full`.
+- **Sprint 20 read API + webhooks**: `/app/settings/api`, `GET /api/v1/*`, outbound webhooks + delivery log. `npm run smoke:api`.
 - **Sprint 14 recurring jobs**: `JobSeries` model, daily cron `/api/cron/recurring-jobs`, owner pause/cancel on job detail, `recurring_job_scheduled` email. `npm run smoke:recurring`. See `docs/16-recurring-jobs.md`.
 - **Sprint 15 pricing parameters**: bed/bath surcharges on services, public + manual booking, residential cleaning catalog defaults. `npm run smoke:pricing-params`. See `docs/17-pricing-parameters.md`.
 - **Sprint 16 portal cancel**: `minNoticeHours` policy, fix accepted-booking cancel, pause recurring series. `npm run smoke:portal-cancel`.

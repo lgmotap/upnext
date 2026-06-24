@@ -20,12 +20,18 @@ async function requireBookingManager() {
 export async function fetchManualAvailableDaysAction(
   serviceId: string,
   addonServiceIds?: string | string[],
+  membershipId?: string,
 ) {
   const session = await requireBookingManager();
   if (!session) return { days: [] as SlotDay[], timeZone: "America/New_York" };
 
   const addons = parseAddonIds(addonServiceIds);
-  const result = await getOrgAvailableDays(session.organizationId, serviceId, addons);
+  const result = await getOrgAvailableDays(
+    session.organizationId,
+    serviceId,
+    addons,
+    membershipId || undefined,
+  );
   if (!result) return { days: [] as SlotDay[], timeZone: "America/New_York" };
   return result;
 }
@@ -34,12 +40,19 @@ export async function fetchManualSlotsForDayAction(
   serviceId: string,
   dateYmd: string,
   addonServiceIds?: string | string[],
+  membershipId?: string,
 ) {
   const session = await requireBookingManager();
   if (!session) return { slots: [] as { date: string; time: string; label: string }[] };
 
   const addons = parseAddonIds(addonServiceIds);
-  const slots = await getOrgSlotsForDay(session.organizationId, serviceId, dateYmd, addons);
+  const slots = await getOrgSlotsForDay(
+    session.organizationId,
+    serviceId,
+    dateYmd,
+    addons,
+    membershipId || undefined,
+  );
   if (!slots) return { slots: [] as { date: string; time: string; label: string }[] };
   return {
     slots: slots.map((s) => ({ date: s.date, time: s.time, label: formatTime12h(s.time) })),

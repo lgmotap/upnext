@@ -32,6 +32,8 @@ export async function submitPublicBookingAction(formData: FormData): Promise<voi
     postalCode: formData.get("postalCode"),
     customerNotes: formData.get("customerNotes"),
     frequency: formData.get("frequency"),
+    bedrooms: formData.get("bedrooms"),
+    bathrooms: formData.get("bathrooms"),
   });
 
   if (!parsed.success) {

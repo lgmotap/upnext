@@ -4,19 +4,19 @@
 
 ## Schema
 
-- [ ] `MembershipAvailabilityRule` — membershipId, dayOfWeek, startHm, endHm (or reuse pattern from org rules)
+- [x] `MembershipAvailabilityRule` — membershipId, dayOfWeek, startHm, endHm (or reuse pattern from org rules)
 
 ## Slot engine
 
-- [ ] When job has assignment, optional filter: only slots where assigned worker is available
-- [ ] Public booking: org-level unchanged (MVP)
-- [ ] Manual booking assign: warn if worker unavailable at slot
+- [x] When job has assignment, optional filter: only slots where assigned worker is available
+- [x] Public booking: org-level unchanged (MVP)
+- [x] Manual booking assign: warn if worker unavailable at slot
 
 ## UI
 
-- [ ] `/app/team/[membershipId]` or modal — edit worker weekly hours
-- [ ] Crew member sees read-only hours on `/crew`
+- [x] `/app/team/[membershipId]` or modal — edit worker weekly hours
+- [x] Crew member sees read-only hours on `/crew`
 
 ## Validation
 
-- [ ] `npm run smoke:worker-availability`
+- [x] `npm run smoke:worker-availability`

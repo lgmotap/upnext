@@ -36,11 +36,19 @@ export default async function CustomersPage() {
         title="Customers"
         subtitle="Profiles, history, and lifetime value."
         action={
-          bookingUrl ? (
-            <CopyBookingLink url={bookingUrl} label="Share booking page" />
-          ) : (
-            <AppButton href="/app/settings/business">Set up booking page</AppButton>
-          )
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/app/customers/import"
+              className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold text-ink-700 ring-1 ring-ink-200 hover:bg-ink-50"
+            >
+              Import CSV
+            </Link>
+            {bookingUrl ? (
+              <CopyBookingLink url={bookingUrl} label="Share booking page" />
+            ) : (
+              <AppButton href="/app/settings/business">Set up booking page</AppButton>
+            )}
+          </div>
         }
       />
 

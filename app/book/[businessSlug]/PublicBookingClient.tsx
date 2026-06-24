@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { AlertCircle, Check, Clock, Plus, Repeat } from "lucide-react";
+import { AlertCircle, Check, Plus, Repeat } from "lucide-react";
 import { BookingMonthCalendar } from "@/components/booking/BookingMonthCalendar";
+import { PublicServiceCard } from "@/components/booking/PublicServiceCard";
 import { BOOKING_FREQUENCY_OPTIONS } from "@/lib/booking/frequency";
 import { formatMoney } from "@/lib/money/format";
 import { monthKeyFromYmd } from "@/lib/availability/calendar-ui";
@@ -122,9 +123,13 @@ export function PublicBookingClient({
     [selectedPrimary, selectedAddons, paramConfigs, paramValues],
   );
 
-  useEffect(() => {
-    setParamValues(defaultParameterValues(paramConfigs) as Record<PricingParameterType, number>);
-  }, [serviceId, paramConfigs.length]);
+  function selectService(nextId: string) {
+    setServiceId(nextId);
+    const next = primaryServices.find((s) => s.id === nextId);
+    setParamValues(
+      defaultParameterValues(next?.pricingParameters ?? []) as Record<PricingParameterType, number>,
+    );
+  }
 
   useEffect(() => {
     startTransition(async () => {
@@ -228,29 +233,17 @@ export function PublicBookingClient({
             <p className="mb-3 text-sm text-ink-500">Select one main service for your visit.</p>
             <div className="grid gap-2.5">
               {primaryServices.map((s) => (
-                <button
+                <PublicServiceCard
                   key={s.id}
-                  type="button"
-                  onClick={() => setServiceId(s.id)}
-                  className={`flex items-center justify-between rounded-2xl border p-4 text-left transition ${
-                    serviceId === s.id
-                      ? "border-brand-400 bg-brand-50 ring-1 ring-brand-400"
-                      : "border-ink-200 bg-white hover:border-brand-300"
-                  }`}
-                >
-                  <div className="min-w-0 pr-3">
-                    <p className="font-semibold text-ink-950">{s.name}</p>
-                    {s.description && (
-                      <p className="mt-0.5 line-clamp-2 text-xs text-ink-500">{s.description}</p>
-                    )}
-                    <p className="mt-1 inline-flex items-center gap-1 text-xs text-ink-500">
-                      <Clock className="size-3" /> {s.durationMinutes} min
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-sm font-bold text-ink-950">
-                    {formatMoney(s.basePriceCents, s.currency)}
-                  </span>
-                </button>
+                  name={s.name}
+                  description={s.description}
+                  durationMinutes={s.durationMinutes}
+                  basePriceCents={s.basePriceCents}
+                  currency={s.currency}
+                  iconKey={s.iconKey}
+                  selected={serviceId === s.id}
+                  onSelect={() => selectService(s.id)}
+                />
               ))}
             </div>
           </Section>

@@ -5,7 +5,6 @@ import { CalendarClock } from "lucide-react";
 import { RescheduleModal } from "@/components/app/RescheduleModal";
 import {
   rescheduleBookingRequestAction,
-  fetchBookingRescheduleDaysAction,
   fetchBookingRescheduleSlotsAction,
 } from "@/server/actions/scheduling";
 import type { BookableDay } from "@/lib/availability/calendar-ui";
@@ -43,7 +42,6 @@ export function BookingRescheduleButton({
         entityId={bookingRequestId}
         idFieldName="bookingRequestId"
         formAction={rescheduleBookingRequestAction}
-        fetchDays={fetchBookingRescheduleDaysAction}
         fetchSlots={fetchBookingRescheduleSlotsAction}
         initialDays={reschedule.initialDays}
         initialSlots={reschedule.initialSlots}

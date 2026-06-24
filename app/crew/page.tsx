@@ -4,8 +4,11 @@ import { MapPin, ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
 import { formatYmdInTimezone, localDateTimeToUtc, addDaysYmd } from "@/lib/datetime/timezone";
+import { WeeklyHoursReadOnly } from "@/components/app/WeeklyHoursForm";
 import { getAppSession } from "@/server/permissions/session";
 import { listJobsAssignedToMember } from "@/server/repositories/assignments";
+import { listMembershipAvailabilityRules } from "@/server/repositories/membership-availability";
+import { defaultWeeklyRules } from "@/server/validators/availability";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function CrewTodayPage() {
@@ -27,6 +30,24 @@ export default async function CrewTodayPage() {
     rangeStart,
     rangeEnd,
   );
+
+  const workerRules = await listMembershipAvailabilityRules(session.membershipId);
+  const defaults = defaultWeeklyRules();
+  const rulesByDay = Object.fromEntries(workerRules.map((r) => [r.dayOfWeek, r]));
+  const hours =
+    workerRules.length > 0
+      ? defaults.map((d) => {
+          const row = rulesByDay[d.dayOfWeek];
+          return row
+            ? {
+                dayOfWeek: row.dayOfWeek,
+                startTime: row.startTime,
+                endTime: row.endTime,
+                isActive: row.isActive,
+              }
+            : d;
+        })
+      : [];
 
   const greeting = session.name?.split(" ")[0] ?? "there";
 
@@ -69,6 +90,15 @@ export default async function CrewTodayPage() {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {hours.length > 0 && (
+        <div className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-ink-100">
+          <h2 className="text-sm font-bold text-ink-950">Your working hours</h2>
+          <div className="mt-2">
+            <WeeklyHoursReadOnly rules={hours} />
+          </div>
         </div>
       )}
     </div>

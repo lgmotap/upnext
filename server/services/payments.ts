@@ -10,6 +10,7 @@ import { markPaymentPaidFromStripe } from "@/server/services/portal-payments";
 import { notifyPaymentRequest } from "@/server/services/notifications";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
+import { emitOrgWebhook } from "@/server/services/webhooks";
 import { getJobForOrg } from "@/server/repositories/jobs";
 import type { PaymentStatus } from "@/generated/prisma/client";
 import type Stripe from "stripe";
@@ -169,6 +170,17 @@ export async function markPaymentStatusManual(
       ...(status === "paid" ? { paidAt: new Date(), paymentUrl: null } : {}),
     },
   });
+
+  if (status === "paid") {
+    emitOrgWebhook(organizationId, "payment_paid", {
+      paymentRecordId: payment.id,
+      jobId: payment.jobId,
+      customerId: payment.customerId,
+      amountCents: payment.amountCents,
+      currency: payment.currency,
+      provider: "manual",
+    });
+  }
 
   return { ok: true as const };
 }

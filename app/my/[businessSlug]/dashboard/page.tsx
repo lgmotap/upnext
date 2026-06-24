@@ -37,6 +37,7 @@ export default async function CustomerPortalDashboardPage({
       payments={data.payments}
       bookAgainUrl={data.bookAgainUrl}
       prefill={data.prefill}
+      primaryServices={data.primaryServices}
       stripePaymentsEnabled={data.stripePaymentsEnabled}
       savedPaymentMethods={data.savedPaymentMethods}
       initialTab={initialTab}

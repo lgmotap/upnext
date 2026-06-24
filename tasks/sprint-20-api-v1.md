@@ -4,22 +4,22 @@
 
 ## API keys
 
-- [ ] `ApiKey` model — org scoped, hashed secret, name, lastUsedAt
-- [ ] `/app/settings/api` — create/revoke keys (owner only)
+- [x] `ApiKey` model — org scoped, hashed secret, name, lastUsedAt
+- [x] `/app/settings/api` — create/revoke keys (owner only)
 
 ## Read endpoints (v1)
 
-- [ ] `GET /api/v1/bookings` — list with `since` cursor
-- [ ] `GET /api/v1/customers`
-- [ ] `GET /api/v1/services`
-- [ ] Bearer auth; rate limited
+- [x] `GET /api/v1/bookings` — list with `since` cursor
+- [x] `GET /api/v1/customers`
+- [x] `GET /api/v1/services`
+- [x] Bearer auth; rate limited
 
 ## Webhooks
 
-- [ ] `WebhookEndpoint` model — url, secret, events[]
-- [ ] Deliver on: `booking.created`, `booking.accepted`, `job.completed`, `customer.created`, `payment.paid`
-- [ ] Retry + delivery log
+- [x] `WebhookEndpoint` model — url, secret, events[]
+- [x] Deliver on: `booking.created`, `booking.accepted`, `job.completed`, `customer.created`, `payment.paid`
+- [x] Retry + delivery log
 
 ## Validation
 
-- [ ] `npm run smoke:api`
+- [x] `npm run smoke:api`

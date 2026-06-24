@@ -8,6 +8,7 @@ import { createJobSeriesFromAcceptedJob } from "@/server/services/recurring-jobs
 import { seedJobChecklistItems } from "@/server/services/checklists";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
+import { emitOrgWebhook } from "@/server/services/webhooks";
 
 export async function createJobFromBookingRequest(organizationId: string, bookingRequestId: string) {
   const booking = await getBookingRequestForOrg(organizationId, bookingRequestId);
@@ -81,6 +82,14 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
     jobId: job.id,
   });
 
+  emitOrgWebhook(organizationId, "booking_accepted", {
+    bookingRequestId,
+    jobId: job.id,
+    customerId: job.customerId,
+    serviceId: job.serviceId,
+    scheduledStartAt: job.scheduledStartAt.toISOString(),
+  });
+
   return { ok: true as const, jobId: job.id };
 }
 
@@ -103,6 +112,11 @@ export async function updateJobStatus(
   if (status === "completed" && job.status !== "completed") {
     await notifyJobCompleted(organizationId, jobId);
     captureServerEvent(organizationId, AnalyticsEvents.jobCompleted, { jobId });
+    emitOrgWebhook(organizationId, "job_completed", {
+      jobId,
+      customerId: job.customerId,
+      completedAt: new Date().toISOString(),
+    });
   }
 
   return updated;

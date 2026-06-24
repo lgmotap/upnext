@@ -33,6 +33,8 @@ export async function submitManualBookingAction(formData: FormData): Promise<voi
     customerNotes: formData.get("customerNotes"),
     assignMembershipId: formData.get("assignMembershipId"),
     frequency: formData.get("frequency"),
+    bedrooms: formData.get("bedrooms"),
+    bathrooms: formData.get("bathrooms"),
   });
 
   if (!parsed.success) {

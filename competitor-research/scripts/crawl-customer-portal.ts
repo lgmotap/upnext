@@ -139,7 +139,7 @@ async function main() {
     viewport: { width: 1440, height: 900 },
     storageState: existsSync(storagePath) ? storagePath : undefined,
   });
-  let page = await context.newPage();
+  const page = await context.newPage();
 
   console.log("\n=== Customer portal — login ===");
   await loginCustomerPortal(target, page, cfg);

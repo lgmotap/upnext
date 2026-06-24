@@ -29,7 +29,11 @@ export function useCommandPalette() {
 
 export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
   const [visible, setVisible] = useState(false);
-  const open = useCallback(() => setVisible(true), []);
+  const [paletteKey, setPaletteKey] = useState(0);
+  const open = useCallback(() => {
+    setPaletteKey((k) => k + 1);
+    setVisible(true);
+  }, []);
   const close = useCallback(() => setVisible(false), []);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
   return (
     <CommandPaletteContext.Provider value={{ open, close }}>
       {children}
-      <CommandPalette open={visible} onClose={close} />
+      <CommandPalette key={paletteKey} open={visible} onClose={close} />
     </CommandPaletteContext.Provider>
   );
 }
@@ -61,8 +65,6 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
 
   useEffect(() => {
     if (open) {
-      setQuery("");
-      setResults([]);
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [open]);

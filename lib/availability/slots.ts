@@ -1,4 +1,5 @@
-import type { AvailabilityRule, BlackoutDate } from "@/generated/prisma/client";
+import type { BlackoutDate } from "@/generated/prisma/client";
+import type { WeeklyRule } from "@/lib/availability/intersect-rules";
 import {
   addDaysYmd,
   formatYmdInTimezone,
@@ -19,7 +20,7 @@ export type AvailableSlot = {
 
 type SlotInput = {
   timeZone: string;
-  rules: AvailabilityRule[];
+  rules: WeeklyRule[];
   blackouts: BlackoutDate[];
   minNoticeHours: number;
   maxBookingDaysAhead: number;

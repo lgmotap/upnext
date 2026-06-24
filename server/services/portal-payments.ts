@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { emitOrgWebhook } from "@/server/services/webhooks";
 import { appBaseUrl, getStripe } from "@/lib/stripe/client";
 import { getOrgStripeConnect } from "@/server/repositories/payments";
 import type { PortalSession } from "@/lib/portal/session";
@@ -180,6 +181,21 @@ export async function markPaymentPaidFromStripe(
       paymentUrl: null,
     },
   });
+
+  const payment = await prisma.paymentRecord.findFirst({
+    where: { id: paymentRecordId, organizationId },
+    select: { jobId: true, customerId: true, amountCents: true, currency: true },
+  });
+  if (payment) {
+    emitOrgWebhook(organizationId, "payment_paid", {
+      paymentRecordId,
+      jobId: payment.jobId,
+      customerId: payment.customerId,
+      amountCents: payment.amountCents,
+      currency: payment.currency,
+      provider: "stripe",
+    });
+  }
 }
 
 export async function isPortalStripePaymentsEnabled(organizationId: string) {

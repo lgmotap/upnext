@@ -2,12 +2,15 @@ import { serviceTypes } from "@/lib/config";
 
 type ServiceType = (typeof serviceTypes)[number];
 
+import { resolveIconKeyForServiceName } from "@/lib/onboarding/service-icons";
+
 export type CatalogService = {
   name: string;
   description: string;
   durationMinutes: number;
   basePriceCents: number;
   isAddon: boolean;
+  iconKey: string;
   pricingParameters?: Array<{
     parameterType: "bedrooms" | "bathrooms";
     unitPriceCents: number;
@@ -36,7 +39,15 @@ function svc(
   isAddon = false,
   pricingParameters?: CatalogService["pricingParameters"],
 ): CatalogService {
-  return { name, description, durationMinutes, basePriceCents, isAddon, pricingParameters };
+  return {
+    name,
+    description,
+    durationMinutes,
+    basePriceCents,
+    isAddon,
+    pricingParameters,
+    iconKey: resolveIconKeyForServiceName(name, isAddon),
+  };
 }
 
 /** ConvertLabs-style catalogs: multiple bookable services + extras per vertical. */
