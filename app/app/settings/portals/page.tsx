@@ -13,6 +13,7 @@ import {
   getCustomerPortalUrl,
   isBookingUrlMisconfigured,
 } from "@/lib/url/app";
+import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
 
 export default async function PortalsSettingsPage({
   searchParams,
@@ -71,7 +72,7 @@ export default async function PortalsSettingsPage({
             <input
               type="checkbox"
               name="customerPortalEnabled"
-              defaultChecked={profile.customerPortalEnabled}
+              defaultChecked={isCustomerPortalEnabled(profile)}
               disabled={!canEdit}
               className="size-4 rounded border-ink-300 text-brand-600 focus:ring-brand-400"
             />
@@ -99,7 +100,7 @@ export default async function PortalsSettingsPage({
           Send a magic link from any customer profile, or customers can request one at the portal URL.
         </p>
 
-        {portalUrl && profile.customerPortalEnabled && (
+        {portalUrl && isCustomerPortalEnabled(profile) && (
           <Link
             href={portalUrl}
             target="_blank"

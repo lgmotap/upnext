@@ -1,8 +1,10 @@
 # MVP traceability audit
 
-**Updated:** 2026-06-24 (full research + code pass)  
+**Updated:** 2026-06-25 (post-beta sprints 09–12 complete)  
 **Purpose:** Line-by-line check — competitor research → `docs/02-mvp-scope.md` → sprint tasks → **actual codebase**  
-**Competitor synthesis:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (local, gitignored)
+**Competitor synthesis:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (local, gitignored)  
+**Current status:** `tasks/competitor-parity-status.md`  
+**Extensive audit plan:** `tasks/competitor-parity-audit-plan.md` (Parts 0–14)
 
 Run this audit **before each sprint kickoff**. Do not start new competitor crawls unless a row is marked "needs CL spec."
 
@@ -62,18 +64,18 @@ These were **missed** in the first audit because sprint files assumed "built" wh
 | Customers (+ 7 tabs) | ✅ | List + detail ✅; no notes/quotes tabs | P0 OK / P1 notes |
 | Service Providers | ✅ | `/app/team` ✅ | P0 |
 | New Booking wizard (10 tabs) | ✅ | Not built → sprint 07 manual booking | P0 |
-| Service Studio (pricing/freq/extras) | ✅ | Flat service + addons ✅ | P1 params/frequency |
+| Service Studio (pricing/freq/extras) | ✅ | Flat service + addons ✅; **frequency on booking** ✅ sprint 11 | P1 params deferred |
 | Settings — Time & Scheduling | ✅ | Availability ✅ | P0 |
 | Settings — Payment | ✅ | Not built | P0 sprint 06 |
 | Settings — Notifications | ✅ | Shell UI | P0 sprint 06–07 |
-| Settings — Portals | ✅ | Out of MVP | P1 |
+| Settings — Portals | ✅ | **✅ Sprint 09–10** — booking + customer portal URLs | Done |
 | Settings — Forms / Integrations | ✅ | Out of MVP | P2 |
 | Getting Started checklist | ✅ | Not built | P1 |
 | Quotes / Invoices / Discounts | ✅ | Out of MVP | P2 |
 | Marketing / Websites / Domains | ✅ | Out of MVP | P2 |
 | Payouts / Providers Activity | ✅ | Out of MVP | P1/P2 |
 | Profile — API Keys / Billing | ✅ | Partial (`/app/settings/billing` exists) | P1 API |
-| Global search ⌘K | ✅ | Not built | P1 |
+| Global search ⌘K | ✅ | **✅ Sprint 12** — `CommandPalette` + `globalSearch` | Done |
 
 ---
 
@@ -165,8 +167,8 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 
 | Item | Backlog | CL report |
 |------|---------|-----------|
-| Customer portal | ✅ | `customer-portal.md` | **Sprint 10** (was P1 defer) |
-| Recurring / frequency | ✅ | Service Studio Frequencies |
+| Customer portal | ✅ **Sprint 10** | `customer-portal.md` | `/my/[slug]`, magic link, dashboard tabs |
+| Recurring / frequency | ✅ frequency stored | Service Studio Frequencies | **Cron/JobSeries deferred** Phase 3 |
 | Pricing parameters | — | Service Studio |
 | On The Way / Running Late | ✅ | `provider-job-workflow.md` |
 | Public API + webhooks | gap-analysis | `api-reference.md` |
@@ -176,27 +178,24 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 
 ---
 
-## Audit verdict (2026-06-24 full pass)
+## Audit verdict (2026-06-25 post-beta)
 
 | Question | Answer |
 |----------|--------|
-| Did we use all research? | **All flow reports + app-coverage + API** — yes. **feature-inventory** line-by-line — no (640k auto-extract; spot-check sufficient). |
-| Was first audit complete? | **No** — it caught sprint drift but missed **4 mock pages** still in production routes. |
-| More competitor crawls? | **No** for MVP — research covers modules; gaps are **UpNext build + plan alignment**. |
-| Next action | Sprint 06 — notifications + crew depth + team invite (payments core done). |
+| Post-beta sprints 09–12 | **Complete** — portal reliability, customer portal, booking parity, ⌘K search |
+| Launch checklist | **1 item** — Resend prod domain (owner DNS action) |
+| Next build candidates | Recurring engine (cron), pricing params, full Playwright signup→pay E2E, backlog (`tasks/backlog.md`) |
 
 ---
 
-## Sprint order (PO approved)
+## Sprint order (complete)
 
 ```
-Sprint 06  Wire booking detail + payments + notifications (8 types) + crew depth + team invite
-Sprint 07  Dashboard + manual booking + wire business/notifications settings + payments page
-Sprint 08  E2E + RBAC audit + Sentry + PostHog + launch checklist
-Sprint 09  Portal reliability — booking link UX, Portals settings (in progress)
-Sprint 10  Customer portal v1 — magic link, history, book again
-Sprint 11  Public booking parity — frequency, prefill, embed
-Sprint 12  Operations growth — recurring, ⌘K search, full Playwright E2E
+Sprint 06–08  MVP + launch hardening — done
+Sprint 09     Portal reliability — done
+Sprint 10     Customer portal v1 — done
+Sprint 11     Public booking parity — done
+Sprint 12     Operations growth — done (frequency UI, ⌘K, payment link; cron deferred)
 ```
 
 See `tasks/post-beta-roadmap.md`, `tasks/sprint-09-portal-reliability.md` through `sprint-12-operations-growth.md`.

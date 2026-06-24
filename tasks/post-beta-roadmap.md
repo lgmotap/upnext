@@ -32,6 +32,8 @@ Sprint 12  Operations growth — recurring jobs, ⌘K search, pricing params (MV
 
 **After 12:** Resend prod domain (`tasks/launch-checklist.md` line 17) when owner is ready.
 
+**Status (2026-06-25):** Sprints **09–12 complete**. Launch smokes green (`npm run smoke:launch`). Only Resend domain remains for production email.
+
 ---
 
 ## Competitor → sprint mapping

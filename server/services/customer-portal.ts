@@ -22,6 +22,7 @@ import {
   notifyCustomerPortalLink,
 } from "@/server/services/notifications";
 import type { PortalSession } from "@/lib/portal/session";
+import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
 
 const MAGIC_LINK_TTL_MS = 15 * 60 * 1000;
 
@@ -31,7 +32,7 @@ function normalizeEmail(email: string) {
 
 export async function loadPortalContext(businessSlug: string) {
   const profile = await getBusinessProfileBySlug(businessSlug);
-  if (!profile || !profile.customerPortalEnabled) return null;
+  if (!profile || !isCustomerPortalEnabled(profile)) return null;
   return profile;
 }
 
@@ -131,7 +132,7 @@ export async function sendCustomerPortalLinkFromOwner(
   const profile = await prisma.businessProfile.findUnique({
     where: { organizationId },
   });
-  if (!profile?.customerPortalEnabled) {
+  if (!profile || !isCustomerPortalEnabled(profile)) {
     return { ok: false, error: "Enable the customer portal in Settings → Portals first." };
   }
 

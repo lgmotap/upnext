@@ -6,6 +6,7 @@ import { formatDisplayDateTime } from "@/lib/datetime/timezone";
 import { buildBookingIcsEvent, icsDataUrl } from "@/lib/datetime/ics";
 import { formatMoney } from "@/lib/money/format";
 import { getCustomerPortalUrl } from "@/lib/url/app";
+import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
 import { getPublicBookingRequest } from "@/server/repositories/bookings";
 
 export default async function BookingConfirmationPage({
@@ -44,7 +45,7 @@ export default async function BookingConfirmationPage({
   const calendarHref = icsDataUrl(ics);
 
   const portalUrl =
-    profile?.customerPortalEnabled && profile.publicSlug
+    profile && isCustomerPortalEnabled(profile) && profile.publicSlug
       ? getCustomerPortalUrl(profile.publicSlug)
       : null;
 

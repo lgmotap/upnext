@@ -154,7 +154,10 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 | 10 | Customer portal v1 (`/my/[slug]`), magic link, `smoke:customer-portal` |
 | 11 | Booking frequency, `/embed`, query prefill, ICS, `smoke:public-booking-parity` |
 | 12 | ⌘K global search, manual booking frequency, job payment link, `smoke:global-search` |
+| 13 | Reporting v1 (`/app/reports`), browser audit fixes (portal + calendar) |
+
+**Browser audit (2026-06-25):** Fixed customer portal showing "Portal not found" when `customerPortalEnabled` was undefined in Prisma runtime; fixed calendar subtitle (`Mon – Sun, Jun 28, 11:59 PM` → `Jun 22 – Jun 28, 2026`); added `/my/` to public proxy routes.
 
 **Deferred (Phase 3):** recurring cron/JobSeries, bed/bath pricing params, Stripe Checkout Playwright E2E.
 
-**Validation:** `npm run typecheck` ✓ · `npm run smoke:global-search` ✓ · `npm run smoke:manual-booking` ✓
+**Validation:** `npm run typecheck` ✓ · `npm run smoke:customer-portal` ✓ · `npm run smoke:reports` ✓

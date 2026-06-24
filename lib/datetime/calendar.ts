@@ -27,9 +27,19 @@ export function getWeekRange(timeZone: string, anchor = new Date()) {
   const rangeStart = localDateTimeToUtc(weekStartYmd, "00:00", timeZone);
   const rangeEnd = localDateTimeToUtc(addDaysYmd(weekStartYmd, 7), "00:00", timeZone);
 
-  const weekLabel = `${formatDisplayDateTime(rangeStart, timeZone).replace(/,.*$/, "")} – ${formatDisplayDateTime(new Date(rangeEnd.getTime() - 1), timeZone)}`;
+  const weekEndYmd = addDaysYmd(weekStartYmd, 6);
+  const weekStartLabel = formatShortDate(localDateTimeToUtc(weekStartYmd, "12:00", timeZone), timeZone);
+  const weekEndLabel = formatShortDate(localDateTimeToUtc(weekEndYmd, "12:00", timeZone), timeZone);
+  const weekLabel =
+    weekStartYmd.slice(0, 4) === weekEndYmd.slice(0, 4)
+      ? `${weekStartLabel} – ${weekEndLabel}, ${weekStartYmd.slice(0, 4)}`
+      : `${weekStartLabel}, ${weekStartYmd.slice(0, 4)} – ${weekEndLabel}, ${weekEndYmd.slice(0, 4)}`;
 
   return { days, rangeStart, rangeEnd, weekLabel, todayYmd };
+}
+
+function formatShortDate(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-US", { timeZone, month: "short", day: "numeric" }).format(date);
 }
 
 export function formatJobSchedule(start: Date, end: Date, timeZone: string) {

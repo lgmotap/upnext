@@ -7,6 +7,7 @@ import {
   UserCog,
   Wrench,
   CreditCard,
+  BarChart3,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ export const appNav: NavItem[] = [
   { label: "Team", href: "/app/team", icon: UserCog },
   { label: "Services", href: "/app/services", icon: Wrench },
   { label: "Payments", href: "/app/payments", icon: CreditCard },
+  { label: "Reports", href: "/app/reports", icon: BarChart3 },
   { label: "Settings", href: "/app/settings/business", icon: Settings },
 ];
 

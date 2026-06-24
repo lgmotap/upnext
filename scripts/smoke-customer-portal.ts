@@ -10,6 +10,7 @@ config({ path: ".env", override: false });
 
 const { prisma } = await import("../lib/db/prisma");
 const {
+  loadPortalContext,
   requestCustomerPortalMagicLink,
   verifyCustomerPortalMagicLink,
   getPortalDashboardData,
@@ -27,6 +28,9 @@ async function main() {
     select: { publicSlug: true, organizationId: true, displayName: true },
   });
   if (!profile) throw new Error("No business profile with portal enabled");
+
+  const ctx = await loadPortalContext(profile.publicSlug);
+  if (!ctx) throw new Error(`loadPortalContext returned null for ${profile.publicSlug}`);
 
   const customer = await prisma.customer.findFirst({
     where: { organizationId: profile.organizationId },

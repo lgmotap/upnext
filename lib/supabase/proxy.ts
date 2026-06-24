@@ -62,6 +62,7 @@ function clearAuthCookies(response: NextResponse, request: NextRequest) {
 function isPublicRoute(pathname: string): boolean {
   if (pathname === "/") return true;
   if (pathname.startsWith("/book/")) return true;
+  if (pathname.startsWith("/my/")) return true;
   if (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up") || pathname.startsWith("/forgot-password")) {
     return true;
   }

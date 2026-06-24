@@ -12,6 +12,7 @@ import {
   parsePublicPrefillFromSearchParams,
   type PublicBookingPrefillFields,
 } from "@/lib/booking/public-prefill";
+import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
 
 function formatTime12h(hm: string): string {
   const [h, m] = hm.split(":").map(Number);
@@ -147,7 +148,7 @@ export async function loadPublicBookingPage(
       description: profile.description,
       phone: profile.phone,
       email: profile.email,
-      customerPortalEnabled: profile.customerPortalEnabled,
+      customerPortalEnabled: isCustomerPortalEnabled(profile),
     },
     primaryServices: primaryServices.map(mapService),
     addonServices: addonServices.map(mapService),
