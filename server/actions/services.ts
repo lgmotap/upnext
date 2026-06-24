@@ -12,6 +12,7 @@ import {
   updateService,
 } from "@/server/services/services";
 import { replaceChecklistTemplateForService } from "@/server/services/checklists";
+import { seedIndustryCatalog } from "@/server/services/industry-catalog";
 import { prisma } from "@/lib/db/prisma";
 
 function redirectWithError(path: string, error: string): never {
@@ -109,4 +110,29 @@ export async function deleteServiceAction(formData: FormData): Promise<void> {
   await deleteService(session.organizationId, serviceId);
   revalidatePath("/app/services");
   revalidatePath("/book");
+}
+
+export async function seedSuggestedCatalogAction(): Promise<void> {
+  const session = await getAppSession();
+  if (!session || !canManageServices(session)) {
+    redirect("/app/services?error=Permission%20denied");
+  }
+
+  const org = await prisma.organization.findUnique({
+    where: { id: session.organizationId },
+    include: { businessProfile: { select: { businessType: true } } },
+  });
+  const businessType = org?.businessProfile?.businessType;
+  if (!org || !businessType) {
+    redirect("/app/services?error=Set%20your%20business%20type%20in%20Settings%20first");
+  }
+
+  const result = await seedIndustryCatalog(session.organizationId, org.currency, businessType);
+  if (!result.seeded) {
+    redirect("/app/services?error=All%20suggested%20services%20are%20already%20on%20your%20list");
+  }
+
+  revalidatePath("/app/services");
+  revalidatePath("/book");
+  redirect(`/app/services?seeded=${result.primaryCount + result.addonCount}`);
 }
