@@ -1,90 +1,46 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  getBusinessProfileBySlug,
-  listPublicPrimaryServicesForOrg,
-  listPublicAddonServicesForOrg,
-} from "@/server/repositories/services";
-import { getPublicAvailableDays, getPublicSlotsForDay } from "@/server/services/bookings";
-import { PublicBookingClient } from "./PublicBookingClient";
+import { getBusinessProfileBySlug } from "@/server/repositories/services";
+import { PublicBookingView } from "./PublicBookingView";
 
-function formatTime12h(hm: string): string {
-  const [h, m] = hm.split(":").map(Number);
-  const suffix = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, "0")} ${suffix}`;
-}
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ businessSlug: string }>;
+}): Promise<Metadata> {
+  const { businessSlug } = await params;
+  const profile = await getBusinessProfileBySlug(businessSlug);
+  if (!profile) return { title: "Book online" };
 
-function mapService(s: {
-  id: string;
-  name: string;
-  description: string | null;
-  durationMinutes: number;
-  basePriceCents: number;
-  currency: string;
-  isAddon: boolean;
-}) {
+  const title = `Book ${profile.displayName} online`;
+  const description =
+    profile.description?.trim() ||
+    `Request an appointment with ${profile.displayName}${profile.serviceArea ? ` in ${profile.serviceArea}` : ""}.`;
+
   return {
-    id: s.id,
-    name: s.name,
-    description: s.description,
-    durationMinutes: s.durationMinutes,
-    basePriceCents: s.basePriceCents,
-    currency: s.currency,
-    isAddon: s.isAddon,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
   };
 }
 
 export default async function PublicBookingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ businessSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { businessSlug } = await params;
-  const profile = await getBusinessProfileBySlug(businessSlug);
+  const query = await searchParams;
 
-  if (!profile || !profile.bookingEnabled) {
+  if (query.embed === "1") {
     notFound();
   }
 
-  const [primaryServices, addonServices] = await Promise.all([
-    listPublicPrimaryServicesForOrg(profile.organizationId),
-    listPublicAddonServicesForOrg(profile.organizationId),
-  ]);
-
-  if (primaryServices.length === 0) {
-    notFound();
-  }
-
-  const firstService = primaryServices[0];
-  const daysResult = await getPublicAvailableDays(businessSlug, firstService.id, []);
-  const days = daysResult?.days ?? [];
-  const timeZone = profile.organization.timezone;
-  const firstDate = days[0]?.date ?? "";
-  const rawSlots = firstDate
-    ? ((await getPublicSlotsForDay(businessSlug, firstService.id, firstDate, [])) ?? [])
-    : [];
-  const initialSlots = rawSlots.map((s) => ({
-    date: s.date,
-    time: s.time,
-    label: formatTime12h(s.time),
-  }));
-
-  return (
-    <PublicBookingClient
-      businessSlug={businessSlug}
-      timeZone={timeZone}
-      business={{
-        displayName: profile.displayName,
-        serviceArea: profile.serviceArea,
-        description: profile.description,
-      }}
-      primaryServices={primaryServices.map(mapService)}
-      addonServices={addonServices.map(mapService)}
-      initialDays={days}
-      initialSlots={initialSlots}
-      initialServiceId={firstService.id}
-      initialDate={firstDate}
-      initialTime={initialSlots[0]?.time ?? ""}
-    />
-  );
+  return <PublicBookingView businessSlug={businessSlug} searchParams={query} />;
 }

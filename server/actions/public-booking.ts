@@ -10,13 +10,15 @@ export async function submitPublicBookingAction(formData: FormData): Promise<voi
   const hdrs = await headers();
   const ip = rateLimitKeyFromHeaders(hdrs);
   const slug = String(formData.get("businessSlug") ?? "");
+  const returnPath = formData.get("returnPath") === "embed" ? `/book/${slug}/embed` : `/book/${slug}`;
   if (!checkRateLimit(`public-booking:${ip}`, 10, 60 * 60 * 1000)) {
-    redirect(slug ? `/book/${slug}?error=rate_limit` : "/");
+    redirect(slug ? `${returnPath}?error=rate_limit` : "/");
   }
 
   const parsed = publicBookingSchema.safeParse({
     businessSlug: formData.get("businessSlug"),
     serviceId: formData.get("serviceId"),
+    addonServiceIds: formData.getAll("addonServiceIds"),
     date: formData.get("date"),
     time: formData.get("time"),
     firstName: formData.get("firstName"),
@@ -29,16 +31,16 @@ export async function submitPublicBookingAction(formData: FormData): Promise<voi
     region: formData.get("region"),
     postalCode: formData.get("postalCode"),
     customerNotes: formData.get("customerNotes"),
+    frequency: formData.get("frequency"),
   });
 
   if (!parsed.success) {
-    const slug = String(formData.get("businessSlug") ?? "");
-    redirect(`/book/${slug}?error=invalid`);
+    redirect(`${returnPath}?error=invalid`);
   }
 
   const result = await createPublicBooking(parsed.data);
   if (!result.ok) {
-    redirect(`/book/${parsed.data.businessSlug}?error=${encodeURIComponent(result.error)}`);
+    redirect(`${returnPath}?error=${encodeURIComponent(result.error)}`);
   }
 
   redirect(`/book/${parsed.data.businessSlug}/confirmation/${result.bookingRequestId}`);

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import type { BookingRequestStatus } from "@/generated/prisma/client";
+import type { BookingFrequency, BookingRequestStatus } from "@/generated/prisma/client";
 
 export function listBookingRequestsForOrg(organizationId: string, status?: BookingRequestStatus) {
   return prisma.bookingRequest.findMany({
@@ -36,7 +36,7 @@ export function getPublicBookingRequest(businessSlug: string, bookingRequestId: 
       organization: { businessProfile: { publicSlug: businessSlug } },
     },
     include: {
-      customer: true,
+      customer: { include: { addresses: { where: { isDefault: true }, take: 1 } } },
       service: true,
       addons: true,
       organization: { include: { businessProfile: true } },
@@ -52,6 +52,7 @@ export function createBookingRequest(data: {
   requestedEndAt: Date;
   customerNotes?: string | null;
   source?: "public_booking" | "manual";
+  frequency?: BookingFrequency;
   addons?: Array<{
     serviceId: string;
     name: string;
@@ -68,6 +69,7 @@ export function createBookingRequest(data: {
       requestedEndAt: data.requestedEndAt,
       customerNotes: data.customerNotes || null,
       source: data.source ?? "public_booking",
+      frequency: data.frequency ?? "one_time",
       ...(data.addons?.length
         ? {
             addons: {

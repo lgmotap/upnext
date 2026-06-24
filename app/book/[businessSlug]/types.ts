@@ -12,6 +12,9 @@ export type PublicBusiness = {
   displayName: string;
   serviceArea: string | null;
   description: string | null;
+  phone?: string | null;
+  email?: string | null;
+  customerPortalEnabled?: boolean;
 };
 
 export type { BookableDay as SlotDay } from "@/lib/availability/calendar-ui";

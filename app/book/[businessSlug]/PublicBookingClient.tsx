@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, Clock, Plus } from "lucide-react";
+import { AlertCircle, Check, Clock, Plus, Repeat } from "lucide-react";
 import { BookingMonthCalendar } from "@/components/booking/BookingMonthCalendar";
+import { BOOKING_FREQUENCY_OPTIONS } from "@/lib/booking/frequency";
 import { formatMoney } from "@/lib/money/format";
 import { monthKeyFromYmd } from "@/lib/availability/calendar-ui";
 import { submitPublicBookingAction } from "@/server/actions/public-booking";
@@ -11,6 +12,7 @@ import {
   fetchSlotsForDayAction,
 } from "@/server/actions/public-booking-slots";
 import type { PublicBusiness, PublicService, SlotDay, SlotOption } from "./types";
+import type { BookingFrequency } from "@/generated/prisma/client";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
@@ -20,6 +22,19 @@ function computeTotals(primary: PublicService | undefined, addons: PublicService
   const priceCents = primary.basePriceCents + addons.reduce((s, a) => s + a.basePriceCents, 0);
   const durationMinutes = primary.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
   return { priceCents, durationMinutes, currency: primary.currency };
+}
+
+function buildSteps(hasAddons: boolean) {
+  let n = 1;
+  const next = () => String(n++);
+  return {
+    service: next(),
+    addons: hasAddons ? next() : null,
+    frequency: next(),
+    date: next(),
+    time: next(),
+    details: next(),
+  };
 }
 
 export function PublicBookingClient({
@@ -33,6 +48,10 @@ export function PublicBookingClient({
   initialServiceId,
   initialDate,
   initialTime,
+  prefill,
+  error,
+  embedded = false,
+  returnPath = "full",
 }: {
   businessSlug: string;
   timeZone: string;
@@ -44,9 +63,25 @@ export function PublicBookingClient({
   initialServiceId: string;
   initialDate: string;
   initialTime: string;
+  prefill?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    line1?: string;
+    line2?: string;
+    city?: string;
+    region?: string;
+    postalCode?: string;
+    customerNotes?: string;
+  };
+  error?: string;
+  embedded?: boolean;
+  returnPath?: "embed" | "full";
 }) {
   const [serviceId, setServiceId] = useState(initialServiceId);
   const [addonIds, setAddonIds] = useState<string[]>([]);
+  const [frequency, setFrequency] = useState<BookingFrequency>("one_time");
   const [days, setDays] = useState(initialDays);
   const [slots, setSlots] = useState(initialSlots);
   const [date, setDate] = useState(initialDate);
@@ -56,6 +91,7 @@ export function PublicBookingClient({
   );
   const [pending, startTransition] = useTransition();
 
+  const steps = useMemo(() => buildSteps(addonServices.length > 0), [addonServices.length]);
   const addonKey = addonIds.slice().sort().join(",");
 
   const selectedPrimary = primaryServices.find((s) => s.id === serviceId);
@@ -114,33 +150,56 @@ export function PublicBookingClient({
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 text-ink-900 sm:py-10">
-      <div className="mx-auto max-w-2xl px-4 sm:px-5">
-        <header className="overflow-hidden rounded-3xl bg-brand-950 p-6 text-white shadow-float sm:p-8">
-          <div className="flex items-center gap-3">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-brand-400 text-lg font-bold text-brand-950">
-              {business.displayName.charAt(0)}
-            </span>
-            <div>
-              <h1 className="text-xl font-bold">{business.displayName}</h1>
-              <p className="text-sm text-white/60">
-                {business.serviceArea ? `${business.serviceArea} · ` : ""}
-                Book online in a few steps
-              </p>
+    <div className={embedded ? "bg-transparent text-ink-900" : "min-h-screen bg-background py-6 text-ink-900 sm:py-10"}>
+      <div className={embedded ? "px-1" : "mx-auto max-w-2xl px-4 sm:px-5"}>
+        {!embedded && (
+          <header className="overflow-hidden rounded-3xl bg-brand-950 p-5 text-white shadow-float sm:p-8">
+            <div className="flex items-center gap-3">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-lg font-bold text-brand-950">
+                {business.displayName.charAt(0)}
+              </span>
+              <div className="min-w-0">
+                <h1 className="truncate text-xl font-bold">{business.displayName}</h1>
+                <p className="text-sm text-white/60">
+                  {business.serviceArea ? `${business.serviceArea} · ` : ""}
+                  Book online in a few steps
+                </p>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
+        )}
 
-        <form action={submitPublicBookingAction} className="mt-4 space-y-4">
+        {embedded && (
+          <div className="mb-4 border-b border-ink-100 pb-3">
+            <h1 className="text-lg font-bold text-ink-950">{business.displayName}</h1>
+            {business.serviceArea && (
+              <p className="text-sm text-ink-500">{business.serviceArea}</p>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <div
+            role="alert"
+            className={`flex items-start gap-2 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800 ring-1 ring-rose-100 ${embedded ? "mb-4" : "mt-4"}`}
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form action={submitPublicBookingAction} className={embedded ? "space-y-3" : "mt-4 space-y-4"}>
           <input type="hidden" name="businessSlug" value={businessSlug} />
           <input type="hidden" name="serviceId" value={serviceId} />
           <input type="hidden" name="date" value={date} />
           <input type="hidden" name="time" value={time} />
+          <input type="hidden" name="frequency" value={frequency} />
+          <input type="hidden" name="returnPath" value={returnPath} />
           {addonIds.map((id) => (
             <input key={id} type="hidden" name="addonServiceIds" value={id} />
           ))}
 
-          <Section step="1" title="Choose your service">
+          <Section step={steps.service} title="Choose your service">
             <p className="mb-3 text-sm text-ink-500">Select one main service for your visit.</p>
             <div className="grid gap-2.5">
               {primaryServices.map((s) => (
@@ -157,7 +216,7 @@ export function PublicBookingClient({
                   <div className="min-w-0 pr-3">
                     <p className="font-semibold text-ink-950">{s.name}</p>
                     {s.description && (
-                      <p className="mt-0.5 text-xs text-ink-500 line-clamp-2">{s.description}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-ink-500">{s.description}</p>
                     )}
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-ink-500">
                       <Clock className="size-3" /> {s.durationMinutes} min
@@ -171,10 +230,10 @@ export function PublicBookingClient({
             </div>
           </Section>
 
-          {addonServices.length > 0 && (
-            <Section step="2" title="Add extras (optional)">
+          {steps.addons && addonServices.length > 0 && (
+            <Section step={steps.addons} title="Add-ons & extras (optional)">
               <p className="mb-3 text-sm text-ink-500">
-                Enhance your booking with optional add-ons. Time and price update automatically.
+                Optional extras — time and price update automatically.
               </p>
               <div className="space-y-2">
                 {addonServices.map((a) => {
@@ -216,7 +275,33 @@ export function PublicBookingClient({
             </Section>
           )}
 
-          <Section step={addonServices.length > 0 ? "3" : "2"} title="Pick a date">
+          <Section step={steps.frequency} title="How often?">
+            <p className="mb-3 text-sm text-ink-500">
+              Recurring schedules are noted on your request. Your provider will confirm details.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {BOOKING_FREQUENCY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setFrequency(opt.value)}
+                  className={`rounded-2xl border p-3.5 text-left transition ${
+                    frequency === opt.value
+                      ? "border-brand-400 bg-brand-50 ring-1 ring-brand-400"
+                      : "border-ink-200 bg-white hover:border-brand-300"
+                  }`}
+                >
+                  <p className="flex items-center gap-1.5 font-semibold text-ink-950">
+                    <Repeat className="size-3.5 text-brand-600" />
+                    {opt.label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink-500">{opt.description}</p>
+                </button>
+              ))}
+            </div>
+          </Section>
+
+          <Section step={steps.date} title="Pick a date">
             <BookingMonthCalendar
               days={days}
               selectedDate={date}
@@ -228,10 +313,10 @@ export function PublicBookingClient({
             />
           </Section>
 
-          <Section step={addonServices.length > 0 ? "4" : "3"} title="Pick a time">
+          <Section step={steps.time} title="Pick a time">
             {slots.length === 0 ? (
               <p className="text-sm text-ink-500">
-                {pending ? "Loading available times…" : "No times available on this date. Try another day."}
+                {pending ? "Loading available times…" : "No times on this date — try another day."}
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -253,21 +338,22 @@ export function PublicBookingClient({
             )}
           </Section>
 
-          <Section step={addonServices.length > 0 ? "5" : "4"} title="Your details">
+          <Section step={steps.details} title="Your details">
             <div className="grid gap-3 sm:grid-cols-2">
-              <input name="firstName" required placeholder="First name" className={input} />
-              <input name="lastName" required placeholder="Last name" className={input} />
-              <input name="email" type="email" required placeholder="Email" className={`sm:col-span-2 ${input}`} />
-              <input name="phone" type="tel" placeholder="Phone (optional)" className={`sm:col-span-2 ${input}`} />
-              <input name="line1" required placeholder="Street address" className={`sm:col-span-2 ${input}`} />
-              <input name="line2" placeholder="Apt / suite (optional)" className={`sm:col-span-2 ${input}`} />
-              <input name="city" required placeholder="City" className={input} />
-              <input name="region" required placeholder="State / region" className={input} />
-              <input name="postalCode" required placeholder="ZIP / postal code" className={input} />
+              <input name="firstName" required placeholder="First name" defaultValue={prefill?.firstName} className={input} />
+              <input name="lastName" required placeholder="Last name" defaultValue={prefill?.lastName} className={input} />
+              <input name="email" type="email" required placeholder="Email" defaultValue={prefill?.email} className={`sm:col-span-2 ${input}`} />
+              <input name="phone" type="tel" placeholder="Phone (optional)" defaultValue={prefill?.phone} className={`sm:col-span-2 ${input}`} />
+              <input name="line1" required placeholder="Street address" defaultValue={prefill?.line1} className={`sm:col-span-2 ${input}`} />
+              <input name="line2" placeholder="Apt / suite (optional)" defaultValue={prefill?.line2} className={`sm:col-span-2 ${input}`} />
+              <input name="city" required placeholder="City" defaultValue={prefill?.city} className={input} />
+              <input name="region" required placeholder="State / region" defaultValue={prefill?.region} className={input} />
+              <input name="postalCode" required placeholder="ZIP / postal code" defaultValue={prefill?.postalCode} className={input} />
               <textarea
                 name="customerNotes"
                 rows={2}
                 placeholder="Notes for the team (optional)"
+                defaultValue={prefill?.customerNotes}
                 className={`sm:col-span-2 ${input}`}
               />
             </div>
@@ -286,7 +372,14 @@ export function PublicBookingClient({
                 </div>
               ))}
               <div className="mt-2 flex justify-between border-t border-ink-200 pt-2 font-bold text-ink-950">
-                <span>Total · {totals.durationMinutes} min</span>
+                <span>
+                  Total · {totals.durationMinutes} min
+                  {frequency !== "one_time" && (
+                    <span className="ml-1 text-xs font-semibold text-brand-700">
+                      · {BOOKING_FREQUENCY_OPTIONS.find((o) => o.value === frequency)?.label}
+                    </span>
+                  )}
+                </span>
                 <span>{formatMoney(totals.priceCents, totals.currency)}</span>
               </div>
             </div>
@@ -295,7 +388,7 @@ export function PublicBookingClient({
           <button
             type="submit"
             disabled={!date || !time || !selectedPrimary || pending}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-4 text-base font-bold text-brand-950 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3.5 text-base font-bold text-brand-950 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4"
           >
             <Check className="size-5" /> Request booking
             {selectedPrimary && (
@@ -304,7 +397,7 @@ export function PublicBookingClient({
               </span>
             )}
           </button>
-          <p className="pb-6 text-center text-xs text-ink-400">
+          <p className={`text-center text-xs text-ink-400 ${embedded ? "" : "pb-4"}`}>
             You&apos;ll get a confirmation email. {business.displayName} will confirm your time shortly.
           </p>
         </form>
@@ -315,7 +408,7 @@ export function PublicBookingClient({
 
 function Section({ step, title, children }: { step: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-3xl bg-white p-5 ring-1 ring-ink-100 shadow-soft sm:p-6">
+    <div className="rounded-3xl bg-white p-4 ring-1 ring-ink-100 shadow-soft sm:p-6">
       <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-ink-400">
         <span className="flex size-5 items-center justify-center rounded-full bg-brand-100 text-[11px] text-brand-700">
           {step}

@@ -13,6 +13,7 @@ import {
   type AvailableSlot,
 } from "@/lib/availability/slots";
 import type { PublicBookingInput, ManualBookingInput } from "@/server/validators/booking";
+import { publicBookingSchema } from "@/server/validators/booking";
 import {
   findCustomerByEmail,
   createCustomerWithAddress,
@@ -315,7 +316,8 @@ export async function createManualBooking(organizationId: string, input: ManualB
   };
 }
 
-export async function createPublicBooking(input: PublicBookingInput) {
+export async function createPublicBooking(raw: PublicBookingInput) {
+  const input = publicBookingSchema.parse(raw);
   const loaded = await loadSlotContext(input.businessSlug, input.serviceId, input.addonServiceIds);
   if (!loaded) return { ok: false as const, error: "Business or service not found" };
 
@@ -354,6 +356,7 @@ export async function createPublicBooking(input: PublicBookingInput) {
     requestedStartAt: slot.startAt,
     requestedEndAt: slot.endAt,
     customerNotes: input.customerNotes || null,
+    frequency: input.frequency,
     addons: loaded.addons.map((a) => ({
       serviceId: a.id,
       name: a.name,

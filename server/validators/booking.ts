@@ -27,9 +27,10 @@ export const publicBookingSchema = z.object({
   region: z.string().min(1).max(100).trim(),
   postalCode: z.string().min(1).max(20).trim(),
   customerNotes: z.string().max(2000).trim().optional().or(z.literal("")),
+  frequency: z.enum(["one_time", "weekly", "biweekly", "monthly"]).default("one_time"),
 });
 
-export type PublicBookingInput = z.infer<typeof publicBookingSchema>;
+export type PublicBookingInput = z.input<typeof publicBookingSchema>;
 
 export const manualBookingSchema = z
   .object({

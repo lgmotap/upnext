@@ -24,6 +24,7 @@
 /app/services
 /app/payments
 /app/settings/business
+/app/settings/portals
 /app/settings/availability
 /app/settings/notifications
 /app/settings/billing
@@ -32,7 +33,11 @@
 ## Public
 ```
 /book/[businessSlug]
+/book/[businessSlug]/embed
 /book/[businessSlug]/confirmation/[bookingRequestId]
+/my/[businessSlug]                    (customer portal — magic link)
+/my/[businessSlug]/auth/[token]
+/my/[businessSlug]/dashboard
 ```
 
 ## Crew
@@ -50,4 +55,5 @@
 
 ## Sidebar (MVP)
 Dashboard · Bookings · Calendar · Jobs · Customers · Team · Services · Payments · Settings.
-Later: Customer Portal · Website · Marketing · Automations · Integrations · Reports.
+Settings tabs: Business · **Portals** · Availability · Notifications · Billing.
+Later: Website · Marketing · Automations · Integrations · Reports.

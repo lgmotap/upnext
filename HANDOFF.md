@@ -145,4 +145,6 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 
 **Batch 4 (2026-06-25):** Full **industry service catalogs** — onboarding seeds all primary services + add-ons per trade (e.g. residential cleaning: 4 services + 9 CL-style extras). Services page grouped; **Load suggested catalog** for existing orgs. `npm run smoke:industry-catalog`.
 
-**Validation:** `npm run typecheck` ✓ · `db:validate` needs Node ≥ 20.19 (use `nvm use` / Node 22).
+**Sprint planning (2026-06-25):** `tasks/post-beta-roadmap.md` — sprints **09–12**. Sprint 09–10 done. **Sprint 11 done** — booking frequency, `/embed`, query prefill, confirmation ICS + portal link. `npm run smoke:public-booking-parity`.
+
+**Validation:** `npm run typecheck` ✓ · `npm run smoke:public-booking-parity` ✓ · `npm run smoke:e2e` ✓

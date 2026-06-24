@@ -4,6 +4,10 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Sprint 09 portal reliability**: `BookingLinkCard`, Settings → Portals, `npm run smoke:portal-links`.
+- **Sprint 11 booking parity**: frequency step (one-time/weekly/bi-weekly/monthly), `/book/[slug]/embed`, query prefill params, confirmation ICS + portal link, OG meta. `npm run smoke:public-booking-parity`.
+- **Sprint 10 customer portal**: magic-link `/my/[slug]`, dashboard (history, book again, payments), prefill on `/book/[slug]?prefill=`, owner **Send portal link**. `npm run smoke:customer-portal`.
+- **Post-beta roadmap**: `tasks/post-beta-roadmap.md` + sprints 11–12 remaining.
 - **Industry service catalogs**: onboarding seeds full service + add-on lists per vertical (CL-style cleaning extras). `npm run smoke:industry-catalog`.
 - **Portal batch 3**: Job + pending booking reschedule; crew On the way / Running late. `npm run smoke:scheduling`.
 - **Portal batch 2**: Getting Started checklist, decline confirm modals, job assign/cancel, customer notes/address, calendar week nav, copy booking link.
