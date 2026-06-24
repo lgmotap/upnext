@@ -11,7 +11,8 @@ config({ path: ".env", override: false });
 const { prisma } = await import("../lib/db/prisma");
 const { createWorkspaceForNewUser } = await import("../server/services/onboarding");
 const { updateBusinessSetup } = await import("../server/services/business");
-const { createService } = await import("../server/services/services");
+const { seedIndustryCatalog } = await import("../server/services/industry-catalog");
+const { catalogStats } = await import("../lib/onboarding/industry-catalog");
 const { saveWeeklyAvailability } = await import("../server/services/availability");
 const { defaultWeeklyRules } = await import("../server/validators/availability");
 const { getPublicAvailableDays, getPublicSlotsForDay, createPublicBooking } = await import(
@@ -52,16 +53,18 @@ async function main() {
   });
   console.log("✓ Onboarding business setup saved");
 
-  const service = await createService(organization.id, organization.currency, {
-    name: "Launch Standard Clean",
-    description: "Smoke test service",
-    durationMinutes: 60,
-    basePriceCents: 12000,
-    isActive: true,
-    isPublic: true,
-    isAddon: false,
+  const expected = catalogStats("Residential Cleaning");
+  const seeded = await seedIndustryCatalog(organization.id, organization.currency, "Residential Cleaning");
+  if (!seeded.seeded || seeded.primaryCount !== expected.primaryCount) {
+    throw new Error("Industry catalog did not seed correctly");
+  }
+  console.log(`✓ Catalog seeded: ${expected.primaryCount} services + ${expected.addonCount} add-ons`);
+
+  const service = await prisma.service.findFirst({
+    where: { organizationId: organization.id, isAddon: false },
+    orderBy: { sortOrder: "asc" },
   });
-  console.log(`✓ Service created: ${service.name}`);
+  if (!service) throw new Error("No primary service after catalog seed");
 
   await saveWeeklyAvailability(organization.id, { rules: defaultWeeklyRules() });
   console.log("✓ Default availability saved");

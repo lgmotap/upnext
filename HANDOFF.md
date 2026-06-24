@@ -143,4 +143,6 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 
 **Batch 3 (2026-06-25):** Job + pending booking reschedule (calendar modal, conflict-aware slots, customer email). Crew **On the way** / **Running late** with customer notifications. `npm run smoke:scheduling`.
 
+**Batch 4 (2026-06-25):** Full **industry service catalogs** — onboarding seeds all primary services + add-ons per trade (e.g. residential cleaning: 4 services + 9 CL-style extras). Services page grouped; **Load suggested catalog** for existing orgs. `npm run smoke:industry-catalog`.
+
 **Validation:** `npm run typecheck` ✓ · `db:validate` needs Node ≥ 20.19 (use `nvm use` / Node 22).

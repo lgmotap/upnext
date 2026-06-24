@@ -44,7 +44,7 @@ A: Works via Resend/Supabase; submit now shows loading state.
 | Business name + AI suggestions | Partial (name only) | Step 3: name, TZ, currency, phone |
 | SaaS billing card (skippable) | — | Skipped (not our model) |
 | Getting Started checklist | — | **Fixed** — dashboard checklist with progress bar |
-| Seed service catalog | Auto from industry | Step 4: suggested service + booking link |
+| Seed service catalog | Auto from industry | **Fixed** — full catalog (services + add-ons) per industry on onboarding |
 
 **Q: Why was onboarding only 2 steps?**  
 A: MVP sprint 01 minimized TTFB. Competitor research showed industry + address are expected before first booking.

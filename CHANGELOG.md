@@ -4,7 +4,8 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
-- **Portal batch 3**: Job + pending booking **reschedule** (calendar modal, conflict-aware slots, customer email). Crew **On the way** / **Running late** customer notifications. `npm run smoke:scheduling`.
+- **Industry service catalogs**: onboarding seeds full service + add-on lists per vertical (CL-style cleaning extras). `npm run smoke:industry-catalog`.
+- **Portal batch 3**: Job + pending booking reschedule; crew On the way / Running late. `npm run smoke:scheduling`.
 - **Portal batch 2**: Getting Started checklist, decline confirm modals, job assign/cancel, customer notes/address, calendar week nav, copy booking link.
 - **Launch smokes**: `npm run smoke:launch` (+ onboarding, crew, payment scripts) automates launch-checklist core product flows.
 - **Legal pages**: `/privacy` and `/terms` with footer links.

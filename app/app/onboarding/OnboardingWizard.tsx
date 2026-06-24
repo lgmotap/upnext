@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Check, ArrowRight, ArrowLeft, Copy, Globe, Loader2, MapPin, Briefcase } from "lucide-react";
 import { serviceTypes, teamSizes } from "@/lib/config";
-import { industryServiceTemplate } from "@/lib/onboarding/industry-templates";
+import { catalogStats, getIndustryCatalog } from "@/lib/onboarding/industry-catalog";
 import { CURRENCIES, TIMEZONES, US_REGIONS } from "@/server/validators/onboarding";
 import { completeOnboardingAction } from "@/server/actions/onboarding";
 
@@ -65,17 +65,9 @@ export function OnboardingWizard({
   const [copied, setCopied] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [businessType, setBusinessType] = useState(defaults.businessType);
-  const [teamSize, setTeamSize] = useState(defaults.teamSize);
-  const [seedService, setSeedService] = useState(() => {
-    const t = industryServiceTemplate(defaults.businessType || serviceTypes[0]);
-    return {
-      name: t.serviceName,
-      price: (t.basePriceCents / 100).toFixed(0),
-      duration: String(t.durationMinutes),
-    };
-  });
 
-  const template = useMemo(() => industryServiceTemplate(businessType), [businessType]);
+  const catalog = useMemo(() => getIndustryCatalog(businessType || serviceTypes[0]), [businessType]);
+  const stats = useMemo(() => catalogStats(businessType || serviceTypes[0]), [businessType]);
 
   const copy = async () => {
     try {
@@ -118,12 +110,6 @@ export function OnboardingWizard({
     if (step === 1) {
       const bt = String(new FormData(form).get("businessType") ?? businessType);
       setBusinessType(bt);
-      const t = industryServiceTemplate(bt);
-      setSeedService({
-        name: t.serviceName,
-        price: (t.basePriceCents / 100).toFixed(0),
-        duration: String(t.durationMinutes),
-      });
     }
     setStep((s) => Math.min(STEPS, s + 1));
   };
@@ -152,7 +138,9 @@ export function OnboardingWizard({
           <h1 className="mt-1 flex items-center gap-2 text-2xl font-bold tracking-tight text-ink-950">
             <Briefcase className="size-6 text-brand-600" /> What kind of business?
           </h1>
-          <p className="mt-1 text-sm text-ink-500">We&apos;ll suggest a starter service and tailor your setup.</p>
+          <p className="mt-1 text-sm text-ink-500">
+            We&apos;ll add a full starter service catalog — like ConvertLabs — tailored to your trade.
+          </p>
 
           <div className="mt-5 space-y-4">
             <div>
@@ -176,8 +164,7 @@ export function OnboardingWizard({
               <select
                 id="teamSize"
                 name="teamSize"
-                value={teamSize}
-                onChange={(e) => setTeamSize(e.target.value)}
+                defaultValue={defaults.teamSize}
                 className={input}
                 required
               >
@@ -232,16 +219,11 @@ export function OnboardingWizard({
                 </select>
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={label} htmlFor="postalCode">ZIP code</label>
-                <input id="postalCode" name="postalCode" defaultValue={defaults.postalCode} className={input} required />
-              </div>
-              <div>
-                <label className={label} htmlFor="country">Country</label>
-                <input id="country" name="country" defaultValue={defaults.country || "US"} readOnly className={`${input} bg-ink-50`} />
-              </div>
+            <div>
+              <label className={label} htmlFor="postalCode">ZIP code</label>
+              <input id="postalCode" name="postalCode" defaultValue={defaults.postalCode} className={input} required />
             </div>
+            <input type="hidden" name="country" value={defaults.country || "US"} />
           </div>
 
           <div className="mt-6 flex items-center justify-between">
@@ -258,7 +240,7 @@ export function OnboardingWizard({
         <div className={step === 3 ? "block" : "hidden"}>
           <p className="text-xs font-bold uppercase tracking-wider text-brand-700">Step 3 of {STEPS}</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink-950">Business details</h1>
-          <p className="mt-1 text-sm text-ink-500">Shown on your booking page and used for scheduling.</p>
+          <p className="mt-1 text-sm text-ink-500">Shown on your booking page and customer emails.</p>
 
           <div className="mt-5 space-y-4">
             <div>
@@ -268,7 +250,7 @@ export function OnboardingWizard({
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className={label} htmlFor="timezone">Timezone</label>
-                <select id="timezone" name="timezone" defaultValue={defaults.timezone} className={input}>
+                <select id="timezone" name="timezone" defaultValue={defaults.timezone} className={input} required>
                   {TIMEZONES.map((tz) => (
                     <option key={tz} value={tz}>{tz.replace(/_/g, " ")}</option>
                   ))}
@@ -276,7 +258,7 @@ export function OnboardingWizard({
               </div>
               <div>
                 <label className={label} htmlFor="currency">Currency</label>
-                <select id="currency" name="currency" defaultValue={defaults.currency} className={input}>
+                <select id="currency" name="currency" defaultValue={defaults.currency} className={input} required>
                   {CURRENCIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
@@ -307,58 +289,42 @@ export function OnboardingWizard({
           </div>
         </div>
 
-        {/* Step 4 — first service + booking link */}
+        {/* Step 4 — catalog preview + booking link */}
         <div className={step === 4 ? "block" : "hidden"}>
           <p className="text-xs font-bold uppercase tracking-wider text-brand-700">Step 4 of {STEPS}</p>
           <span className="mt-2 flex size-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700">
             <Globe className="size-6" />
           </span>
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink-950">Get your first booking</h1>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-ink-950">Your starter catalog</h1>
           <p className="mt-1 text-sm text-ink-500">
-            Add a starter service (suggested for {businessType || "your industry"}) and share your booking link.
+            We&apos;ll add <strong>{stats.primaryCount} services</strong> and{" "}
+            <strong>{stats.addonCount} add-ons</strong> for {stats.label}. Edit prices anytime under Services.
           </p>
 
-          <div className="mt-5 space-y-4 rounded-xl bg-ink-50 p-4 ring-1 ring-ink-100">
-            <p className="text-xs font-bold uppercase tracking-wide text-ink-500">Starter service</p>
+          <div className="mt-5 max-h-56 space-y-3 overflow-y-auto rounded-xl bg-ink-50 p-4 ring-1 ring-ink-100">
             <div>
-              <label className={label} htmlFor="seedServiceName">Service name</label>
-              <input
-                id="seedServiceName"
-                name="seedServiceName"
-                value={seedService.name}
-                onChange={(e) => setSeedService((s) => ({ ...s, name: e.target.value }))}
-                className={input}
-              />
+              <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-ink-400">Services</p>
+              <ul className="space-y-1">
+                {catalog.primary.map((s) => (
+                  <li key={s.name} className="text-sm text-ink-800">
+                    {s.name}
+                    <span className="ml-2 text-xs text-ink-400">{s.durationMinutes} min</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            {catalog.addons.length > 0 && (
               <div>
-                <label className={label} htmlFor="seedServicePriceDollars">Price ($)</label>
-                <input
-                  id="seedServicePriceDollars"
-                  name="seedServicePriceDollars"
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={seedService.price}
-                  onChange={(e) => setSeedService((s) => ({ ...s, price: e.target.value }))}
-                  className={input}
-                />
+                <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-ink-400">Add-ons &amp; extras</p>
+                <ul className="space-y-1">
+                  {catalog.addons.map((s) => (
+                    <li key={s.name} className="text-sm text-ink-700">
+                      {s.name}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div>
-                <label className={label} htmlFor="seedServiceDurationMinutes">Duration (min)</label>
-                <input
-                  id="seedServiceDurationMinutes"
-                  name="seedServiceDurationMinutes"
-                  type="number"
-                  min={15}
-                  step={15}
-                  value={seedService.duration}
-                  onChange={(e) => setSeedService((s) => ({ ...s, duration: e.target.value }))}
-                  className={input}
-                />
-              </div>
-            </div>
-            <p className="text-xs text-ink-500">{template.description}</p>
+            )}
           </div>
 
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-ink-50 p-2 ring-1 ring-ink-200">
