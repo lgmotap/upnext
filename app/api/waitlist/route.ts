@@ -25,7 +25,10 @@ export async function POST(req: Request) {
     if (err instanceof WaitlistRateLimitError) {
       return NextResponse.json({ error: err.message }, { status: 429 });
     }
-    console.error("[waitlist] submit failed:", err);
+    const detail = err instanceof Error ? err.message : String(err);
+    const code =
+      err && typeof err === "object" && "code" in err ? String((err as { code: string }).code) : "";
+    console.error("[waitlist] submit failed:", code, detail, err);
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 

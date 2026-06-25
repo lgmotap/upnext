@@ -22,8 +22,11 @@ function createPrismaClient(): PrismaClient {
 
 /** Dev HMR can keep a singleton from before `prisma generate` added new models. */
 function isStalePrismaClient(client: PrismaClient): boolean {
-  const delegate = (client as PrismaClient & { bookingFormField?: { findMany?: unknown } }).bookingFormField;
-  return delegate?.findMany == null;
+  const c = client as PrismaClient & {
+    bookingFormField?: { findMany?: unknown };
+    waitlistLead?: { findUnique?: unknown };
+  };
+  return c.bookingFormField?.findMany == null || c.waitlistLead?.findUnique == null;
 }
 
 function getPrismaClient(): PrismaClient {
