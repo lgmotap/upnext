@@ -798,3 +798,20 @@ model WebhookDelivery {
   @@index([webhookEndpointId, createdAt])
   @@index([status, createdAt])
 }
+
+/// Marketing waitlist sign-ups from the public landing page (not tenant-scoped).
+model WaitlistLead {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  firstName      String
+  businessName   String
+  businessType   String?
+  businessSize   String?
+  currentTool    String?
+  source         String?
+  thankYouSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([createdAt])
+}

@@ -1,2 +1,2 @@
 # emails/
-React email templates (Resend). Planned: booking-confirmation, booking-reminder, booking-declined, job-completed, payment-request. Built in Sprint 06.
+Branded HTML email helpers live in `lib/email/` (layout + templates). Waitlist thank-you: `lib/email/waitlist-thank-you.ts`. Product transactional emails use `server/services/notifications.ts` (plain text today).

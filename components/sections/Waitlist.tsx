@@ -14,6 +14,7 @@ const labelCls = "mb-1.5 block text-sm font-semibold";
 
 export function Waitlist() {
   const [status, setStatus] = useState<Status>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,15 +23,20 @@ export function Waitlist() {
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
     setStatus("submitting");
+    setErrorMessage(null);
     try {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, source: window.location.pathname }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? `HTTP ${res.status}`);
+      }
       setStatus("success");
-    } catch {
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : waitlistForm.errorMessage);
       setStatus("error");
     }
   }
@@ -125,7 +131,7 @@ export function Waitlist() {
 
             {status === "error" && (
               <p className="mt-4 rounded-xl bg-rose-500/15 px-4 py-3 text-sm font-medium text-rose-300" role="alert">
-                {waitlistForm.errorMessage}
+                {errorMessage ?? waitlistForm.errorMessage}
               </p>
             )}
 

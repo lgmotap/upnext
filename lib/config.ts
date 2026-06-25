@@ -61,7 +61,7 @@ export const waitlistForm = {
     "We're opening access to a small group of service business owners before the public launch. Join the waitlist to get early access, product updates, and exclusive launch offers.",
   submitLabel: "Join the waitlist",
   successMessage:
-    "You're on the list. We'll contact you before public launch with early access details.",
+    "You're on the list. Check your inbox for a confirmation email — we'll contact you before public launch with early access details.",
   errorMessage: "Something went wrong. Please try again.",
 } as const;
 

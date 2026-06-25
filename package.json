@@ -40,6 +40,7 @@
     "smoke:global-search": "tsx scripts/smoke-global-search.ts",
     "smoke:reports": "tsx scripts/smoke-reports.ts",
     "smoke:dashboard": "tsx scripts/smoke-dashboard.ts",
+    "smoke:waitlist": "tsx scripts/smoke-waitlist.ts",
     "smoke:recurring": "tsx scripts/smoke-recurring.ts",
     "smoke:pricing-params": "tsx scripts/smoke-pricing-params.ts",
     "smoke:bed-bath-form-defaults": "tsx scripts/smoke-bed-bath-form-defaults.ts",

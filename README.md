@@ -62,4 +62,4 @@ npm run test:e2e              # Playwright (starts dev server)
 
 ## Waitlist (legacy landing)
 
-The root landing page can stay in waitlist mode or switch to launch — see `lib/config.ts` (`phase`, `cta`). Waitlist API: `app/api/waitlist/route.ts` (file storage; swap before serverless if still used).
+The root landing page can stay in waitlist mode or switch to launch — see `lib/config.ts` (`phase`, `cta`). Waitlist API: `app/api/waitlist/route.ts` (Postgres `WaitlistLead` + branded Resend thank-you email).

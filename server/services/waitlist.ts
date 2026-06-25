@@ -1,0 +1,101 @@
+import { getResend } from "@/lib/resend/client";
+import {
+  emailFromAddress,
+  isResendConfigured,
+  resolveOutboundEmail,
+} from "@/lib/resend/config";
+import {
+  waitlistThankYouHtml,
+  waitlistThankYouSubject,
+  waitlistThankYouText,
+} from "@/lib/email/waitlist-thank-you";
+import { emailBrand } from "@/lib/email/bookedfox-layout";
+import { checkRateLimit } from "@/lib/rate-limit";
+import {
+  createWaitlistLead,
+  findWaitlistLeadByEmail,
+  markWaitlistThankYouSent,
+} from "@/server/repositories/waitlist";
+import type { WaitlistLeadInput } from "@/server/validators/waitlist";
+
+export class WaitlistRateLimitError extends Error {
+  constructor() {
+    super("Too many waitlist sign-ups. Please try again later.");
+    this.name = "WaitlistRateLimitError";
+  }
+}
+
+async function sendWaitlistThankYouEmail(params: {
+  email: string;
+  firstName: string;
+  businessName: string;
+}): Promise<boolean> {
+  const resend = getResend();
+  if (!isResendConfigured() || !resend) {
+    console.warn("[waitlist] RESEND_API_KEY not set — thank-you email skipped");
+    return false;
+  }
+
+  const subject = waitlistThankYouSubject();
+  const text = waitlistThankYouText(params);
+
+  const outbound = resolveOutboundEmail({
+    to: params.email,
+    subject,
+    text,
+  });
+
+  let html = waitlistThankYouHtml(params);
+  if (outbound.to.toLowerCase() !== params.email.toLowerCase()) {
+    html = `<p style="margin:0 0 16px;font-size:12px;color:${emailBrand.inkMuted};">Sandbox: intended for ${params.email}</p>${html}`;
+  }
+
+  const result = await resend.emails.send({
+    from: emailFromAddress(),
+    to: outbound.to,
+    subject: outbound.subject,
+    text: outbound.text,
+    html,
+  });
+
+  if (result.error) {
+    console.error("[waitlist] thank-you email failed:", result.error.message);
+    return false;
+  }
+
+  return true;
+}
+
+/** Persist lead and send thank-you email (idempotent on duplicate email). */
+export async function submitWaitlistLead(
+  input: WaitlistLeadInput,
+  rateLimitKey: string,
+): Promise<{ stored: boolean; emailSent: boolean }> {
+  if (!checkRateLimit(`waitlist:ip:${rateLimitKey}`, 8, 60 * 60 * 1000)) {
+    throw new WaitlistRateLimitError();
+  }
+
+  const email = input.email.trim().toLowerCase();
+  let lead = await findWaitlistLeadByEmail(email);
+  let stored = false;
+
+  if (!lead) {
+    lead = await createWaitlistLead({ ...input, email });
+    stored = true;
+  }
+
+  let emailSent = Boolean(lead.thankYouSentAt);
+  if (!lead.thankYouSentAt) {
+    const sent = await sendWaitlistThankYouEmail({
+      email: lead.email,
+      firstName: lead.firstName,
+      businessName: lead.businessName,
+    });
+    if (sent) {
+      await markWaitlistThankYouSent(lead.id);
+      emailSent = true;
+    }
+  }
+
+  return { stored, emailSent };
+}
