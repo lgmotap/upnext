@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import type { PaymentStatus } from "@/generated/prisma/client";
 
+/** Dashboard KPI link uses `pending` to mean all outstanding (pending + overdue). */
+export type PaymentListStatusFilter = PaymentStatus | "awaiting";
+
 export function listPaymentRecordsForCustomer(organizationId: string, customerId: string) {
   return prisma.paymentRecord.findMany({
     where: { organizationId, customerId },
@@ -11,9 +14,16 @@ export function listPaymentRecordsForCustomer(organizationId: string, customerId
   });
 }
 
-export function listPaymentRecordsForOrg(organizationId: string, status?: PaymentStatus) {
+export function listPaymentRecordsForOrg(organizationId: string, status?: PaymentListStatusFilter) {
   return prisma.paymentRecord.findMany({
-    where: { organizationId, ...(status ? { status } : {}) },
+    where: {
+      organizationId,
+      ...(status === "awaiting"
+        ? { status: { in: ["pending", "overdue"] } }
+        : status
+          ? { status }
+          : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: {
       job: { select: { id: true, title: true, scheduledStartAt: true } },

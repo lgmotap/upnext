@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatMoney } from "@/lib/money/format";
 import { formatDisplayDateTime } from "@/lib/datetime/timezone";
 import { getAppSession } from "@/server/permissions/session";
-import { listPaymentRecordsForOrg, paymentAggregatesForOrg } from "@/server/repositories/payments";
+import { listPaymentRecordsForOrg, paymentAggregatesForOrg, type PaymentListStatusFilter } from "@/server/repositories/payments";
 import { prisma } from "@/lib/db/prisma";
 
 function StatCard({
@@ -35,10 +35,12 @@ export default async function PaymentsPage({
   if (!session) redirect("/sign-in?next=/app/payments");
 
   const params = await searchParams;
-  const statusFilter =
-    params.status === "pending" || params.status === "overdue" || params.status === "paid"
-      ? params.status
-      : undefined;
+  const statusFilter: PaymentListStatusFilter | undefined =
+    params.status === "pending"
+      ? "awaiting"
+      : params.status === "overdue" || params.status === "paid"
+        ? params.status
+        : undefined;
 
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
@@ -54,16 +56,18 @@ export default async function PaymentsPage({
 
   const overdueCount = payments.filter((p) => p.status === "overdue").length;
   const pendingCount = payments.filter((p) => p.status === "pending").length;
-  const filterLabel = statusFilter ? ` (${statusFilter})` : "";
+  const filterLabel = statusFilter === "awaiting" ? " (awaiting)" : statusFilter ? ` (${statusFilter})` : "";
 
   return (
     <>
       <PageHeader
         title={`Payments${filterLabel}`}
         subtitle={
-          statusFilter
-            ? `Showing ${payments.length} ${statusFilter} payment${payments.length === 1 ? "" : "s"}.`
-            : "Track what's paid, pending, and overdue."
+          statusFilter === "awaiting"
+            ? `Showing ${payments.length} outstanding payment${payments.length === 1 ? "" : "s"} (pending + overdue).`
+            : statusFilter
+              ? `Showing ${payments.length} ${statusFilter} payment${payments.length === 1 ? "" : "s"}.`
+              : "Track what's paid, pending, and overdue."
         }
         action={
           statusFilter ? (

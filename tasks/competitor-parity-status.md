@@ -48,7 +48,7 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 | Payment at booking | Stripe on form | Optional toggle (off by default) | ✅ sprint 24 |
 | Payment status tracking | Dashboard + invoices | PaymentRecord + `/app/payments` | ✅ |
 | Email notifications | 3 audiences | 8 types + NotificationLog + cron | ✅ |
-| Dashboard | Widgets | Real data + Getting Started; **43–44** ops queues + analytics | 🟡 **43–44** |
+| Dashboard | Widgets | Real data + queues + 30d snapshot | ✅ **43–44** |
 | Global search ⌘K | Header | CommandPalette | ✅ |
 
 ### 2. Field / crew
@@ -184,4 +184,4 @@ Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 
 ## Next step
 
-Execute **Phase 5** starting with **`tasks/sprint-43-dashboard-ops-parity.md`** (detailed plan inside). Production gate (owner): Resend domain — `tasks/launch-checklist.md`.
+**Phase 5 (sprints 43–44) complete.** Remaining launch gate (owner): Resend production domain — `tasks/launch-checklist.md` line 17. Post-launch polish: `tasks/backlog.md` P2 items.

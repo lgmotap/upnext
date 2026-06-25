@@ -34,6 +34,7 @@ const STATUS_OPTIONS = [
 
 const RANGE_OPTIONS = [
   { value: "all", label: "All time" },
+  { value: "today", label: "Today (updated)" },
   { value: "7d", label: "Last 7 days" },
   { value: "30d", label: "Last 30 days" },
 ] as const;
@@ -103,7 +104,11 @@ export default async function BookingsPage({
   });
   const timeZone = org?.timezone ?? "America/New_York";
 
-  const filterBase = { q: q || undefined, range: range !== "all" ? range : undefined };
+  const filterBase = {
+    q: q || undefined,
+    range: range !== "all" ? range : undefined,
+    timeZone,
+  };
 
   const [pendingCount, historyCount] = await Promise.all([
     showPending

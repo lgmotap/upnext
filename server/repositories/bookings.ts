@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import type { BookingFrequency, BookingRequestStatus, PricingParameterType, Prisma } from "@/generated/prisma/client";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/pagination";
+import { addDaysYmd, formatYmdInTimezone, localDateTimeToUtc } from "@/lib/datetime/timezone";
 
 const bookingRequestListInclude = {
   customer: { include: { addresses: { where: { isDefault: true }, take: 1 } } },
@@ -14,12 +15,13 @@ export type BookingHistoryStatusFilter =
   | "all"
   | "history";
 
-export type BookingDateRangeFilter = "7d" | "30d" | "all";
+export type BookingDateRangeFilter = "7d" | "30d" | "today" | "all";
 
 export type ListBookingRequestsOptions = {
   status?: BookingHistoryStatusFilter;
   q?: string;
   range?: BookingDateRangeFilter;
+  timeZone?: string;
   page?: number;
   pageSize?: number;
   pendingOnly?: boolean;
@@ -55,6 +57,11 @@ function buildBookingWhere(
     const since = new Date();
     since.setUTCDate(since.getUTCDate() - (range === "7d" ? 7 : 30));
     where.createdAt = { gte: since };
+  } else if (range === "today" && options.timeZone) {
+    const todayYmd = formatYmdInTimezone(new Date(), options.timeZone);
+    const start = localDateTimeToUtc(todayYmd, "00:00", options.timeZone);
+    const end = localDateTimeToUtc(addDaysYmd(todayYmd, 1), "00:00", options.timeZone);
+    where.updatedAt = { gte: start, lt: end };
   }
 
   return where;

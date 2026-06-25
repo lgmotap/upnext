@@ -211,7 +211,7 @@ export async function getDashboardData(
       label: "Booked today",
       value: String(bookedTodayCount),
       delta: bookedTodayCount === 1 ? "1 accepted today" : `${bookedTodayCount} accepted today`,
-      href: "/app/bookings?status=accepted",
+      href: "/app/bookings?status=accepted&range=today",
       iconClassName: "bg-emerald-100 text-emerald-700",
     },
     {
@@ -331,18 +331,19 @@ export async function getDashboardData(
       : [];
   const jobCustomerById = new Map(crewJobs.map((j) => [j.id, j]));
 
+  const crewDedupeKeys = new Set<string>();
+
   for (const log of crewLogs) {
     if (!log.relatedId) continue;
+    const bucket = Math.floor(log.sentAt.getTime() / (5 * 60_000));
+    const dedupeKey = `${log.relatedId}:${log.template}:${bucket}`;
+    if (crewDedupeKeys.has(dedupeKey)) continue;
+    crewDedupeKeys.add(dedupeKey);
+
     const job = jobCustomerById.get(log.relatedId);
     const customerName = job
       ? `${job.customer.firstName} ${job.customer.lastName}`.trim()
       : "customer";
-    const duplicate = activityEvents.some(
-      (e) =>
-        e.what.includes(log.relatedId!) &&
-        Math.abs(e.at.getTime() - log.sentAt.getTime()) < 5 * 60_000,
-    );
-    if (duplicate) continue;
     activityEvents.push({
       who: "Team",
       what: `${templateLabel(log.template)} — ${customerName}`,

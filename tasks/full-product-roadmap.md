@@ -217,7 +217,7 @@ Sprint 42  Portal — customer reschedule + Book Again sidebar polish
 | 41 | `tasks/sprint-41-calendar-month-conflicts.md` |
 | 42 | `tasks/sprint-42-portal-reschedule-ux.md` |
 
-**Agent resume after Phase 3:** `tasks/sprint-43-dashboard-ops-parity.md` → first unchecked `- [ ]`.
+**Agent resume after Phase 3:** Phase 5 complete. See `tasks/launch-checklist.md` for production gate.
 
 ---
 
