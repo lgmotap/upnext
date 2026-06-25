@@ -186,4 +186,4 @@ Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 
 ## Next step
 
-**Phase 5 (sprints 43–44) complete.** Remaining launch gate (owner): Resend production domain — `tasks/launch-checklist.md` line 17. Post-launch polish: `tasks/backlog.md` P2 items.
+**Phase 6 planned (sprints 45–49).** **Next build:** `tasks/sprint-46-multi-location.md` (planning). Sprint 45 service-area enforcement ✅ shipped.

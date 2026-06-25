@@ -1,10 +1,11 @@
 # MVP traceability audit
 
-**Updated:** 2026-06-25 (Phases 3–5 complete: sprints 35–44)  
+**Updated:** 2026-06-25 (Phase 6 planned: sprints 45–49)  
 **Purpose:** Line-by-line check — competitor research → `docs/02-mvp-scope.md` → sprint tasks → **actual codebase**  
 **Competitor synthesis:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (local, gitignored)  
 **Profile gaps:** `docs/audits/business-profile-gaps.md`  
-**Full roadmap:** `docs/audits/product-gaps-roadmap.md` (Phases 3–5, sprints 35–44)  
+**Full roadmap:** `docs/audits/product-gaps-roadmap.md` (Phases 3–6)  
+**Post-MVP ADR:** `docs/adr/0007-post-mvp-p2-scope.md`  
 **Current status:** `tasks/competitor-parity-status.md`  
 **Extensive audit plan:** `tasks/competitor-parity-audit-plan.md` (Parts 0–14)
 
@@ -195,11 +196,24 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 |----------|--------|
 | Post-beta sprints 09–12 | **Complete** — portal reliability, customer portal, booking parity, ⌘K search |
 | Launch checklist | **1 item** — Resend prod domain (owner DNS action) |
-| Next build candidates | Recurring engine (cron), pricing params, full Playwright signup→pay E2E, backlog (`tasks/backlog.md`) |
+| Phase 6 (P2) | **Planned** — sprints 45–49; **next:** sprint 45 service-area enforcement |
+| MVP scope unchanged | Phase 6 tracked via `docs/adr/0007-post-mvp-p2-scope.md` |
 
 ---
 
-## Sprint order (complete)
+## Phase 6 — P2 post-parity (planned, not started)
+
+| Sprint | File | Theme |
+|--------|------|-------|
+| 45 | `tasks/sprint-45-service-area-enforcement.md` | Zip list + radius enforcement |
+| 46 | `tasks/sprint-46-multi-location.md` | Multi-location entity + booking |
+| 47 | `tasks/sprint-47-provider-open-jobs.md` | Crew open jobs self-claim |
+| 48 | `tasks/sprint-48-providers-activity-kanban.md` | Dispatcher activity board |
+| 49 | `tasks/sprint-49-promo-codes-portal-rebook.md` | Promo codes on rebook |
+
+---
+
+## Sprint order (complete — through Phase 5)
 
 ```
 Sprint 06–08  MVP + launch hardening — done

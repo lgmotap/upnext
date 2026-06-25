@@ -28,6 +28,12 @@ enum OrganizationStatus {
   suspended
 }
 
+enum ServiceAreaEnforcementMode {
+  off
+  zip_list
+  radius
+}
+
 /// Mirrors Supabase auth.users.id — created on first sign-up.
 model User {
   id          String       @id
@@ -115,6 +121,11 @@ model BusinessProfile {
   email          String?
   websiteUrl     String?
   serviceArea    String?
+  serviceAreaEnforcementMode ServiceAreaEnforcementMode @default(off)
+  serviceAreaRadiusMiles     Int?
+  serviceAreaZipCodesJson      Json?
+  addressLatitude              Float?
+  addressLongitude             Float?
   description    String?
   onboardingCompletedAt DateTime?
   bookingEnabled        Boolean      @default(true)

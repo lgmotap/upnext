@@ -72,6 +72,10 @@ export const manualBookingSchema = z
       z.boolean().optional(),
     ),
     customerAddressId: z.string().optional().or(z.literal("")),
+    overrideServiceArea: z.preprocess(
+      (v) => v === "on" || v === "1" || v === true || v === "true",
+      z.boolean().optional().default(false),
+    ),
     customFieldsJson: z.record(z.string(), z.union([z.string(), z.boolean()])).optional(),
   })
   .superRefine((data, ctx) => {
@@ -102,4 +106,4 @@ export const manualBookingSchema = z
     }
   });
 
-export type ManualBookingInput = z.infer<typeof manualBookingSchema>;
+export type ManualBookingInput = z.input<typeof manualBookingSchema>;

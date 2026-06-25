@@ -1,7 +1,7 @@
 # Backlog
 
-Unprioritized ideas and **P2 items without a sprint**. Phases **3–5 (sprints 35–44) complete**.  
-Master map: `docs/audits/product-gaps-roadmap.md` · Profile gaps: `docs/audits/business-profile-gaps.md`
+Unprioritized ideas and **P2 items**. Phases **3–5 (sprints 35–44) complete** · **Phase 6 (45–49) planned**.  
+Master map: `docs/audits/product-gaps-roadmap.md` · ADR: `docs/adr/0007-post-mvp-p2-scope.md`
 
 Promote into a sprint file when scheduling ad-hoc work. Before promoting: check `tasks/mvp-traceability.md`.
 
@@ -55,16 +55,21 @@ Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 - Resend production domain verify — `tasks/launch-checklist.md` line 17
 - Stripe Checkout Playwright E2E — env-gated (`tasks/sprint-12-operations-growth.md`)
 
-## P2 — post Phase 4 (not scheduled)
+## Phase 6 — P2 post-parity (planned)
 
-- Service-area zip lists / radius enforcement
+| Item | Sprint | Status |
+|------|--------|--------|
+| Service-area zip lists / radius enforcement | [45](sprint-45-service-area-enforcement.md) | ✅ |
+| Multi-location | [46](sprint-46-multi-location.md) | 📋 Planning |
+| Provider Open Jobs self-claim pool | [47](sprint-47-provider-open-jobs.md) | 📋 Planning |
+| Providers Activity kanban board | [48](sprint-48-providers-activity-kanban.md) | 📋 Planning |
+| Promo codes / gift cards on portal rebook | [49](sprint-49-promo-codes-portal-rebook.md) | 📋 Planning |
+
+## P2 — not yet planned
+
 - Branding colors on booking page
 - Editable `publicSlug`
-- Provider Open Jobs self-claim pool
-- Providers Activity kanban board
-- Promo codes / gift cards on portal rebook
 - iCal sync / Zapier official connector
-- Multi-location
 - Native iOS/Android apps
 - Website builder, marketing campaigns, quotes/invoices pipeline
 - Provider payouts / wage reporting

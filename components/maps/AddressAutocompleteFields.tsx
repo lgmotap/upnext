@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { isGoogleMapsConfigured } from "@/lib/maps/google-maps-config";
 import { PlaceAutocompleteLine1 } from "@/components/maps/PlaceAutocompleteLine1";
+import type { ParsedPlaceAddress } from "@/lib/maps/parse-place-address";
 import { US_REGIONS } from "@/server/validators/onboarding";
 
 const input =
@@ -31,6 +32,7 @@ type Props = {
   idPrefix?: string;
   onCityChange?: (city: string) => void;
   onRegionChange?: (region: string) => void;
+  onCoordinatesChange?: (coords: { latitude: number; longitude: number } | null) => void;
   line1Label?: string;
   line2Label?: string;
   compact?: boolean;
@@ -51,6 +53,7 @@ export function AddressAutocompleteFields({
   idPrefix = "",
   onCityChange,
   onRegionChange,
+  onCoordinatesChange,
   line1Label = "Street address",
   line2Label = "Suite / unit (optional)",
   compact = false,
@@ -75,13 +78,7 @@ export function AddressAutocompleteFields({
     onRegionChange?.(value);
   };
 
-  const handleAddressSelect = (parsed: {
-    line1: string;
-    line2?: string;
-    city: string;
-    region: string;
-    postalCode: string;
-  }) => {
+  const handleAddressSelect = (parsed: ParsedPlaceAddress) => {
     setPlacesHint(true);
     setLine2(parsed.line2 ?? "");
     setCity(parsed.city);
@@ -89,6 +86,9 @@ export function AddressAutocompleteFields({
     setPostalCode(parsed.postalCode);
     onCityChange?.(parsed.city);
     onRegionChange?.(parsed.region);
+    if (parsed.latitude != null && parsed.longitude != null) {
+      onCoordinatesChange?.({ latitude: parsed.latitude, longitude: parsed.longitude });
+    }
   };
 
   const regionField = regionAsSelect ? (

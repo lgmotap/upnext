@@ -60,6 +60,7 @@ export async function submitManualBookingAction(formData: FormData): Promise<voi
     half_bathrooms: formData.get("half_bathrooms"),
     square_feet: formData.get("square_feet"),
     collectPaymentNow: paymentMode === "collect_now",
+    overrideServiceArea: formData.get("overrideServiceArea"),
     customFieldsJson,
   });
 

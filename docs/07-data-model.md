@@ -7,7 +7,7 @@ Money in integer **cents**; timestamps in **UTC**; display in org timezone. Ever
 - **Organization**: id, name, slug, ownerId, timezone, currency, status, timestamps
 - **Membership**: id, organizationId, userId, role(owner|admin|dispatcher|worker|viewer), status(active|invited|disabled), timestamps
 - **TeamInvite**: id, organizationId, email, role, token, invitedById, expiresAt, acceptedAt, createdAt
-- **BusinessProfile**: id, organizationId, displayName, publicSlug, logoUrl, phone, email, websiteUrl, serviceArea, description, bookingEnabled, timestamps
+- **BusinessProfile**: id, organizationId, displayName, publicSlug, logoUrl, phone, email, websiteUrl, serviceArea, serviceAreaEnforcementMode(off|zip_list|radius), serviceAreaRadiusMiles, serviceAreaZipCodesJson, addressLatitude, addressLongitude, description, bookingEnabled, timestamps
 - **Service**: id, organizationId, categoryId, name, description, durationMinutes, basePriceCents, currency, isActive, isPublic, sortOrder, timestamps
 - **AvailabilityRule**: id, organizationId, dayOfWeek, startTime, endTime, isActive
 - **BlackoutDate**: id, organizationId, startsAt, endsAt, reason

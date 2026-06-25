@@ -85,6 +85,7 @@ export function ManualBookingClient({
   initialTime,
   customFormFields = [],
   payAtBooking = { showPaymentStep: false, requirePaymentAtBooking: false },
+  serviceAreaEnforcementEnabled = false,
 }: {
   timeZone: string;
   primaryServices: ServiceOption[];
@@ -99,6 +100,7 @@ export function ManualBookingClient({
   initialTime: string;
   customFormFields?: BookingFormField[];
   payAtBooking?: { showPaymentStep: boolean; requirePaymentAtBooking: boolean };
+  serviceAreaEnforcementEnabled?: boolean;
 }) {
   const [customerMode, setCustomerMode] = useState<"existing" | "new">(
     customers.length > 0 ? "existing" : "new",
@@ -122,6 +124,7 @@ export function ManualBookingClient({
   const [assignMembershipId, setAssignMembershipId] = useState("");
   const [customerAddressId, setCustomerAddressId] = useState("");
   const [paymentMode, setPaymentMode] = useState<"bill_later" | "collect_now">("bill_later");
+  const [overrideServiceArea, setOverrideServiceArea] = useState(false);
 
   const selectedCustomer = customers.find((c) => c.id === customerId);
   const selectedMember = assignableMembers.find((m) => m.id === assignMembershipId);
@@ -608,6 +611,23 @@ export function ManualBookingClient({
           )}
         </dl>
       </details>
+
+      {serviceAreaEnforcementEnabled && (
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-100">
+          <input
+            type="checkbox"
+            name="overrideServiceArea"
+            value="1"
+            checked={overrideServiceArea}
+            onChange={(e) => setOverrideServiceArea(e.target.checked)}
+            className="mt-0.5 size-4 rounded border-ink-300 text-brand-600 focus:ring-brand-400"
+          />
+          <span className="text-sm text-amber-950">
+            Book anyway if the service address is outside your configured coverage (phone/walk-in
+            exception).
+          </span>
+        </label>
+      )}
 
       <button
         type="submit"

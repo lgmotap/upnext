@@ -7,10 +7,23 @@ import {
   serviceAreaCustomField,
   serviceAreaScopeField,
 } from "@/server/validators/service-area-form";
+import {
+  computeServiceAreaZipCodesJson,
+  refineServiceAreaEnforcementFields,
+  serviceAreaEnforcementModeField,
+  serviceAreaRadiusMilesField,
+  serviceAreaZipCodesRawField,
+} from "@/server/validators/service-area-enforcement-form";
 import { CURRENCIES, TIMEZONES, US_REGIONS } from "@/server/validators/onboarding";
+import type { ServiceAreaEnforcementMode } from "@/lib/business/service-area-enforcement";
 
 const optionalTrimmed = (max: number) =>
   z.string().max(max).trim().optional().default("");
+
+const optionalFloat = z.preprocess(
+  (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
+  z.number().finite().optional(),
+);
 
 const websiteUrlField = z
   .string()
@@ -56,20 +69,33 @@ const businessProfileFields = {
     }),
   description: optionalTrimmed(400),
   websiteUrl: websiteUrlField,
+  serviceAreaEnforcementMode: serviceAreaEnforcementModeField.default("off"),
+  serviceAreaZipCodesRaw: serviceAreaZipCodesRawField,
+  serviceAreaRadiusMiles: serviceAreaRadiusMilesField,
+  addressLatitude: optionalFloat,
+  addressLongitude: optionalFloat,
 };
 
 /** Fields editable on Settings → Business (parity with onboarding capture). */
 export const businessSettingsSchema = z
   .object(businessProfileFields)
   .superRefine(refineServiceAreaFields)
-  .transform((data) => ({
-    ...data,
-    serviceArea: computeServiceAreaDisplay({
-      city: data.city,
-      region: data.region,
-      serviceAreaScope: data.serviceAreaScope as ServiceAreaScope,
-      serviceAreaCustom: data.serviceAreaCustom,
-    }),
-  }));
+  .superRefine(refineServiceAreaEnforcementFields)
+  .transform((data) => {
+    const mode = data.serviceAreaEnforcementMode as ServiceAreaEnforcementMode;
+    return {
+      ...data,
+      serviceArea: computeServiceAreaDisplay({
+        city: data.city,
+        region: data.region,
+        serviceAreaScope: data.serviceAreaScope as ServiceAreaScope,
+        serviceAreaCustom: data.serviceAreaCustom,
+      }),
+      serviceAreaZipCodesJson: computeServiceAreaZipCodesJson(mode, data.serviceAreaZipCodesRaw),
+      serviceAreaRadiusMiles: mode === "radius" ? (data.serviceAreaRadiusMiles ?? null) : null,
+      addressLatitude: data.addressLatitude ?? null,
+      addressLongitude: data.addressLongitude ?? null,
+    };
+  });
 
 export type BusinessSettingsInput = z.infer<typeof businessSettingsSchema>;

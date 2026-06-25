@@ -31,6 +31,11 @@ export async function updateBusinessSettingsAction(formData: FormData): Promise<
     email: formData.get("email") ?? "",
     description: formData.get("description") ?? "",
     websiteUrl: formData.get("websiteUrl") ?? "",
+    serviceAreaEnforcementMode: formData.get("serviceAreaEnforcementMode") ?? "off",
+    serviceAreaZipCodesRaw: formData.get("serviceAreaZipCodesRaw") ?? "",
+    serviceAreaRadiusMiles: formData.get("serviceAreaRadiusMiles") ?? "",
+    addressLatitude: formData.get("addressLatitude") ?? "",
+    addressLongitude: formData.get("addressLongitude") ?? "",
   });
 
   if (!parsed.success) {

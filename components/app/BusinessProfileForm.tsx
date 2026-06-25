@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Briefcase, MapPin, Building2 } from "lucide-react";
 import { serviceTypes, teamSizes } from "@/lib/config";
 import { ServiceAreaFields } from "@/components/app/ServiceAreaFields";
+import { ServiceAreaEnforcementFields } from "@/components/app/ServiceAreaEnforcementFields";
 import { AddressAutocompleteFields } from "@/components/maps/AddressAutocompleteFields";
 import type { ServiceAreaScope } from "@/lib/business/service-area";
+import type { ServiceAreaEnforcementMode } from "@/lib/business/service-area-enforcement";
 import { CURRENCIES, TIMEZONES } from "@/server/validators/onboarding";
 
 const input =
@@ -31,6 +33,11 @@ export type BusinessProfileFormDefaults = {
   websiteUrl: string;
   serviceAreaScope: ServiceAreaScope;
   serviceAreaCustom: string;
+  serviceAreaEnforcementMode: ServiceAreaEnforcementMode;
+  serviceAreaZipCodesRaw: string;
+  serviceAreaRadiusMiles: string;
+  addressLatitude: string;
+  addressLongitude: string;
 };
 
 type Props = {
@@ -45,6 +52,15 @@ export function BusinessProfileForm({ defaults, publicSlug, canEdit, action }: P
   const [region, setRegion] = useState(defaults.region);
   const [scope, setScope] = useState<ServiceAreaScope>(defaults.serviceAreaScope);
   const [customLabel, setCustomLabel] = useState(defaults.serviceAreaCustom);
+  const [enforcementMode, setEnforcementMode] = useState<ServiceAreaEnforcementMode>(
+    defaults.serviceAreaEnforcementMode,
+  );
+  const [zipCodesRaw, setZipCodesRaw] = useState(defaults.serviceAreaZipCodesRaw);
+  const [radiusMiles, setRadiusMiles] = useState(defaults.serviceAreaRadiusMiles);
+  const [addressLat, setAddressLat] = useState(defaults.addressLatitude);
+  const [addressLng, setAddressLng] = useState(defaults.addressLongitude);
+
+  const hasOriginCoordinates = Boolean(addressLat && addressLng);
 
   return (
     <form action={action} className="space-y-4">
@@ -119,8 +135,16 @@ export function BusinessProfileForm({ defaults, publicSlug, canEdit, action }: P
             disabled={!canEdit}
             onCityChange={setCity}
             onRegionChange={setRegion}
+            onCoordinatesChange={(coords) => {
+              if (coords) {
+                setAddressLat(String(coords.latitude));
+                setAddressLng(String(coords.longitude));
+              }
+            }}
             idPrefix="biz-addr"
           />
+          <input type="hidden" name="addressLatitude" value={addressLat} />
+          <input type="hidden" name="addressLongitude" value={addressLng} />
         </div>
       </section>
 
@@ -140,6 +164,16 @@ export function BusinessProfileForm({ defaults, publicSlug, canEdit, action }: P
             customLabel={customLabel}
             onScopeChange={setScope}
             onCustomLabelChange={setCustomLabel}
+            disabled={!canEdit}
+          />
+          <ServiceAreaEnforcementFields
+            mode={enforcementMode}
+            zipCodesRaw={zipCodesRaw}
+            radiusMiles={radiusMiles}
+            hasOriginCoordinates={hasOriginCoordinates}
+            onModeChange={setEnforcementMode}
+            onZipCodesRawChange={setZipCodesRaw}
+            onRadiusMilesChange={setRadiusMiles}
             disabled={!canEdit}
           />
         </div>

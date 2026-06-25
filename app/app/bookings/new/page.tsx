@@ -58,7 +58,11 @@ export default async function NewManualBookingPage({
     getAssignableMembers(orgId),
     prisma.businessProfile.findUnique({
       where: { organizationId: orgId },
-      select: { payAtBookingEnabled: true, requirePaymentAtBooking: true },
+      select: {
+        payAtBookingEnabled: true,
+        requirePaymentAtBooking: true,
+        serviceAreaEnforcementMode: true,
+      },
     }),
     listActiveBookingFormFields(orgId),
     isPayAtBookingAvailable(orgId),
@@ -188,6 +192,10 @@ export default async function NewManualBookingPage({
             showPaymentStep,
             requirePaymentAtBooking: Boolean(businessProfile?.requirePaymentAtBooking),
           }}
+          serviceAreaEnforcementEnabled={
+            businessProfile?.serviceAreaEnforcementMode !== undefined &&
+            businessProfile.serviceAreaEnforcementMode !== "off"
+          }
         />
       </Card>
     </>

@@ -5,6 +5,7 @@ import {
   inferServiceAreaCustom,
   inferServiceAreaScope,
 } from "@/lib/business/service-area";
+import { zipCodesFromJson } from "@/lib/business/service-area-enforcement";
 import { updateBusinessSettingsAction } from "@/server/actions/settings";
 import { canManageBusiness } from "@/server/permissions/can";
 import { getAppSession } from "@/server/permissions/session";
@@ -87,6 +88,11 @@ export default async function BusinessSettingsPage({
             region,
             serviceAreaScope,
           ),
+          serviceAreaEnforcementMode: profile.serviceAreaEnforcementMode,
+          serviceAreaZipCodesRaw: zipCodesFromJson(profile.serviceAreaZipCodesJson).join("\n"),
+          serviceAreaRadiusMiles: profile.serviceAreaRadiusMiles?.toString() ?? "",
+          addressLatitude: profile.addressLatitude?.toString() ?? "",
+          addressLongitude: profile.addressLongitude?.toString() ?? "",
         }}
       />
     </>

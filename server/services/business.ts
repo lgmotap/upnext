@@ -30,6 +30,11 @@ export async function updateBusinessSettings(organizationId: string, input: Busi
         email: input.email || null,
         description: input.description || null,
         websiteUrl: input.websiteUrl || null,
+        serviceAreaEnforcementMode: input.serviceAreaEnforcementMode,
+        serviceAreaRadiusMiles: input.serviceAreaRadiusMiles,
+        serviceAreaZipCodesJson: input.serviceAreaZipCodesJson ?? undefined,
+        addressLatitude: input.addressLatitude,
+        addressLongitude: input.addressLongitude,
       },
     });
 

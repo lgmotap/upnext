@@ -262,6 +262,53 @@ Sprint 44  Dashboard analytics — 30d snapshot, greeting, post-checklist busine
 
 ---
 
+## Phase 6 — P2 post-parity (sprints 45 → 49)
+
+**Created:** 2026-06-25  
+**Context:** Post-parity backlog promotion after Phases 3–5. ADR: `docs/adr/0007-post-mvp-p2-scope.md`  
+**Status:** Planned — **sprint 45 next build**
+
+```
+Sprint 45  Service-area enforcement — zip allowlist + radius from HQ
+Sprint 46  Multi-location — Location entity, per-location booking (planning)
+Sprint 47  Provider Open Jobs — crew self-claim pool (planning)
+Sprint 48  Providers Activity — dispatcher kanban board (planning)
+Sprint 49  Promo codes — portal rebook + public book (planning)
+```
+
+### Sprint → gap mapping
+
+| Sprint | Closes gap | CL reference |
+|--------|------------|--------------|
+| 45 | Service geo zones / out-of-area rejection | Service Studio zones (inferred) |
+| 46 | Multi-branch operators | Multi-location (deferred MVP) |
+| 47 | Open Jobs self-claim | Provider portal Open Jobs tab |
+| 48 | Providers Activity board | `/providers-activity` module |
+| 49 | Promo on rebook | Discounts module (lite) |
+
+### Phase 6 success criteria (sprint 45 first)
+
+| # | Criterion | Verified by |
+|---|-----------|-------------|
+| 1 | Owner enables zip list; public book outside zip blocked | `smoke:service-area-enforcement` |
+| 2 | Manual book outside area allows dispatcher override | same smoke |
+| 3 | Default off — existing orgs unchanged | `smoke:business-profile` |
+| 4 | Radius mode requires HQ coordinates | settings UI + smoke |
+
+### Phase 6 task files
+
+| Sprint | File |
+|--------|------|
+| 45 | `tasks/sprint-45-service-area-enforcement.md` |
+| 46 | `tasks/sprint-46-multi-location.md` |
+| 47 | `tasks/sprint-47-provider-open-jobs.md` |
+| 48 | `tasks/sprint-48-providers-activity-kanban.md` |
+| 49 | `tasks/sprint-49-promo-codes-portal-rebook.md` |
+
+**Still backlog (no sprint file):** branding colors, editable slug, iCal/Zapier, native apps, website builder.
+
+---
+
 ### Phase 2 → P1 gap mapping (sprints 22–31)
 
 | Sprint | Closes gap | CL reference |

@@ -4,6 +4,7 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Sprint 45 service-area enforcement**: optional ZIP allowlist or radius-from-HQ on `BusinessProfile`; blocks public booking outside coverage; manual booking override checkbox. Settings → Business. `npm run smoke:service-area-enforcement`.
 - **Booking confirmation calendar picker**: “Add to calendar” opens a modal with Google Calendar, Outlook, and Apple Calendar (.ics download); shared `buildCalendarLinks` helper. `npm run smoke:calendar-links`.
 - **Sprint 36 onboarding & address UX**: `AddressAutocompleteFields` (Google Places when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` set, manual fallback otherwise) on onboarding, settings, and public booking; `IndustryTypeCards` on onboarding step 1; sign-up business name dedup via Option A helper on step 3. `docs/architecture/google-maps.md`. `npm run smoke:address-autocomplete`.
 - **Sprint 35 company profile parity**: shared `ServiceAreaFields` (onboarding + settings), logo upload to Supabase Storage (`business-logos` bucket), `websiteUrl` on profile, public booking logo + website link. `npm run smoke:business-profile`.

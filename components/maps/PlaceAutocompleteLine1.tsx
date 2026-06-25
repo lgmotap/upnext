@@ -38,6 +38,7 @@ type PlaceInstance = {
     short_name?: string;
     types: string[];
   }>;
+  location?: { lat?: number | (() => number); lng?: number | (() => number) };
 };
 
 type PlacesLibrary = {
@@ -119,9 +120,18 @@ export function PlaceAutocompleteLine1({
 
       try {
         const place = prediction.toPlace();
-        await place.fetchFields({ fields: ["addressComponents"] });
+        await place.fetchFields({ fields: ["addressComponents", "location"] });
         const parsed = parseGoogleAddressComponents(place.addressComponents ?? []);
         if (!parsed) return;
+        const loc = place.location;
+        if (loc) {
+          const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
+          const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
+          if (typeof lat === "number" && typeof lng === "number") {
+            parsed.latitude = lat;
+            parsed.longitude = lng;
+          }
+        }
         if (widgetRef.current) widgetRef.current.value = parsed.line1;
         onAddressSelectRef.current(parsed);
       } catch {

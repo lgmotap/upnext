@@ -6,6 +6,8 @@ export type ParsedPlaceAddress = {
   region: string;
   postalCode: string;
   country: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 /** Legacy Places (`long_name`) and Places API (New) (`longText`) shapes. */

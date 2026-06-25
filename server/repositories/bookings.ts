@@ -149,6 +149,7 @@ export function createBookingRequest(data: {
   requestedStartAt: Date;
   requestedEndAt: Date;
   customerNotes?: string | null;
+  internalNotes?: string | null;
   customFieldsJson?: Record<string, string | boolean> | null;
   source?: "public_booking" | "manual" | "recurring";
   frequency?: BookingFrequency;
@@ -168,6 +169,7 @@ export function createBookingRequest(data: {
       requestedStartAt: data.requestedStartAt,
       requestedEndAt: data.requestedEndAt,
       customerNotes: data.customerNotes || null,
+      internalNotes: data.internalNotes || null,
       customFieldsJson: data.customFieldsJson ?? undefined,
       source: data.source ?? "public_booking",
       frequency: data.frequency ?? "one_time",

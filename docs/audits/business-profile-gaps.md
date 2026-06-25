@@ -18,7 +18,7 @@
 | Logo / branding | Upload on company | Logo upload + public booking | ✅ **35** |
 | Website | On company profile | `websiteUrl` on profile + booking page | ✅ **35** |
 | Business name | AI suggestions (CL only) | Sign-up + onboarding step 3 (Option A dedup) | ✅ **36** |
-| Service geo zones | Possible in Service Studio | Display string only | **Backlog** (P2) |
+| Service geo zones | Possible in Service Studio | Optional zip/radius enforcement | **45** ✅ |
 | Branding colors | Settings → Branding | Not built | **Backlog** (P2) |
 | Editable booking slug | May allow change | Read-only | **Backlog** (intentional) |
 
@@ -62,8 +62,8 @@ Sign-up collects **business name** (creates org slug). Onboarding step 3 pre-fil
 - SaaS billing card in onboarding wizard (different product model)
 - **AI business name suggestions** (CL feature — intentionally omitted per `docs/adr/0005-mvp-scope-boundaries.md`)
 - Website builder / WordPress hub
-- Multi-location company profiles
-- Service-area **enforcement** on slots (CL may zone-match; MVP uses display label only)
+- Multi-location company profiles — sprint 46 planning
+- Service-area **enforcement** — sprint 45 (optional zip/radius; default off)
 
 ---
 

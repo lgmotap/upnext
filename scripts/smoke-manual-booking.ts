@@ -34,15 +34,24 @@ async function main() {
   const days = daysResult?.days ?? [];
   if (days.length === 0) throw new Error("No available days");
 
-  const slotResult = await getOrgSlotsForDay(org.id, service.id, days[0].date);
-  const slots = slotResult?.slots ?? [];
-  if (slots.length === 0) throw new Error("No slots");
+  let slotDate = "";
+  let slotTime = "";
+  for (const day of days.slice(0, 14)) {
+    const slotResult = await getOrgSlotsForDay(org.id, service.id, day.date);
+    const slots = slotResult?.slots ?? [];
+    if (slots.length > 0) {
+      slotDate = day.date;
+      slotTime = slots[0].time;
+      break;
+    }
+  }
+  if (!slotDate || !slotTime) throw new Error("No slots");
 
   const result = await createManualBooking(org.id, {
     serviceId: service.id,
     addonServiceIds: [],
-    date: days[0].date,
-    time: slots[0].time,
+    date: slotDate,
+    time: slotTime,
     frequency: "one_time",
     firstName: "Manual",
     lastName: "Smoke",

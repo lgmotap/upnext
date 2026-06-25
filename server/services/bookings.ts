@@ -27,6 +27,10 @@ import { createBookingRequest, updateBookingRequestStatus } from "@/server/repos
 import { notifyBookingRequestReceived, notifyJobAssigned } from "@/server/services/notifications";
 import { createJobFromBookingRequest } from "@/server/services/jobs";
 import { assignJobToMember } from "@/server/repositories/assignments";
+import {
+  getServiceAreaProfileByOrganizationId,
+  validateCustomerServiceArea,
+} from "@/server/services/service-area-enforcement";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
 import { emitOrgWebhook } from "@/server/services/webhooks";
@@ -183,6 +187,13 @@ export function bookingTotals(
       ? `${service.name} + ${addons.map((a) => a.name).join(", ")}`
       : service.name;
   return { priceCents, subtotalCents: subtotal, durationMinutes, label, currency: service.currency };
+}
+
+function pickCustomerAddress<
+  T extends { id: string; isDefault: boolean; line1: string; city: string; region: string; postalCode: string },
+>(addresses: T[], addressId?: string): T | undefined {
+  if (addressId) return addresses.find((a) => a.id === addressId);
+  return addresses.find((a) => a.isDefault) ?? addresses[0];
 }
 
 async function resolveParameterValues(
@@ -395,19 +406,64 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
   });
   if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
 
-  let customerId: string;
-
+  let existingCustomer: Awaited<ReturnType<typeof getCustomerForOrg>> | null = null;
   if (input.customerId?.trim()) {
-    const existing = await getCustomerForOrg(organizationId, input.customerId.trim());
-    if (!existing) return { ok: false as const, error: "Customer not found" };
-    if (existing.addresses.length === 0) {
+    existingCustomer = await getCustomerForOrg(organizationId, input.customerId.trim());
+    if (!existingCustomer) return { ok: false as const, error: "Customer not found" };
+    if (existingCustomer.addresses.length === 0) {
       return { ok: false as const, error: "Customer has no address on file" };
     }
     const addressId = input.customerAddressId?.trim();
-    if (addressId && !existing.addresses.some((a) => a.id === addressId)) {
+    if (addressId && !existingCustomer.addresses.some((a) => a.id === addressId)) {
       return { ok: false as const, error: "Selected address not found for this customer" };
     }
-    customerId = existing.id;
+  }
+
+  const areaProfile = await getServiceAreaProfileByOrganizationId(organizationId);
+  let overrideNote: string | undefined;
+  if (areaProfile && areaProfile.serviceAreaEnforcementMode !== "off") {
+    const checkPoint = existingCustomer
+      ? (() => {
+          const addr = pickCustomerAddress(
+            existingCustomer!.addresses,
+            input.customerAddressId?.trim(),
+          );
+          return addr
+            ? {
+                postalCode: addr.postalCode,
+                line1: addr.line1,
+                city: addr.city,
+                region: addr.region,
+              }
+            : null;
+        })()
+      : {
+          postalCode: input.postalCode!.trim(),
+          line1: input.line1!.trim(),
+          city: input.city!.trim(),
+          region: input.region!.trim(),
+        };
+    if (checkPoint) {
+      const areaCheck = await validateCustomerServiceArea(areaProfile, checkPoint);
+      if (!areaCheck.ok) {
+        if (!input.overrideServiceArea) {
+          return {
+            ok: false as const,
+            error: areaCheck.error,
+            code: "out_of_service_area" as const,
+          };
+        }
+        overrideNote = "Service area override (manual booking)";
+      }
+    }
+  }
+
+  let customerId: string;
+
+  if (existingCustomer) {
+    customerId = existingCustomer.id;
+  } else if (input.customerId?.trim()) {
+    return { ok: false as const, error: "Customer not found" };
   } else {
     const email = input.email!.trim().toLowerCase();
     let customer = await findCustomerByEmail(organizationId, email);
@@ -449,6 +505,7 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
     requestedStartAt: availableSlot.startAt,
     requestedEndAt: availableSlot.endAt,
     customerNotes: input.customerNotes || null,
+    internalNotes: overrideNote ?? null,
     customFieldsJson: input.customFieldsJson ?? null,
     source: "manual",
     frequency: input.frequency,
@@ -530,6 +587,25 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     square_feet: input.square_feet,
   });
   if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
+
+  const publicAreaCheck = await validateCustomerServiceArea(
+    {
+      serviceArea: loaded.profile.serviceArea,
+      phone: loaded.profile.phone,
+      serviceAreaEnforcementMode: loaded.profile.serviceAreaEnforcementMode,
+      serviceAreaRadiusMiles: loaded.profile.serviceAreaRadiusMiles,
+      serviceAreaZipCodesJson: loaded.profile.serviceAreaZipCodesJson,
+      addressLatitude: loaded.profile.addressLatitude,
+      addressLongitude: loaded.profile.addressLongitude,
+    },
+    {
+      postalCode: input.postalCode,
+      line1: input.line1,
+      city: input.city,
+      region: input.region,
+    },
+  );
+  if (!publicAreaCheck.ok) return { ok: false as const, error: publicAreaCheck.error };
 
   let customer = await findCustomerByEmail(loaded.profile.organizationId, input.email);
 
@@ -651,6 +727,25 @@ export async function createPublicBookingCheckout(raw: PublicBookingInput) {
     square_feet: input.square_feet,
   });
   if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
+
+  const checkoutAreaCheck = await validateCustomerServiceArea(
+    {
+      serviceArea: loaded.profile.serviceArea,
+      phone: loaded.profile.phone,
+      serviceAreaEnforcementMode: loaded.profile.serviceAreaEnforcementMode,
+      serviceAreaRadiusMiles: loaded.profile.serviceAreaRadiusMiles,
+      serviceAreaZipCodesJson: loaded.profile.serviceAreaZipCodesJson,
+      addressLatitude: loaded.profile.addressLatitude,
+      addressLongitude: loaded.profile.addressLongitude,
+    },
+    {
+      postalCode: input.postalCode,
+      line1: input.line1,
+      city: input.city,
+      region: input.region,
+    },
+  );
+  if (!checkoutAreaCheck.ok) return { ok: false as const, error: checkoutAreaCheck.error };
 
   let customer = await findCustomerByEmail(loaded.profile.organizationId, input.email);
 

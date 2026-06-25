@@ -2,7 +2,7 @@
 
 **Updated:** 2026-06-25  
 **Method:** Code inspection + `tasks/competitor-parity-audit-plan.md` + CL scorecard  
-**Execution order:** `tasks/full-product-roadmap.md`
+**Execution order:** `tasks/full-product-roadmap.md` · **Phase 6 ADR:** `docs/adr/0007-post-mvp-p2-scope.md`
 
 ---
 
@@ -13,11 +13,12 @@
 | 2 P1 parity | 22–31 | Scheduling, pay-at-book, domain, portal auth, API, SMS, fields, scheduler | ✅ Done |
 | 2.5 CRM scale | 32–34 | List tables, comms log, jobs pagination | ✅ Done |
 | 3 Profile | 35–36 | Company `/company` parity, onboarding UX | ✅ Done |
-| 4 Ops polish | 37–42 | Reports, CRM depth, inbox, manual book, calendar, portal | ✅ Done (37–42) |
+| 4 Ops polish | 37–42 | Reports, CRM depth, inbox, manual book, calendar, portal | ✅ Done |
 | 5 Dashboard parity | 43–44 | CL ops queues + analytics snapshot | ✅ Done |
+| **6 P2 post-parity** | **45–49** | Geo enforcement, multi-location, crew ops, promos | 📋 Planned |
 | Launch gate | — | Resend prod domain | ⏳ Owner action |
 
-**Out of scope (never schedule):** AI business name, website builder, quotes/invoices pipeline, gift cards, multi-location, native apps, marketing campaigns.
+**Out of scope (never schedule without new ADR):** AI business name, website builder, quotes/invoices pipeline, native apps, marketing campaigns, payouts reporting.
 
 ---
 
@@ -132,6 +133,20 @@ Routes: `/app/dashboard`
 
 ---
 
+### Phase 6 — P2 post-parity → **45–49** 📋
+
+| Gap | Code today | Sprint |
+|-----|------------|--------|
+| Service-area zip / radius enforcement | Display label only | **45** ✅ |
+| Multi-location | Single org profile | **46** 📋 |
+| Open Jobs self-claim | Dispatcher assign only | **47** 📋 |
+| Providers Activity kanban | Scheduler day board only | **48** 📋 |
+| Promo codes on portal rebook | Frequency discounts only | **49** 📋 |
+
+ADR: `docs/adr/0007-post-mvp-p2-scope.md`
+
+---
+
 ### App shell → no dedicated sprint (P2 backlog)
 
 | Gap | Code today | Note |
@@ -153,19 +168,17 @@ Shipped: `CHANGELOG.md` app shell parity.
 
 ---
 
-## Backlog P2 (no sprint — promote when needed)
+## Backlog P2 (Phase 6 — sprint files created)
 
-- Service-area zip/radius enforcement
-- Branding colors on booking page
-- Editable `publicSlug`
-- Provider Open Jobs self-claim
-- Providers Activity kanban
-- iCal feed / Zapier app
-- Per-template email copy editing
-- Promo codes / gift cards
-- Multi-location, native apps, website builder
+| Item | Sprint |
+|------|--------|
+| Service-area zip/radius enforcement | `tasks/sprint-45-service-area-enforcement.md` 📋 **next** |
+| Multi-location | `tasks/sprint-46-multi-location.md` |
+| Provider Open Jobs self-claim | `tasks/sprint-47-provider-open-jobs.md` |
+| Providers Activity kanban | `tasks/sprint-48-providers-activity-kanban.md` |
+| Promo codes / gift cards | `tasks/sprint-49-promo-codes-portal-rebook.md` |
 
-See `tasks/backlog.md`.
+Branding colors, editable slug, iCal/Zapier — still unscheduled. See `tasks/backlog.md`.
 
 ---
 
