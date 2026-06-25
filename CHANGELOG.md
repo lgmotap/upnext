@@ -4,6 +4,7 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Sprint 46 multi-location v1**: `Location` model; Settings → Locations CRUD; public location picker (2+ branches); manual booking location; `locationId` on bookings/jobs. ADR `docs/adr/0008-multi-location-v1.md`. `npm run smoke:locations`.
 - **Sprint 45 service-area enforcement**: optional ZIP allowlist or radius-from-HQ on `BusinessProfile`; blocks public booking outside coverage; manual booking override checkbox. Settings → Business. `npm run smoke:service-area-enforcement`.
 - **Booking confirmation calendar picker**: “Add to calendar” opens a modal with Google Calendar, Outlook, and Apple Calendar (.ics download); shared `buildCalendarLinks` helper. `npm run smoke:calendar-links`.
 - **Sprint 36 onboarding & address UX**: `AddressAutocompleteFields` (Google Places when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` set, manual fallback otherwise) on onboarding, settings, and public booking; `IndustryTypeCards` on onboarding step 1; sign-up business name dedup via Option A helper on step 3. `docs/architecture/google-maps.md`. `npm run smoke:address-autocomplete`.

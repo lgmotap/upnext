@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import type { BusinessSetupInput } from "@/server/validators/onboarding";
 import type { BusinessSettingsInput } from "@/server/validators/business";
+import { syncDefaultLocationFromProfile } from "@/server/services/locations";
 
 export async function updateBusinessSettings(organizationId: string, input: BusinessSettingsInput) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.update({
       where: { id: organizationId },
       data: {
@@ -40,11 +41,14 @@ export async function updateBusinessSettings(organizationId: string, input: Busi
 
     return { organization, businessProfile };
   });
+
+  await syncDefaultLocationFromProfile(organizationId);
+  return result;
 }
 
 /** Full onboarding wizard — industry, address, profile, completion flag. */
 export async function updateBusinessSetup(organizationId: string, input: BusinessSetupInput) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.update({
       where: { id: organizationId },
       data: {
@@ -75,6 +79,9 @@ export async function updateBusinessSetup(organizationId: string, input: Busines
 
     return { organization, businessProfile };
   });
+
+  await syncDefaultLocationFromProfile(organizationId);
+  return result;
 }
 
 /** The org + public profile for the signed-in user's workspace. */

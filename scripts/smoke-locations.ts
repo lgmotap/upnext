@@ -1,6 +1,6 @@
 /**
- * Smoke: owner manual booking → job with source=manual.
- * Run: npx tsx scripts/smoke-manual-booking.ts
+ * Smoke: multi-location v1 — default location, second location, booking tagging.
+ * Run: npm run smoke:locations
  */
 import { config } from "dotenv";
 
@@ -13,11 +13,17 @@ const { defaultWeeklyRules } = await import("../server/validators/availability")
 const { getOrgAvailableDays, getOrgSlotsForDay, createManualBooking } = await import(
   "../server/services/bookings"
 );
+const {
+  ensureDefaultLocationForOrg,
+  getPublicLocationOptions,
+  resolveLocationIdForBooking,
+} = await import("../server/services/locations");
+const { createLocationForOrg } = await import("../server/repositories/locations");
 
 const TEST_SLUG = "smoke-test-co";
 
 async function main() {
-  console.log("▶ Manual booking smoke test\n");
+  console.log("▶ Multi-location smoke test\n");
 
   const org = await prisma.organization.findFirst({
     where: { businessProfile: { publicSlug: TEST_SLUG } },
@@ -29,6 +35,31 @@ async function main() {
     where: { organizationId: org.id },
     data: { serviceAreaEnforcementMode: "off" },
   });
+
+  const defaultLoc = await ensureDefaultLocationForOrg(org.id);
+  if (!defaultLoc) throw new Error("Default location not created");
+
+  let second = await prisma.location.findFirst({
+    where: { organizationId: org.id, name: "Smoke North Branch" },
+  });
+  if (!second) {
+    second = await createLocationForOrg(org.id, {
+      name: "Smoke North Branch",
+      isActive: true,
+      city: "Testville",
+      region: "NY",
+      addressLine1: "100 North St",
+      postalCode: "10001",
+    });
+  }
+
+  const options = await getPublicLocationOptions(org.id);
+  if (options.length < 2) throw new Error(`Expected 2+ locations, got ${options.length}`);
+
+  const resolved = await resolveLocationIdForBooking(org.id, second.id);
+  if (!resolved.ok || resolved.locationId !== second.id) {
+    throw new Error("resolveLocationIdForBooking failed for second location");
+  }
 
   const service = org.services.find((s) => s.isActive && !s.isAddon) ?? org.services[0];
   if (!service) throw new Error("No active service");
@@ -58,39 +89,44 @@ async function main() {
     date: slotDate,
     time: slotTime,
     frequency: "one_time",
-    firstName: "Manual",
+    locationId: second.id,
+    firstName: "Loc",
     lastName: "Smoke",
-    email: `manual-smoke+${Date.now()}@upnext.local`,
+    email: `loc-smoke+${Date.now()}@upnext.local`,
     phone: "",
-    line1: "456 Manual Ave",
+    line1: "200 Branch Ave",
     line2: "",
     city: "Testville",
     region: "NY",
     postalCode: "10001",
-    customerNotes: "Manual booking smoke test",
+    customerNotes: "Multi-location smoke",
     assignMembershipId: "",
   });
 
   if (!result.ok) throw new Error(`Manual booking failed: ${result.error}`);
-  console.log(`✓ Created manual booking → job ${result.jobId}`);
 
   const booking = await prisma.bookingRequest.findUnique({
     where: { id: result.bookingRequestId },
     include: { job: true },
   });
-  if (!booking) throw new Error("Booking not found");
-  if (booking.source !== "manual") throw new Error(`Expected source=manual, got ${booking.source}`);
-  if (booking.frequency !== "one_time") throw new Error(`Expected frequency=one_time, got ${booking.frequency}`);
-  if (booking.status !== "accepted") throw new Error(`Expected accepted, got ${booking.status}`);
-  if (!booking.job || booking.job.status !== "scheduled") throw new Error("Job not scheduled");
+  if (!booking?.locationId || booking.locationId !== second.id) {
+    throw new Error(`Booking missing locationId (got ${booking?.locationId})`);
+  }
+  if (!booking.job?.locationId || booking.job.locationId !== second.id) {
+    throw new Error(`Job missing locationId (got ${booking.job?.locationId})`);
+  }
 
-  console.log("✓ source=manual, status=accepted, job scheduled");
-  console.log("\n✓ Manual booking smoke test passed");
+  console.log(`✓ Default location: ${defaultLoc.name}`);
+  console.log(`✓ Public options: ${options.length} locations`);
+  console.log(`✓ Manual booking tagged to ${second.name} → job ${result.jobId}`);
+  console.log("\n✅ Multi-location smoke passed");
 }
 
 main()
   .catch((e) => {
-    console.error("\n✗ Manual booking smoke FAILED:", e);
+    console.error(e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

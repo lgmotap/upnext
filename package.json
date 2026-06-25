@@ -53,6 +53,7 @@
     "smoke:crm-lists": "tsx scripts/smoke-crm-lists.ts",
     "smoke:business-profile": "tsx scripts/smoke-business-profile.ts",
     "smoke:service-area-enforcement": "tsx scripts/smoke-service-area-enforcement.ts",
+    "smoke:locations": "tsx scripts/smoke-locations.ts",
     "smoke:address-autocomplete": "tsx scripts/smoke-address-autocomplete.ts",
     "smoke:calendar-links": "tsx scripts/smoke-calendar-links.ts",
     "smoke:portal-cancel": "tsx scripts/smoke-portal-cancel.ts",

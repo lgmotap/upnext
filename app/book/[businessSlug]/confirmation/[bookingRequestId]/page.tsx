@@ -9,6 +9,7 @@ import { formatMoney } from "@/lib/money/format";
 import { getCustomerPortalUrl } from "@/lib/url/app";
 import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
 import { getPublicBookingRequest } from "@/server/repositories/bookings";
+import { site } from "@/lib/config";
 
 export default async function BookingConfirmationPage({
   params,
@@ -98,7 +99,7 @@ export default async function BookingConfirmationPage({
 
         <p className="mt-6 text-xs text-ink-400">
           Reference <span className="font-mono text-ink-500">{booking.id}</span> · Powered by{" "}
-          <span className="font-semibold text-ink-600">UpNext</span>
+          <span className="font-semibold text-ink-600">{site.name}</span>
         </p>
       </div>
     </div>

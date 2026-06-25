@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Search, ArrowUpRight } from "lucide-react";
 import { useCommandPalette } from "@/components/app/CommandPalette";
+import { site } from "@/lib/config";
 import type { WorkspaceShellData } from "@/server/services/workspace-shell";
 import { MobileNav } from "./MobileNav";
 import { NewActionMenu } from "./NewActionMenu";
@@ -31,7 +32,7 @@ export function AppTopbar({
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink-100 bg-background/80 px-4 py-3 backdrop-blur-lg sm:px-6">
       {workspace ? <MobileNav workspace={workspace} /> : <MobileNav workspace={null} />}
       <Link href="/app/dashboard" className="flex items-center lg:hidden">
-        <span className="text-lg font-bold tracking-tight text-ink-950">UpNext</span>
+        <span className="text-lg font-bold tracking-tight text-ink-950">{site.name}</span>
         <span className="ml-0.5 mt-1.5 size-1.5 rounded-full bg-brand-500" />
       </Link>
 

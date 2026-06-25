@@ -1,3 +1,5 @@
+import { site } from "@/lib/config";
+
 export function PublicBookingEmpty({
   businessName,
   embedded = false,
@@ -21,7 +23,7 @@ export function PublicBookingEmpty({
         </p>
         {!embedded && (
           <p className="mt-4 text-xs text-ink-400">
-            Business owner? Add services under <strong>Services</strong> in your UpNext dashboard.
+            Business owner? Add services under <strong>Services</strong> in your {site.name} dashboard.
           </p>
         )}
       </div>

@@ -1,7 +1,7 @@
 const PLACEHOLDER = /^(placeholder|changeme|your_|xxx|todo|replace_me)/i;
 
 /** Resend test sender — only delivers to RESEND_SANDBOX_TO until a domain is verified. */
-export const RESEND_TEST_FROM = "UpNext <onboarding@resend.dev>";
+export const RESEND_TEST_FROM = "BookedFox <onboarding@resend.dev>";
 
 /**
  * Production gate: verify a domain on the UpNext Resend account, set EMAIL_FROM to

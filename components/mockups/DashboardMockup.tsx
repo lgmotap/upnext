@@ -65,7 +65,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
     <div
       className={`overflow-hidden rounded-2xl bg-white ring-1 ring-ink-200/70 shadow-float ${className}`}
       role="img"
-      aria-label="UpNext dashboard showing KPI cards, today's schedule with assigned team members and payment status, and incoming booking requests"
+      aria-label="BookedFox dashboard showing KPI cards, today's schedule with assigned team members and payment status, and incoming booking requests"
     >
       {/* window chrome */}
       <div className="flex items-center gap-2 border-b border-ink-100 bg-ink-50/70 px-3 py-2">
@@ -73,7 +73,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
         <span className="size-2.5 rounded-full bg-amber-300" />
         <span className="size-2.5 rounded-full bg-emerald-300" />
         <div className="mx-auto flex h-5 w-48 items-center justify-center gap-1 rounded-md bg-white text-[9px] text-ink-400 ring-1 ring-ink-100">
-          <span className="size-1.5 rounded-full bg-emerald-400" /> app.upnext.com/dashboard
+          <span className="size-1.5 rounded-full bg-emerald-400" /> app.bookedfox.com/dashboard
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
         {/* sidebar */}
         <div className="hidden w-32 shrink-0 flex-col border-r border-ink-100 bg-ink-50/40 p-2.5 sm:flex">
           <div className="mb-3 px-1 text-[12px] font-bold tracking-tight text-ink-950">
-            Up<span className="text-brand-600">Next</span>
+            Booked<span className="text-brand-600">Fox</span>
             <span className="ml-0.5 inline-block size-1 rounded-full bg-brand-400 align-middle" />
           </div>
           {[

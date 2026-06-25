@@ -100,7 +100,7 @@ export default async function CustomerImportPage({
           </p>
           <a
             href={`data:text/csv;charset=utf-8,${encodeURIComponent(template)}`}
-            download="upnext-customers-template.csv"
+            download="bookedfox-customers-template.csv"
             className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-4 py-2 text-sm font-semibold text-ink-800 hover:bg-ink-200"
           >
             <Download className="size-4" /> Download CSV template

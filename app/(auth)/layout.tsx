@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { site } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -17,7 +18,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute inset-0 bg-grid opacity-[0.18] [mask-image:radial-gradient(closest-side,black,transparent_90%)]" />
         <div className="absolute -top-24 right-0 size-[28rem] rounded-full bg-[radial-gradient(closest-side,rgba(58,208,121,0.25),transparent)]" />
         <Link href="/" className="relative flex items-center">
-          <span className="text-2xl font-bold tracking-tight">UpNext</span>
+          <span className="text-2xl font-bold tracking-tight">{site.name}</span>
           <span className="ml-0.5 mt-2.5 size-2 rounded-full bg-brand-400" />
         </Link>
         <div className="relative">
@@ -35,7 +36,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             ))}
           </ul>
         </div>
-        <p className="relative text-xs text-white/40">© {new Date().getFullYear()} UpNext</p>
+        <p className="relative text-xs text-white/40">© {new Date().getFullYear()} {site.name}</p>
       </div>
 
       {/* form panel */}

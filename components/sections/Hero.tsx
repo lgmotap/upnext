@@ -1,5 +1,5 @@
 import { Check, RefreshCw } from "lucide-react";
-import { cta } from "@/lib/config";
+import { cta, site } from "@/lib/config";
 import { CTAButton, PrimaryCTA } from "@/components/ui/CTAButton";
 import { Em } from "@/components/ui/Em";
 import { DashboardMockup } from "@/components/mockups/DashboardMockup";
@@ -34,7 +34,7 @@ export function Hero() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/70 lg:mx-0 text-pretty">
-            UpNext gives solo and team home-service providers a professional online booking page —
+            {site.name} gives solo and team home-service providers a professional online booking page —
             plus scheduling, customers, your team, and payments in one place. No more spreadsheets,
             scattered texts, or missed calls.
           </p>

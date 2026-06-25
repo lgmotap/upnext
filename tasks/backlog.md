@@ -60,7 +60,7 @@ Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 | Item | Sprint | Status |
 |------|--------|--------|
 | Service-area zip lists / radius enforcement | [45](sprint-45-service-area-enforcement.md) | ✅ |
-| Multi-location | [46](sprint-46-multi-location.md) | 📋 Planning |
+| Multi-location | [46](sprint-46-multi-location.md) | ✅ Done |
 | Provider Open Jobs self-claim pool | [47](sprint-47-provider-open-jobs.md) | 📋 Planning |
 | Providers Activity kanban board | [48](sprint-48-providers-activity-kanban.md) | 📋 Planning |
 | Promo codes / gift cards on portal rebook | [49](sprint-49-promo-codes-portal-rebook.md) | 📋 Planning |

@@ -75,6 +75,7 @@ model Organization {
   apiKeys           ApiKey[]
   webhookEndpoints  WebhookEndpoint[]
   bookingFormFields BookingFormField[]
+  locations         Location[]
 
   /// Stripe Connect account for customer payments (not UpNext SaaS billing).
   stripeConnectAccountId   String?
@@ -158,6 +159,31 @@ model BusinessProfile {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([publicSlug])
+}
+
+model Location {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  isDefault      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  addressLine1   String?
+  addressLine2   String?
+  city           String?
+  region         String?
+  postalCode     String?
+  country        String   @default("US")
+  phone          String?
+  timezone       String?
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bookingRequests BookingRequest[]
+  jobs           Job[]
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
 }
 
 model Service {
@@ -297,6 +323,7 @@ model CustomerAddress {
 model BookingRequest {
   id               String               @id @default(cuid())
   organizationId   String
+  locationId       String?
   customerId       String
   serviceId        String
   requestedStartAt DateTime
@@ -310,6 +337,7 @@ model BookingRequest {
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   organization     Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location         Location?            @relation(fields: [locationId], references: [id], onDelete: SetNull)
   customer         Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
   service          Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   job              Job?
@@ -320,6 +348,7 @@ model BookingRequest {
   @@index([organizationId])
   @@index([organizationId, status])
   @@index([organizationId, requestedStartAt])
+  @@index([organizationId, locationId])
 }
 
 enum BookingFormFieldType {
@@ -359,6 +388,7 @@ enum JobStatus {
 model Job {
   id                String     @id @default(cuid())
   organizationId    String
+  locationId        String?
   bookingRequestId  String?    @unique
   customerId        String
   customerAddressId String?
@@ -377,6 +407,7 @@ model Job {
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  location          Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
   bookingRequest    BookingRequest? @relation(fields: [bookingRequestId], references: [id], onDelete: SetNull)
   customer          Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerAddress   CustomerAddress? @relation(fields: [customerAddressId], references: [id], onDelete: SetNull)
@@ -392,6 +423,7 @@ model Job {
   @@index([organizationId])
   @@index([organizationId, status])
   @@index([organizationId, scheduledStartAt])
+  @@index([organizationId, locationId])
 }
 
 model JobAssignment {

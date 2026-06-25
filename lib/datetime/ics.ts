@@ -15,11 +15,11 @@ export function buildBookingIcsEvent(params: {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//UpNext//Booking//EN",
+    "PRODID:-//BookedFox//Booking//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
-    `UID:${escape(params.uid)}@upnext`,
+    `UID:${escape(params.uid)}@bookedfox`,
     `DTSTAMP:${fmt(new Date())}`,
     `DTSTART:${fmt(params.startAt)}`,
     `DTEND:${fmt(params.endAt)}`,

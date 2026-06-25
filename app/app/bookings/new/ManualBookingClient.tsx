@@ -54,6 +54,12 @@ type MemberOption = {
   role: string;
 };
 
+type LocationOption = {
+  id: string;
+  label: string;
+  isDefault: boolean;
+};
+
 type SlotOption = { date: string; time: string; label: string };
 
 function computeTotals(
@@ -86,6 +92,7 @@ export function ManualBookingClient({
   customFormFields = [],
   payAtBooking = { showPaymentStep: false, requirePaymentAtBooking: false },
   serviceAreaEnforcementEnabled = false,
+  locations = [],
 }: {
   timeZone: string;
   primaryServices: ServiceOption[];
@@ -101,7 +108,11 @@ export function ManualBookingClient({
   customFormFields?: BookingFormField[];
   payAtBooking?: { showPaymentStep: boolean; requirePaymentAtBooking: boolean };
   serviceAreaEnforcementEnabled?: boolean;
+  locations?: LocationOption[];
 }) {
+  const defaultLocationId =
+    locations.find((l) => l.isDefault)?.id ?? locations[0]?.id ?? "";
+  const [locationId, setLocationId] = useState(defaultLocationId);
   const [customerMode, setCustomerMode] = useState<"existing" | "new">(
     customers.length > 0 ? "existing" : "new",
   );
@@ -244,8 +255,32 @@ export function ManualBookingClient({
       {addonIds.map((id) => (
         <input key={id} type="hidden" name="addonServiceIds" value={id} />
       ))}
+      {locations.length > 1 && locationId ? (
+        <input type="hidden" name="locationId" value={locationId} />
+      ) : null}
 
-      <Section title="Customer" step="1">
+      {locations.length > 1 && (
+        <Section title="Location" step="1">
+          <label className="block">
+            <span className="text-xs font-semibold uppercase tracking-wide text-ink-400">
+              Service location
+            </span>
+            <select
+              value={locationId}
+              onChange={(e) => setLocationId(e.target.value)}
+              className={`${input} mt-1`}
+            >
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </Section>
+      )}
+
+      <Section title="Customer" step={locations.length > 1 ? "2" : "1"}>
         <div className="mb-4 flex flex-wrap gap-2">
           <ModeButton
             active={customerMode === "existing"}

@@ -8,6 +8,7 @@ import {
   requestPortalMagicLinkAction,
   signInPortalPasswordAction,
 } from "@/server/actions/customer-portal";
+import { site } from "@/lib/config";
 
 function MagicSubmitButton() {
   const { pending } = useFormStatus();
@@ -154,7 +155,7 @@ export function PortalLoginForm({
         </form>
       )}
 
-      <p className="mt-4 text-center text-xs text-ink-400">Powered by UpNext</p>
+      <p className="mt-4 text-center text-xs text-ink-400">Powered by {site.name}</p>
     </div>
   );
 }

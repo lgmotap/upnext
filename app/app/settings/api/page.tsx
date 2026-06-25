@@ -16,6 +16,7 @@ import {
   deactivateWebhookAction,
   revokeApiKeyAction,
 } from "@/server/actions/api-settings";
+import { site } from "@/lib/config";
 
 export default async function ApiSettingsPage({
   searchParams,
@@ -66,7 +67,7 @@ export default async function ApiSettingsPage({
       {params.webhook_secret && (
         <p className="mb-4 rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900 ring-1 ring-amber-100">
           <span className="font-semibold">Webhook signing secret</span> (verify{' '}
-          <code className="text-xs">UpNext-Signature</code> header):
+          <code className="text-xs">BookedFox-Signature</code> header):
           <code className="mt-2 block break-all rounded-lg bg-white px-2 py-1 text-xs">
             {params.webhook_secret}
           </code>
@@ -169,7 +170,7 @@ export default async function ApiSettingsPage({
                 name="url"
                 type="url"
                 required
-                placeholder="https://hooks.example.com/upnext"
+                placeholder="https://hooks.example.com/bookedfox"
                 className="w-full rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-ink-200"
               />
             </div>

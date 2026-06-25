@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db/prisma";
 import { slugify, withRandomSuffix } from "@/lib/utils/slug";
-import { DEFAULT_BUSINESS_TYPE, ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
+import {
+  DEFAULT_BUSINESS_TYPE,
+  ensureIndustryCatalogForOrg,
+} from "@/server/services/industry-catalog";
+import { ensureDefaultLocationForOrg } from "@/server/services/locations";
 
 type CreateWorkspaceInput = {
   userId: string;
@@ -69,6 +73,7 @@ export async function createWorkspaceForNewUser(input: CreateWorkspaceInput) {
   });
 
   await ensureIndustryCatalogForOrg(result.organization.id);
+  await ensureDefaultLocationForOrg(result.organization.id);
 
   return result;
 }

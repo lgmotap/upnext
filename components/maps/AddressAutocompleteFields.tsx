@@ -36,6 +36,8 @@ type Props = {
   line1Label?: string;
   line2Label?: string;
   compact?: boolean;
+  /** When false, city/state/ZIP are optional (e.g. location labels without a full address). */
+  fieldsRequired?: boolean;
   className?: string;
 };
 
@@ -57,6 +59,7 @@ export function AddressAutocompleteFields({
   line1Label = "Street address",
   line2Label = "Suite / unit (optional)",
   compact = false,
+  fieldsRequired = true,
   className,
 }: Props) {
   const reactId = useId().replace(/:/g, "");
@@ -99,7 +102,7 @@ export function AddressAutocompleteFields({
       onChange={(e) => handleRegionChange(e.target.value)}
       disabled={disabled}
       className={input}
-      required
+      required={fieldsRequired}
       autoComplete="address-level1"
     >
       <option value="">{compact ? "State / region" : "Select…"}</option>
@@ -117,7 +120,7 @@ export function AddressAutocompleteFields({
       onChange={(e) => handleRegionChange(e.target.value)}
       disabled={disabled}
       className={input}
-      required
+      required={fieldsRequired}
       placeholder="State / region"
       autoComplete="address-level1"
     />
@@ -163,7 +166,7 @@ export function AddressAutocompleteFields({
           placeholder="City"
           disabled={disabled}
           className={input}
-          required
+          required={fieldsRequired}
           autoComplete="address-level2"
         />
         {regionField}
@@ -175,7 +178,7 @@ export function AddressAutocompleteFields({
           placeholder="ZIP / postal code"
           disabled={disabled}
           className={input}
-          required
+          required={fieldsRequired}
           autoComplete="postal-code"
         />
         <input type="hidden" name={countryName} value={countryValue} />
@@ -224,7 +227,7 @@ export function AddressAutocompleteFields({
             onChange={(e) => handleCityChange(e.target.value)}
             disabled={disabled}
             className={input}
-            required
+            required={fieldsRequired}
             autoComplete="address-level2"
           />
         </div>
@@ -247,7 +250,7 @@ export function AddressAutocompleteFields({
           onChange={(e) => setPostalCode(e.target.value)}
           disabled={disabled}
           className={input}
-          required
+          required={fieldsRequired}
           autoComplete="postal-code"
         />
       </div>

@@ -18,7 +18,7 @@ export function MobileMockup({ className = "" }: { className?: string }) {
       <div
         className="relative aspect-[9/19.3] w-full rounded-[2.9rem] bg-ink-950 p-[8px] shadow-float ring-1 ring-ink-800"
         role="img"
-        aria-label="UpNext mobile app on a phone, showing a just-completed job with a finished checklist and a summary — checklist, photos, and receipt — automatically sent to the customer"
+        aria-label="BookedFox mobile app on a phone, showing a just-completed job with a finished checklist and a summary — checklist, photos, and receipt — automatically sent to the customer"
       >
         {/* side buttons */}
         <div className="absolute -left-[3px] top-24 h-8 w-[3px] rounded-l-md bg-ink-800" />

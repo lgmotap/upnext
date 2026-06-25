@@ -144,6 +144,7 @@ export function getPublicBookingRequest(businessSlug: string, bookingRequestId: 
 
 export function createBookingRequest(data: {
   organizationId: string;
+  locationId?: string | null;
   customerId: string;
   serviceId: string;
   requestedStartAt: Date;
@@ -164,6 +165,7 @@ export function createBookingRequest(data: {
   return prisma.bookingRequest.create({
     data: {
       organizationId: data.organizationId,
+      locationId: data.locationId ?? null,
       customerId: data.customerId,
       serviceId: data.serviceId,
       requestedStartAt: data.requestedStartAt,

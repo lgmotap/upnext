@@ -33,6 +33,7 @@ export const publicBookingSchema = z.object({
   city: z.string().min(1).max(100).trim(),
   region: z.string().min(1).max(100).trim(),
   postalCode: z.string().min(1).max(20).trim(),
+  locationId: z.string().optional().or(z.literal("")),
   customerNotes: z.string().max(2000).trim().optional().or(z.literal("")),
   frequency: z.enum(["one_time", "weekly", "biweekly", "monthly"]).default("one_time"),
   bedrooms: optionalIntParam(10),
@@ -72,6 +73,7 @@ export const manualBookingSchema = z
       z.boolean().optional(),
     ),
     customerAddressId: z.string().optional().or(z.literal("")),
+    locationId: z.string().optional().or(z.literal("")),
     overrideServiceArea: z.preprocess(
       (v) => v === "on" || v === "1" || v === true || v === "true",
       z.boolean().optional().default(false),

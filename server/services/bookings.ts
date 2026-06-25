@@ -31,6 +31,7 @@ import {
   getServiceAreaProfileByOrganizationId,
   validateCustomerServiceArea,
 } from "@/server/services/service-area-enforcement";
+import { resolveLocationIdForBooking } from "@/server/services/locations";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
 import { emitOrgWebhook } from "@/server/services/webhooks";
@@ -498,8 +499,12 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
     }
   }
 
+  const locationResult = await resolveLocationIdForBooking(organizationId, input.locationId);
+  if (!locationResult.ok) return { ok: false as const, error: locationResult.error };
+
   const booking = await createBookingRequest({
     organizationId,
+    locationId: locationResult.locationId,
     customerId,
     serviceId: loaded.service.id,
     requestedStartAt: availableSlot.startAt,
@@ -648,8 +653,15 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     frequencyDiscounts,
   );
 
+  const locationResult = await resolveLocationIdForBooking(
+    loaded.profile.organizationId,
+    input.locationId,
+  );
+  if (!locationResult.ok) return { ok: false as const, error: locationResult.error };
+
   const booking = await createBookingRequest({
     organizationId: loaded.profile.organizationId,
+    locationId: locationResult.locationId,
     customerId: customer.id,
     serviceId: loaded.service.id,
     requestedStartAt: availableSlot.startAt,
@@ -787,8 +799,15 @@ export async function createPublicBookingCheckout(raw: PublicBookingInput) {
     frequencyDiscounts,
   );
 
+  const locationResult = await resolveLocationIdForBooking(
+    loaded.profile.organizationId,
+    input.locationId,
+  );
+  if (!locationResult.ok) return { ok: false as const, error: locationResult.error };
+
   const booking = await createBookingRequest({
     organizationId: loaded.profile.organizationId,
+    locationId: locationResult.locationId,
     customerId: customer.id,
     serviceId: loaded.service.id,
     requestedStartAt: availableSlot.startAt,

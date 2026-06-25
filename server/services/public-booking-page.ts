@@ -17,9 +17,11 @@ import { loadPublicPayAtBookingContext } from "@/server/services/pay-at-booking"
 import { listPricingParametersForServices } from "@/server/repositories/pricing-parameters";
 import { listFrequencyDiscountsForServices, toFrequencyDiscountConfigs } from "@/server/repositories/frequency-discounts";
 import { listActiveBookingFormFields } from "@/server/repositories/booking-form-fields";
+import { getPublicLocationOptions } from "@/server/services/locations";
 import { ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 import type { PricingParameterConfig } from "@/lib/pricing/parameters";
 import type { BookingFormField } from "@/generated/prisma/client";
+import type { PublicLocationOption } from "@/server/services/locations";
 import type { FrequencyDiscountConfig } from "@/lib/pricing/frequency-discount";
 
 function formatTime12h(hm: string): string {
@@ -89,6 +91,7 @@ export type PublicBookingPageResult =
         requirePaymentAtBooking: boolean;
       };
       customFormFields: BookingFormField[];
+      locations: PublicLocationOption[];
     };
 
 async function resolvePrefill(
@@ -200,6 +203,7 @@ export async function loadPublicBookingPage(
   const embedded = options.embedded ?? searchParams.embed === "1";
   const payAtBooking = await loadPublicPayAtBookingContext(businessSlug);
   const customFormFields = await listActiveBookingFormFields(profile.organizationId);
+  const locations = await getPublicLocationOptions(profile.organizationId);
 
   return {
     kind: "ready",
@@ -238,5 +242,6 @@ export async function loadPublicBookingPage(
       requirePaymentAtBooking: payAtBooking.requirePaymentAtBooking,
     },
     customFormFields,
+    locations,
   };
 }

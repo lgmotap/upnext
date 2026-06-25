@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ExternalLink } from "lucide-react";
+import { site } from "@/lib/config";
 import type { WorkspaceShellData } from "@/server/services/workspace-shell";
 import { appNav, isActive } from "./appNav";
 
@@ -43,7 +44,7 @@ export function MobileNav({ workspace }: { workspace: WorkspaceShellData | null 
             <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[82vw] flex-col bg-brand-950 px-3 py-4 text-white shadow-float">
               <div className="mb-5 flex items-center justify-between px-2">
                 <Link href="/app/dashboard" onClick={() => setOpen(false)} className="flex items-center">
-                  <span className="text-xl font-bold tracking-tight">UpNext</span>
+                  <span className="text-xl font-bold tracking-tight">{site.name}</span>
                   <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-400" />
                 </Link>
                 <button

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import { site } from "@/lib/config";
 import { formatDisplayDateTime } from "@/lib/datetime/timezone";
 import { formatMoney } from "@/lib/money/format";
 import { appBaseUrl } from "@/lib/stripe/client";
@@ -190,7 +191,7 @@ export async function notifyBookingRequestReceived(params: {
         `Service: ${params.serviceName}`,
         `Requested: ${when}`,
         "",
-        `View in UpNext: ${appBaseUrl()}/app/bookings/${params.bookingRequestId}`,
+        `View in ${site.name}: ${appBaseUrl()}/app/bookings/${params.bookingRequestId}`,
       ].join("\n"),
     });
   }
@@ -336,7 +337,7 @@ export async function notifyJobAssigned(organizationId: string, jobId: string, m
     ? [job.customerAddress.line1, job.customerAddress.city, job.customerAddress.region]
         .filter(Boolean)
         .join(", ")
-    : "See job details in UpNext";
+    : `See job details in ${site.name}`;
 
   await sendAndLogEmail({
     organizationId,
@@ -752,11 +753,11 @@ export async function notifyTeamInvite(organizationId: string, inviteId: string)
     template: "team_invite",
     relatedType: "team_invite",
     relatedId: invite.id,
-    subject: `You're invited to join ${businessName} on UpNext`,
+    subject: `You're invited to join ${businessName} on ${site.name}`,
     text: [
       `Hi,`,
       "",
-      `${inviter} invited you to join ${businessName} on UpNext as a ${invite.role}.`,
+      `${inviter} invited you to join ${businessName} on ${site.name} as a ${invite.role}.`,
       "",
       `Accept your invite and set up crew access:`,
       acceptUrl,

@@ -216,7 +216,7 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 - `tests/e2e/full-product-flow.spec.ts` + `npm run test:e2e:full` (auth tests env-gated).
 - All smokes 14–18 + `smoke:launch` green.
 
-**Resume:** Sprint **45 complete**. **Next:** [`tasks/sprint-46-multi-location.md`](tasks/sprint-46-multi-location.md) (planning) or P2 backlog. Launch gate: Resend prod domain.
+**Resume:** Sprint **46 complete**. **Next:** [`tasks/sprint-47-provider-open-jobs.md`](tasks/sprint-47-provider-open-jobs.md). Launch gate: Resend prod domain.
 
 ## Sprint 32–34 — CRM lists, comms log, jobs pagination (done)
 
@@ -243,10 +243,11 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 - **Sprint 43 (done):** Queue KPIs, deep links, today schedule, crew activity — `npm run smoke:dashboard`
 - **Sprint 44 (done):** 30-day snapshot + greeting — `npm run smoke:dashboard`
 
-## Phase 6 — P2 post-parity (planned)
+## Phase 6 — P2 post-parity
 
 - **Sprint 45 (done):** Service-area zip / radius enforcement — `npm run smoke:service-area-enforcement`
-- **Sprint 46–49:** Multi-location, open jobs, activity kanban, promo codes — planning stubs in `tasks/`
+- **Sprint 46 (done):** Multi-location v1 — Settings → Locations, booking location picker — `npm run smoke:locations`
+- **Sprint 47–49:** Open jobs self-claim, activity kanban, promo codes — planning stubs in `tasks/`
 - ADR: `docs/adr/0007-post-mvp-p2-scope.md`
 - Master map: `docs/audits/product-gaps-roadmap.md`
 

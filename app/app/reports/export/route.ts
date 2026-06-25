@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     currency,
   );
   const csv = buildReportsExportCsv(rows);
-  const filename = `upnext-report-${parsed.range.fromYmd}-${parsed.range.toYmd}.csv`;
+  const filename = `bookedfox-report-${parsed.range.fromYmd}-${parsed.range.toYmd}.csv`;
 
   return new NextResponse(csv, {
     status: 200,

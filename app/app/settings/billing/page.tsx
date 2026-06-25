@@ -9,6 +9,7 @@ import { isStripeConfigured, syncStripeConnectStatus } from "@/server/services/p
 import { startStripeConnectAction, syncStripeConnectAction } from "@/server/actions/payments";
 import { updatePayAtBookingSettingsAction } from "@/server/actions/billing-settings";
 import { prisma } from "@/lib/db/prisma";
+import { site } from "@/lib/config";
 
 const plans = [
   {
@@ -114,7 +115,7 @@ export default async function BillingSettingsPage({
                     : "Not connected"}
               </p>
               <p className="mt-1 text-sm text-ink-500">
-                Separate from UpNext subscription billing. Customers pay your business via Stripe Checkout.
+                Separate from {site.name} subscription billing. Customers pay your business via Stripe Checkout.
               </p>
             </div>
             {canBilling && stripeReady && (
@@ -185,7 +186,7 @@ export default async function BillingSettingsPage({
       </Card>
 
       <Card>
-        <CardHeader title="UpNext subscription" />
+        <CardHeader title={`${site.name} subscription`} />
         <div className="flex flex-wrap items-center justify-between gap-3 p-5">
           <div>
             <p className="text-lg font-bold text-ink-950">Team — $49 / month</p>

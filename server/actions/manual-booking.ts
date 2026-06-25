@@ -52,6 +52,7 @@ export async function submitManualBookingAction(formData: FormData): Promise<voi
     city: formData.get("city"),
     region: formData.get("region"),
     postalCode: formData.get("postalCode"),
+    locationId: formData.get("locationId"),
     customerNotes: formData.get("customerNotes"),
     assignMembershipId: formData.get("assignMembershipId"),
     frequency: formData.get("frequency"),

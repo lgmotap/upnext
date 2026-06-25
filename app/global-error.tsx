@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorFallback } from "@/components/app/ErrorFallback";
+import { site } from "@/lib/config";
 
 export default function GlobalError({
   error,
@@ -14,7 +15,7 @@ export default function GlobalError({
       <body className="min-h-screen bg-background antialiased">
         <ErrorFallback
           title="Something went wrong"
-          description="UpNext hit an unexpected error. Our team has been notified if error tracking is enabled."
+          description={`${site.name} hit an unexpected error. Our team has been notified if error tracking is enabled.`}
           error={error}
           reset={reset}
           links={[{ href: "/", label: "Go home" }]}

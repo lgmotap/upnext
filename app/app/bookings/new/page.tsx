@@ -15,6 +15,8 @@ import { isPayAtBookingAvailable } from "@/server/services/pay-at-booking";
 import { prisma } from "@/lib/db/prisma";
 import type { BookableDay } from "@/lib/availability/calendar-ui";
 import { isStripeConfigured } from "@/server/services/payments";
+import { listActiveLocationsForOrg } from "@/server/repositories/locations";
+import { formatLocationLabel } from "@/server/services/locations";
 import { ManualBookingClient } from "./ManualBookingClient";
 
 function formatAddressLabel(line1: string, city: string, region: string, postalCode: string) {
@@ -40,7 +42,7 @@ export default async function NewManualBookingPage({
   const params = await searchParams;
   const orgId = session.organizationId;
 
-  const [org, primaryServices, addonServices, customers, assignableMembers, businessProfile, customFormFields, payAtBookingAvailable] =
+  const [org, primaryServices, addonServices, customers, assignableMembers, businessProfile, customFormFields, payAtBookingAvailable, activeLocations] =
     await Promise.all([
     prisma.organization.findUnique({
       where: { id: orgId },
@@ -66,6 +68,7 @@ export default async function NewManualBookingPage({
     }),
     listActiveBookingFormFields(orgId),
     isPayAtBookingAvailable(orgId),
+    listActiveLocationsForOrg(orgId),
   ]);
 
   const serviceIds = [...primaryServices, ...addonServices].map((s) => s.id);
@@ -150,6 +153,12 @@ export default async function NewManualBookingPage({
       ? params.customerId
       : (customerOptions[0]?.id ?? "");
 
+  const locationOptions = activeLocations.map((loc) => ({
+    id: loc.id,
+    label: formatLocationLabel(loc),
+    isDefault: loc.isDefault,
+  }));
+
   return (
     <>
       <Link
@@ -196,6 +205,7 @@ export default async function NewManualBookingPage({
             businessProfile?.serviceAreaEnforcementMode !== undefined &&
             businessProfile.serviceAreaEnforcementMode !== "off"
           }
+          locations={locationOptions}
         />
       </Card>
     </>

@@ -49,6 +49,7 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
     const created = await tx.job.create({
       data: {
         organizationId,
+        locationId: booking.locationId,
         bookingRequestId,
         customerId: booking.customerId,
         customerAddressId: address?.id ?? null,

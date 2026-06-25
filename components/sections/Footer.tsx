@@ -34,7 +34,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <Link href="#" className="flex items-center" aria-label={`${site.name} home`}>
-            <span className="text-xl font-bold tracking-tight text-white">UpNext</span>
+            <span className="text-xl font-bold tracking-tight text-white">{site.name}</span>
             <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-400" />
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">{site.description}</p>

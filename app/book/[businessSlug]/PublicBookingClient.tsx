@@ -46,10 +46,16 @@ function computeTotals(
   return { priceCents, subtotalCents, durationMinutes, currency: primary.currency };
 }
 
-function buildSteps(hasAddons: boolean, hasParams: boolean, showPayment: boolean) {
+function buildSteps(
+  hasLocation: boolean,
+  hasAddons: boolean,
+  hasParams: boolean,
+  showPayment: boolean,
+) {
   let n = 1;
   const next = () => String(n++);
   return {
+    location: hasLocation ? next() : null,
     service: next(),
     addons: hasAddons ? next() : null,
     params: hasParams ? next() : null,
@@ -78,6 +84,7 @@ export function PublicBookingClient({
   returnPath = "full",
   payAtBooking = { showPaymentStep: false, requirePaymentAtBooking: false },
   customFormFields = [],
+  locations = [],
 }: {
   businessSlug: string;
   timeZone: string;
@@ -109,7 +116,12 @@ export function PublicBookingClient({
     requirePaymentAtBooking: boolean;
   };
   customFormFields?: BookingFormField[];
+  locations?: Array<{ id: string; name: string; label: string; isDefault: boolean }>;
 }) {
+  const showLocationPicker = locations.length > 1;
+  const defaultLocationId =
+    locations.find((l) => l.isDefault)?.id ?? locations[0]?.id ?? "";
+  const [locationId, setLocationId] = useState(defaultLocationId);
   const [serviceId, setServiceId] = useState(initialServiceId);
   const [addonIds, setAddonIds] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<BookingFrequency>("one_time");
@@ -130,8 +142,14 @@ export function PublicBookingClient({
   );
 
   const steps = useMemo(
-    () => buildSteps(addonServices.length > 0, paramConfigs.length > 0, payAtBooking.showPaymentStep),
-    [addonServices.length, paramConfigs.length, payAtBooking.showPaymentStep],
+    () =>
+      buildSteps(
+        showLocationPicker,
+        addonServices.length > 0,
+        paramConfigs.length > 0,
+        payAtBooking.showPaymentStep,
+      ),
+    [showLocationPicker, addonServices.length, paramConfigs.length, payAtBooking.showPaymentStep],
   );
   const addonKey = addonIds.slice().sort().join(",");
 
@@ -286,6 +304,37 @@ export function PublicBookingClient({
           {addonIds.map((id) => (
             <input key={id} type="hidden" name="addonServiceIds" value={id} />
           ))}
+          {showLocationPicker && (
+            <input type="hidden" name="locationId" value={locationId} />
+          )}
+
+          {steps.location && showLocationPicker && (
+            <Section step={steps.location} title="Choose a location">
+              <p className="mb-3 text-sm text-ink-500">
+                Select the branch or territory for your service.
+              </p>
+              <div className="space-y-2">
+                {locations.map((loc) => {
+                  const selected = locationId === loc.id;
+                  return (
+                    <button
+                      key={loc.id}
+                      type="button"
+                      onClick={() => setLocationId(loc.id)}
+                      className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm ring-1 transition ${
+                        selected
+                          ? "bg-brand-50 ring-brand-400"
+                          : "bg-white ring-ink-200 hover:ring-ink-300"
+                      }`}
+                    >
+                      <span className="font-semibold text-ink-950">{loc.label}</span>
+                      {selected && <Check className="size-4 text-brand-700" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
 
           <Section step={steps.service} title="Choose your service">
             <p className="mb-3 text-sm text-ink-500">Select one main service for your visit.</p>

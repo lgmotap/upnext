@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthAlert } from "@/components/auth/AuthAlert";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import { site } from "@/lib/config";
 import { signInAction } from "@/server/actions/auth";
 
 const input =
@@ -16,7 +17,7 @@ export default async function SignInPage({ searchParams }: PageProps) {
   return (
     <div>
       <h1 className="text-2xl font-bold tracking-tight text-ink-950">Welcome back</h1>
-      <p className="mt-1 text-sm text-ink-500">Sign in to your UpNext workspace.</p>
+      <p className="mt-1 text-sm text-ink-500">Sign in to your {site.name} workspace.</p>
 
       <AuthAlert error={params.error} message={params.message} />
 

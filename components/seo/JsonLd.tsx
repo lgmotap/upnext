@@ -2,7 +2,7 @@ import { site, faqs } from "@/lib/config";
 
 /**
  * Structured data for SEO rich results and GEO (generative-engine answer
- * extraction). Emits a SoftwareApplication describing what UpNext is, and a
+ * extraction). Emits a SoftwareApplication describing what BookedFox is, and a
  * FAQPage mirroring the on-page FAQ. Rendered once in the root layout.
  */
 export function JsonLd() {

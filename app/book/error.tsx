@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorFallback } from "@/components/app/ErrorFallback";
+import { site } from "@/lib/config";
 
 export default function PublicBookingError({
   error,
@@ -15,7 +16,7 @@ export default function PublicBookingError({
       description="We couldn't load this booking page. The business may have disabled online booking."
       error={error}
       reset={reset}
-      links={[{ href: "/", label: "Back to UpNext" }]}
+      links={[{ href: "/", label: `Back to ${site.name}` }]}
     />
   );
 }

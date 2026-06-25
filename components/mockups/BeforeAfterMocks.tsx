@@ -146,7 +146,7 @@ export function ManagedPlatformMock({ className = "" }: { className?: string }) 
         <span className="size-2.5 rounded-full bg-amber-300" />
         <span className="size-2.5 rounded-full bg-emerald-300" />
         <div className="mx-auto flex h-5 w-44 items-center justify-center rounded-md bg-white text-[9px] text-ink-400 ring-1 ring-ink-100">
-          app.upnext.com/inbox
+          app.bookedfox.com/inbox
         </div>
       </div>
 

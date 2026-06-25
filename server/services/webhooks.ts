@@ -35,8 +35,8 @@ export async function deliverWebhookAttempt(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "UpNext-Webhooks/1.0",
-        "UpNext-Signature": `t=${timestamp},v1=${signature}`,
+        "User-Agent": "BookedFox-Webhooks/1.0",
+        "BookedFox-Signature": `t=${timestamp},v1=${signature}`,
       },
       body,
       signal: AbortSignal.timeout(15_000),

@@ -37,11 +37,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
     default:
-      "Booking Software for Cleaning, Lawn Care, Handyman & Home Service Businesses | UpNext",
-    template: "%s | UpNext",
+      `Booking Software for Cleaning, Lawn Care, Handyman & Home Service Businesses | ${site.name}`,
+    template: `%s | ${site.name}`,
   },
-  description:
-    "UpNext is online booking and business software for home-service providers — solo or team. Get booked online and manage jobs, customers, your team, and payments in one place. Join the early-access waitlist.",
+  description: site.description,
   keywords: [
     "online booking software",
     "service business software",

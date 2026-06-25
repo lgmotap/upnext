@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { site } from "@/lib/config";
 import type { WorkspaceShellData } from "@/server/services/workspace-shell";
 import { appNav, isActive } from "./appNav";
 
@@ -12,7 +13,7 @@ export function AppSidebar({ workspace }: { workspace: WorkspaceShellData }) {
   return (
     <aside className="hidden w-60 shrink-0 flex-col bg-brand-950 px-3 py-4 text-white lg:flex">
       <Link href="/app/dashboard" className="mb-6 flex items-center px-2">
-        <span className="text-xl font-bold tracking-tight">UpNext</span>
+        <span className="text-xl font-bold tracking-tight">{site.name}</span>
         <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-400" />
       </Link>
 

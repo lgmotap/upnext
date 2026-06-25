@@ -1,67 +1,48 @@
 # Sprint 46 — Multi-location
 
-> **Status:** 📋 Planning (not started)  
+> **Status:** ✅ Complete  
 > **Phase:** 6 (P2 post-parity)  
-> **Backlog:** `tasks/backlog.md`  
-> **Blocked by:** ADR scope review — `docs/adr/0005-mvp-scope-boundaries.md` defers multi-location  
-> **Depends on:** Sprint 45 recommended first (org-wide service area before per-location zones)
+> **ADR:** `docs/adr/0008-multi-location-v1.md`
 
 ---
 
-## Current state
+## Locked v1 scope
 
-- **One org = one business** — single `BusinessProfile`, one `publicSlug`, one booking URL
-- All tenant data scoped by `organizationId` only — no `Location` entity
-- Team, services, availability, calendar, scheduler — org-wide
-- `docs/02-mvp-scope.md` and ADR 0005 explicitly exclude multi-location
+- Single `/book/[slug]`; location picker when 2+ active locations
+- Shared CRM; org-wide services & availability
+- Org-level service-area enforcement (sprint 45)
+- No location RBAC; default location synced from business profile
 
-## Planning goals (before scope checkboxes)
-
-1. Define **minimum viable multi-location** vs CL enterprise (locations, separate booking pages, per-location hours?)
-2. Decide **data model:** `Location` table + `locationId` on which entities (Service, Job, AvailabilityRule, BusinessProfile?)
-3. Migration path for existing single-location orgs (default location row)
-4. Impact on sprint 45 radius enforcement (per-location origin coords)
-5. Auth/RBAC: can workers see only their location?
-
-## Scope (TBD — fill after planning session)
+## Done
 
 ### Data model
 
-- [ ] ADR amendment or `docs/adr/0007-post-mvp-p2-scope.md` update
-- [ ] `Location` model + migration
-- [ ] Backfill default location for existing orgs
+- [x] `Location` model + migration `20250628140000_sprint_46_multi_location`
+- [x] `BookingRequest.locationId`, `Job.locationId` + backfill default per org
 
 ### Owner UI
 
-- [ ] Settings → Locations CRUD (or Business → Locations tab)
-- [ ] Per-location address, timezone, service area enforcement
-- [ ] Optional per-location booking slug or `?location=` param
+- [x] Settings → Locations CRUD (`/app/settings/locations`)
+- [x] Default location synced on business profile save + onboarding
 
 ### Booking & scheduling
 
-- [ ] Public booking location picker (when org has 2+ locations)
-- [ ] Services/availability scoped or shared per location
-- [ ] Calendar/scheduler filter by location
+- [x] Public booking location picker (2+ locations)
+- [x] Manual booking location dropdown
+- [x] `locationId` on booking create → job create
 
 ### Tests & docs
 
-- [ ] Smoke script TBD
-- [ ] Update `docs/07-data-model.md`
+- [x] `npm run smoke:locations`
+- [x] `docs/07-data-model.md`, ADR 0008
 
-## Out of scope (initial)
+## Out of scope (v1)
 
-- Franchise / billing per location
-- Cross-location crew sharing rules (complex)
-- Route optimization across locations
+- Per-location booking slugs, services, availability, enforcement
+- Calendar/scheduler filter by location (46.1)
+- Franchise billing, cross-location crew rules
 
 ## Validation
 
-- [ ] TBD after scope lock
-- [ ] `npm run typecheck` + `npm run build`
-
-## Open questions (PO)
-
-1. Is v1 **2–5 locations same brand** enough, or full CL parity?
-2. Separate booking URLs per location vs single page with picker?
-3. Shared customer CRM across locations?
-4. Pricing: included in base plan or add-on tier?
+- [x] `npm run typecheck`, `npm run lint`, `npm run build`
+- [x] `npm run smoke:locations`, `smoke:manual-booking`, `smoke:public-booking-parity`
