@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, CreditCard, Key, LogOut, Settings } from "lucide-react";
+import { ChevronDown, CircleHelp, CreditCard, Key, LogOut, Settings } from "lucide-react";
 import { UserAvatar } from "@/components/app/UserAvatar";
 import { signOutAction } from "@/server/actions/auth";
 import type { WorkspaceShellData } from "@/server/services/workspace-shell";
@@ -91,6 +91,16 @@ export function ProfileMenu({ workspace }: { workspace: WorkspaceShellData }) {
               </Link>
             </>
           )}
+
+          <Link
+            href="/#faq"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm font-medium text-ink-800 hover:bg-ink-50"
+          >
+            <CircleHelp className="size-4 text-ink-500" />
+            Help & FAQ
+          </Link>
 
           <form action={signOutAction} className="border-t border-ink-100 pt-1">
             <button

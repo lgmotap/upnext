@@ -132,15 +132,22 @@ export function ManualBookingClient({
       ? formatDisplayDateTime(localDateTimeToUtc(date, time, timeZone), timeZone)
       : "—";
 
-  useEffect(() => {
-    if (customerMode !== "existing" || !selectedCustomer) {
-      setCustomerAddressId("");
-      return;
-    }
-    const defaultAddr =
-      selectedCustomer.addresses.find((a) => a.isDefault) ?? selectedCustomer.addresses[0];
-    setCustomerAddressId(defaultAddr?.id ?? "");
-  }, [customerMode, customerId, selectedCustomer]);
+  const defaultAddressIdForCustomer = useMemo(() => {
+    if (!selectedCustomer?.addresses.length) return "";
+    return (
+      selectedCustomer.addresses.find((a) => a.isDefault)?.id ??
+      selectedCustomer.addresses[0]?.id ??
+      ""
+    );
+  }, [selectedCustomer]);
+
+  const effectiveCustomerAddressId =
+    customerMode !== "existing" || !selectedCustomer
+      ? ""
+      : customerAddressId &&
+          selectedCustomer.addresses.some((a) => a.id === customerAddressId)
+        ? customerAddressId
+        : defaultAddressIdForCustomer;
 
   const addonKey = addonIds.slice().sort().join(",");
   const selectedPrimary = primaryServices.find((s) => s.id === serviceId);
@@ -228,8 +235,8 @@ export function ManualBookingClient({
       {customerMode === "existing" && customerId ? (
         <input type="hidden" name="customerId" value={customerId} />
       ) : null}
-      {customerMode === "existing" && customerAddressId ? (
-        <input type="hidden" name="customerAddressId" value={customerAddressId} />
+      {customerMode === "existing" && effectiveCustomerAddressId ? (
+        <input type="hidden" name="customerAddressId" value={effectiveCustomerAddressId} />
       ) : null}
       {addonIds.map((id) => (
         <input key={id} type="hidden" name="addonServiceIds" value={id} />
@@ -256,7 +263,10 @@ export function ManualBookingClient({
             <div className="space-y-3">
               <select
                 value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
+                onChange={(e) => {
+                  setCustomerId(e.target.value);
+                  setCustomerAddressId("");
+                }}
                 className={input}
                 required
               >
@@ -272,7 +282,7 @@ export function ManualBookingClient({
                     Service address
                   </label>
                   <select
-                    value={customerAddressId}
+                    value={effectiveCustomerAddressId}
                     onChange={(e) => setCustomerAddressId(e.target.value)}
                     className={input}
                     required
@@ -565,7 +575,8 @@ export function ManualBookingClient({
             <ReviewRow
               label="Address"
               value={
-                selectedCustomer.addresses.find((a) => a.id === customerAddressId)?.label ??
+                selectedCustomer.addresses.find((a) => a.id === effectiveCustomerAddressId)
+                  ?.label ??
                 selectedCustomer.addresses[0]?.label ??
                 "—"
               }

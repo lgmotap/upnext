@@ -67,6 +67,18 @@ async function main() {
     }
   }
 
+  const bookedToday = data.queueStats.find((s) => s.id === "booked_today");
+  if (bookedToday?.href !== "/app/bookings?status=accepted&range=today") {
+    console.error(`✗ booked_today href mismatch: ${bookedToday?.href}`);
+    process.exit(1);
+  }
+  const awaitingPayment = data.queueStats.find((s) => s.id === "awaiting_payment");
+  if (awaitingPayment?.href !== "/app/payments?status=pending") {
+    console.error(`✗ awaiting_payment href mismatch: ${awaitingPayment?.href}`);
+    process.exit(1);
+  }
+  console.log("✓ KPI deep links: booked today + awaiting payment");
+
   if (!data.greetingTitle || !data.greetingSubtitle) {
     console.error("✗ Missing greeting title or subtitle");
     process.exit(1);

@@ -1,6 +1,6 @@
 # ConvertLabs parity — status snapshot
 
-**As of:** 2026-06-25 (Phase 4 complete; Phase 5 **43–44** next)  
+**As of:** 2026-06-25 (Phases 3–5 complete; sprints 35–44 shipped)  
 **Baseline research:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (2026-06-24 — **stale**, use this doc for current status)  
 **Profile gaps:** `docs/audits/business-profile-gaps.md`  
 **Full gap map:** `docs/audits/product-gaps-roadmap.md`  
@@ -13,7 +13,7 @@
 | Dimension | vs ConvertLabs | UpNext position |
 |-----------|----------------|-----------------|
 | **Core loop** (book → job → crew → pay) | ~90% | **Shipped** — smokes green |
-| **Owner daily ops** | ~85% | Strong; dashboard CL parity in **43–44** |
+| **Owner daily ops** | ~90% | Strong; dashboard CL parity **43–44 done** |
 | **Crew web** | **Ahead** on checklist + photos | CL web portal thinner than UpNext `/crew` |
 | **Customer portal** | ~80% | v1 + cancel policy + saved Stripe cards |
 | **Public booking** | ~90% | Frequency + embed + bed/bath pricing params |
@@ -39,7 +39,7 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 | Pricing parameters (bed/bath) | Unit ranges | ServicePricingParameter + booking flows | ✅ |
 | Availability + slots | Rules + provider carry-over | Org rules + per-worker intersection | ✅ |
 | Booking inbox accept/decline | `/booking/bookings` | `/app/bookings` | ✅ |
-| Owner manual booking | 10-tab wizard | `/app/bookings/new` + frequency | 🟡 **40** |
+| Owner manual booking | 10-tab wizard | `/app/bookings/new` + frequency + custom fields | ✅ sprint 40 |
 | Calendar | Week + Scheduler tab | Week view + `/calendar/scheduler` drag board | ✅ sprint 31 |
 | Job list + detail | Deep drawer | `/app/jobs`, `/app/jobs/[id]` | ✅ |
 | Assign provider | Wizard tab | Job detail + team | ✅ |
@@ -173,7 +173,9 @@ Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 |---------|--------|
 | `npm run typecheck` | ✅ |
 | `npm run db:validate` | ✅ |
-| `npm run lint` | run at commit time |
+| `npm run lint` | ✅ 0 errors |
+| `npm run build` | ✅ |
+| `npm run smoke:dashboard` | ✅ |
 | `npm run smoke:launch` | ✅ |
 | `npm run test:e2e` | ✅ 8 tests |
 | `npm run smoke:reports` | ✅ |

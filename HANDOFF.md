@@ -216,7 +216,7 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 - `tests/e2e/full-product-flow.spec.ts` + `npm run test:e2e:full` (auth tests env-gated).
 - All smokes 14–18 + `smoke:launch` green.
 
-**Resume:** Sprint **36 complete**. **Next:** **`tasks/sprint-37-reports-v2.md`**. Master gap map: `docs/audits/product-gaps-roadmap.md`.
+**Resume:** Phases **3–5 complete** (sprints 35–44). **Launch gate:** Resend production domain verify — `tasks/launch-checklist.md` line 17 (owner DNS). **P2 backlog:** `tasks/backlog.md`. Master gap map: `docs/audits/product-gaps-roadmap.md`.
 
 ## Sprint 32–34 — CRM lists, comms log, jobs pagination (done)
 
@@ -229,14 +229,19 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 - **Sprint 35 (done):** Service area unify, logo upload, website URL — `npm run smoke:business-profile`
 - **Sprint 36 (done):** Google Places autocomplete, industry cards, sign-up name dedup (Option A) — `npm run smoke:address-autocomplete`
 
-## Phase 4 — Ops polish (planned)
+## Phase 4 — Ops polish (done)
 
-- **Sprint 37 (next):** Reports date range + CSV — `tasks/sprint-37-reports-v2.md`
-- **Sprint 38**: CRM tabs + tags — `tasks/sprint-38-crm-customer-depth.md`
-- **Sprint 39**: Bookings inbox scale — `tasks/sprint-39-bookings-inbox-scale.md`
-- **Sprint 40**: Manual booking parity — `tasks/sprint-40-manual-booking-parity.md`
-- **Sprint 41**: Calendar month + conflicts — `tasks/sprint-41-calendar-month-conflicts.md`
-- **Sprint 42**: Portal reschedule — `tasks/sprint-42-portal-reschedule-ux.md`
+- **Sprint 37 (done):** Reports date range + CSV — `npm run smoke:reports`
+- **Sprint 38 (done):** CRM tabs + tags — `npm run smoke:crm-lists`
+- **Sprint 39 (done):** Bookings inbox scale — `npm run smoke:crm-lists`
+- **Sprint 40 (done):** Manual booking parity — `npm run smoke:manual-booking`
+- **Sprint 41 (done):** Calendar month + conflicts — `npm run smoke:scheduler`
+- **Sprint 42 (done):** Portal reschedule — `npm run smoke:customer-portal`
+
+## Phase 5 — Dashboard parity (done)
+
+- **Sprint 43 (done):** Queue KPIs, deep links, today schedule, crew activity — `npm run smoke:dashboard`
+- **Sprint 44 (done):** 30-day snapshot + greeting — `npm run smoke:dashboard`
 - Master map: `docs/audits/product-gaps-roadmap.md`
 
 ## Sprint 29–31 — SMS, custom fields, scheduler (done)

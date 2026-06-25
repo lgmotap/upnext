@@ -1,6 +1,6 @@
 # Backlog
 
-Unprioritized ideas and **P2 items without a sprint**. Scheduled work: **Phase 4 (41–42)** + **Phase 5 (43–44)**.  
+Unprioritized ideas and **P2 items without a sprint**. Phases **3–5 (sprints 35–44) complete**.  
 Master map: `docs/audits/product-gaps-roadmap.md` · Profile gaps: `docs/audits/business-profile-gaps.md`
 
 Promote into a sprint file when scheduling ad-hoc work. Before promoting: check `tasks/mvp-traceability.md`.
@@ -19,7 +19,7 @@ Promote into a sprint file when scheduling ad-hoc work. Before promoting: check 
 - Phase 2 P1 parity (sprints 22–31)
 - CRM list UX + communication log — sprints 32–33
 - Jobs list pagination — sprint 34
-- App shell: notification bell + profile menu — shipped (see CHANGELOG)
+- App shell: notification bell + profile menu + Help & FAQ link — shipped (see CHANGELOG)
 - Settings → Business structured form (partial; sprint 35 completes parity)
 
 ## Scheduled — Phase 3 (35–36) ✅ done
@@ -71,7 +71,6 @@ Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 - Sales tax engine
 - Per-template email copy editing
 - Full notification center (mark-read, in-app prefs)
-- Profile menu extras (help link, plan badge) — **sprint 43+** defers help; see Phase 5 out of scope
 
 ## Out of scope (intentional — do not schedule)
 

@@ -17,7 +17,8 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 - **Sprint 44 dashboard analytics snapshot**: time-aware greeting, `BusinessSnapshot` (30-day metrics) when Getting Started complete; shared `lib/reporting/period-stats.ts`.
 - **Settings → Business rework (partial)**: sectioned profile form (industry, address, service area coverage + preview, public fields); fixed `businessSettingsSchema` so save no longer requires onboarding-only fields.
 ### Fixed
-- **App shell crash**: `Avatar is not defined` on dashboard — dedicated `UserAvatar` client component; initials from name/email; optional photo from `User.avatarUrl` or Supabase metadata.
+- **Manual booking address picker**: derive default service address in render instead of `useEffect` setState (fixes `react-hooks/set-state-in-effect` lint).
+- **Dashboard KPI deep links**: `?status=pending` on payments now shows pending + overdue (matches KPI count); **Booked today** links to `?status=accepted&range=today`; crew activity dedupe uses stable keys. `Avatar is not defined` on dashboard — dedicated `UserAvatar` client component; initials from name/email; optional photo from `User.avatarUrl` or Supabase metadata.
 - **Settings → API**: removed duplicate page header and tab bar (layout already provides them).
 - **Sprint 34 jobs pagination**: jobs list 50/page + `ListPagination`.
 - **Sprint 32 CRM list UX**: customers table with search, sort, pagination (50/page), last job column; bookings hybrid inbox (pending cards + history table); shared `ListPagination`. `npm run smoke:crm-lists`. `/app/calendar/scheduler` day board with HTML5 drag-drop, worker columns, unassigned sidebar; `rescheduleJobFromSchedulerAction`. `npm run smoke:scheduler`.

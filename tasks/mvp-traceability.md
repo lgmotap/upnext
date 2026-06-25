@@ -1,6 +1,6 @@
 # MVP traceability audit
 
-**Updated:** 2026-06-25 (Phase 4: 37–40 done; 41–42 + Phase 5 dashboard 43–44 planned)  
+**Updated:** 2026-06-25 (Phases 3–5 complete: sprints 35–44)  
 **Purpose:** Line-by-line check — competitor research → `docs/02-mvp-scope.md` → sprint tasks → **actual codebase**  
 **Competitor synthesis:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (local, gitignored)  
 **Profile gaps:** `docs/audits/business-profile-gaps.md`  
