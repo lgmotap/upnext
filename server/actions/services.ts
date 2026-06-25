@@ -14,45 +14,66 @@ import {
 import { replaceChecklistTemplateForService } from "@/server/services/checklists";
 import { seedIndustryCatalog } from "@/server/services/industry-catalog";
 import { replaceServicePricingParameters } from "@/server/repositories/pricing-parameters";
+import { replaceServiceFrequencyDiscounts } from "@/server/repositories/frequency-discounts";
+import type { FrequencyDiscountConfig } from "@/lib/pricing/frequency-discount";
+import type { BookingFrequency } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import type { PricingParameterConfig } from "@/lib/pricing/parameters";
+import { PRICING_PARAMETER_LIMITS } from "@/lib/pricing/parameters";
+import type { PricingParameterType } from "@/generated/prisma/client";
 
 function redirectWithError(path: string, error: string): never {
   redirect(`${path}?error=${encodeURIComponent(error)}`);
 }
 
+const PRICING_FORM_FIELDS: Record<PricingParameterType, { unit: string; included: string }> = {
+  bedrooms: { unit: "bedroomUnitPrice", included: "bedroomIncluded" },
+  bathrooms: { unit: "bathroomUnitPrice", included: "bathroomIncluded" },
+  half_bathrooms: { unit: "halfBathUnitPrice", included: "halfBathIncluded" },
+  square_feet: { unit: "sqFtUnitPrice", included: "sqFtIncluded" },
+};
+
 function parsePricingParametersFromForm(formData: FormData): PricingParameterConfig[] {
-  if (formData.get("enableBedBathPricing") !== "on") return [];
+  const enabled =
+    formData.get("enablePricingParameters") === "on" || formData.get("enableBedBathPricing") === "on";
+  if (!enabled) return [];
   if (formData.get("isAddon") === "on") return [];
 
-  const bedroomUnit = Math.round(Number(formData.get("bedroomUnitPrice")) * 100);
-  const bathroomUnit = Math.round(Number(formData.get("bathroomUnitPrice")) * 100);
-  const bedroomIncluded = Number(formData.get("bedroomIncluded"));
-  const bathroomIncluded = Number(formData.get("bathroomIncluded"));
+  const configs: PricingParameterConfig[] = [];
 
-  if (
-    !Number.isFinite(bedroomUnit) ||
-    !Number.isFinite(bathroomUnit) ||
-    !Number.isInteger(bedroomIncluded) ||
-    !Number.isInteger(bathroomIncluded)
-  ) {
-    return [];
+  for (const parameterType of Object.keys(PRICING_FORM_FIELDS) as PricingParameterType[]) {
+    const fields = PRICING_FORM_FIELDS[parameterType];
+    const limits = PRICING_PARAMETER_LIMITS[parameterType];
+    const unitDollars = Number(formData.get(fields.unit));
+    const included = Number(formData.get(fields.included));
+
+    if (!Number.isFinite(unitDollars) || !Number.isInteger(included)) {
+      continue;
+    }
+
+    configs.push({
+      parameterType,
+      unitPriceCents: Math.max(0, Math.round(unitDollars * 100)),
+      includedUnits: Math.max(0, Math.min(included, limits.maxUnits)),
+      maxUnits: limits.maxUnits,
+    });
   }
 
-  return [
-    {
-      parameterType: "bedrooms",
-      unitPriceCents: Math.max(0, bedroomUnit),
-      includedUnits: Math.max(0, bedroomIncluded),
-      maxUnits: 10,
-    },
-    {
-      parameterType: "bathrooms",
-      unitPriceCents: Math.max(0, bathroomUnit),
-      includedUnits: Math.max(0, bathroomIncluded),
-      maxUnits: 8,
-    },
-  ];
+  return configs;
+}
+
+function parseFrequencyDiscountsFromForm(formData: FormData): FrequencyDiscountConfig[] {
+  const frequencies: BookingFrequency[] = ["weekly", "biweekly", "monthly"];
+  return frequencies
+    .map((frequency) => {
+      const percentOff = Number(formData.get(`freqDiscountPercent_${frequency}`));
+      return {
+        frequency,
+        percentOff: Number.isFinite(percentOff) ? Math.min(100, Math.max(0, Math.round(percentOff))) : 0,
+        amountOffCents: 0,
+      };
+    })
+    .filter((r) => r.percentOff > 0);
 }
 
 export async function createServiceAction(formData: FormData): Promise<void> {
@@ -84,6 +105,10 @@ export async function createServiceAction(formData: FormData): Promise<void> {
     created.id,
     String(formData.get("checklistItems") ?? ""),
   );
+  if (!parsed.data.isAddon) {
+    await replaceServicePricingParameters(created.id, parsePricingParametersFromForm(formData));
+    await replaceServiceFrequencyDiscounts(created.id, parseFrequencyDiscountsFromForm(formData));
+  }
   revalidatePath("/app/services");
   revalidatePath("/book");
   redirect("/app/services");
@@ -118,6 +143,10 @@ export async function updateServiceAction(formData: FormData): Promise<void> {
     serviceId,
     String(formData.get("checklistItems") ?? ""),
   );
+  if (!parsed.data.isAddon) {
+    await replaceServicePricingParameters(serviceId, parsePricingParametersFromForm(formData));
+    await replaceServiceFrequencyDiscounts(serviceId, parseFrequencyDiscountsFromForm(formData));
+  }
 
   revalidatePath("/app/services");
   revalidatePath("/book");

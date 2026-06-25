@@ -1,44 +1,73 @@
 # Custom booking domain
 
-Optional: serve public booking at `book.yourbusiness.com` instead of `upnext.app/book/your-slug`.
+Serve public booking at `book.yourbusiness.com` (root path) instead of `https://your-app.com/book/{slug}`.
 
-## MVP (recommended)
-
-Use the built-in slug URL:
+## Default (no custom domain)
 
 ```txt
-https://upnext.app/book/{publicSlug}
+https://{NEXT_PUBLIC_APP_URL}/book/{publicSlug}
+https://{NEXT_PUBLIC_APP_URL}/book/{publicSlug}/embed
 ```
 
-Embed: `https://upnext.app/book/{publicSlug}/embed`
+Copy from **Settings → Portals** or the dashboard booking link card.
 
-Copy from **Settings → Business** or the dashboard booking link card.
+## Custom domain (implemented — sprint 25)
 
-## Custom domain (P1 — manual DNS)
+When verified, customers visit:
 
-1. **DNS** — Add a CNAME record:
+```txt
+https://book.yourbusiness.com/          → booking form
+https://book.yourbusiness.com/embed     → iframe embed
+https://book.yourbusiness.com/confirmation/{id}  → post-checkout confirmation
+```
+
+Slug URLs on the main app host continue to work.
+
+### Setup
+
+1. **Settings → Portals → Custom booking domain** — enter `book.yourdomain.com` and save.
+
+2. **DNS** — Add a CNAME:
    ```txt
    book.yourdomain.com  →  cname.vercel-dns.com
    ```
-   (Or your Vercel project’s configured domain target.)
+   (Or your Vercel project’s domain target — shown in Settings.)
 
-2. **Vercel** — Add `book.yourdomain.com` as a domain on the UpNext Vercel project (Production).
+3. **Vercel** — Add `book.yourdomain.com` as a domain on the UpNext project (Production).
 
-3. **App URL** — Set `NEXT_PUBLIC_APP_URL=https://book.yourdomain.com` on Production so emails and payment links use the correct host.
+4. **Verify** — Click **Verify DNS** in Settings. On success, `customBookingVerifiedAt` is set and host routing activates.
 
-4. **Middleware (future)** — Host-based routing to resolve `book.*` → `/book/[slug]` without the `/book/` prefix is not implemented in MVP. Until then, custom domains still work if you redirect:
-   ```txt
-   book.yourdomain.com  →  https://upnext.app/book/your-slug
-   ```
-   via Vercel redirect rules or your DNS provider.
+### How routing works
 
-## Customer portal
+- `proxy.ts` checks the request `Host` header.
+- If it matches a verified `BusinessProfile.customBookingHost`, the path rewrites to `/book/{publicSlug}/…` internally.
+- Resolution uses `GET /api/internal/booking-host?host=…` (cached 60s).
 
-Magic-link portal remains at `/my/{slug}` on the app host. A separate `portal.yourdomain.com` follows the same CNAME + Vercel pattern when implemented.
+### Email & payment links
 
-## Checklist
+When the custom host is **verified**, booking confirmation and pay-at-booking checkout success/cancel URLs use the custom host. Customer portal magic links remain on `NEXT_PUBLIC_APP_URL` (`/my/{slug}`).
+
+If `NEXT_PUBLIC_APP_URL` hostname differs from your custom booking host, Settings shows a warning — this is expected when the app dashboard lives on a different domain than booking.
+
+### Env (optional)
+
+```txt
+NEXT_PUBLIC_BOOKING_CNAME_TARGET=cname.vercel-dns.com
+```
+
+### Smoke test
+
+```bash
+npm run smoke:custom-domain
+```
+
+### Checklist
 
 - [ ] CNAME points to Vercel
 - [ ] Domain added in Vercel project
-- [ ] `NEXT_PUBLIC_APP_URL` updated on Production
-- [ ] Test booking + confirmation email links
+- [ ] Host saved + **Verify DNS** green in Settings → Portals
+- [ ] Test `https://book.yourdomain.com/` and confirmation after pay-at-booking
+
+## Customer portal
+
+Magic-link portal remains at `/my/{slug}` on the app host. A separate `portal.yourdomain.com` can follow the same CNAME + Vercel pattern in a future sprint.

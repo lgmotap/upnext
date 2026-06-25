@@ -22,7 +22,10 @@ import { canAssignJobs } from "@/server/permissions/job-access";
 import { isStripeConfigured } from "@/server/services/payments";
 import { prisma } from "@/lib/db/prisma";
 import { JobSeriesPanel } from "@/components/app/JobSeriesPanel";
+import { formatJobServicesLine } from "@/lib/jobs/service-line";
 import { getJobSeriesByAnchorJob } from "@/server/repositories/job-series";
+import { listBookingFormFields } from "@/server/repositories/booking-form-fields";
+import { CustomFieldsDisplay } from "@/components/app/CustomFieldsDisplay";
 
 export default async function JobDetailPage({
   params,
@@ -59,6 +62,11 @@ export default async function JobDetailPage({
   const stripeReady = isStripeConfigured() && Boolean(org?.stripeConnectChargesEnabled);
   const photos = await getJobPhotosWithUrls(session.organizationId, jobId);
   const series = job.jobSeries ?? (await getJobSeriesByAnchorJob(session.organizationId, jobId));
+  const formFields = job.bookingRequest?.customFieldsJson
+    ? await listBookingFormFields(session.organizationId)
+    : [];
+  const addonNames = job.bookingRequest?.addons.map((a) => a.name) ?? [];
+  const servicesLine = formatJobServicesLine(job.service.name, addonNames);
 
   let reschedule:
     | {
@@ -164,7 +172,7 @@ export default async function JobDetailPage({
             {payment && <StatusBadge status={payment.status} />}
           </div>
           <p className="mt-1 text-sm text-ink-500">
-            {job.service.name} · {schedule.date} at {schedule.shortTime}
+            {servicesLine} · {schedule.date} at {schedule.shortTime}
           </p>
         </div>
         <JobDetailActions
@@ -194,13 +202,21 @@ export default async function JobDetailPage({
               }
             />
           )}
-          <Detail icon={Wrench} label="Service" value={job.service.name} />
+          <Detail icon={Wrench} label="Service" value={servicesLine} />
           <Detail icon={Clock} label="Price" value={formatMoney(job.priceCents, job.currency)} />
         </dl>
         {job.customerNotes && (
           <p className="border-t border-ink-100 px-5 py-4 text-sm text-ink-600">
             Customer note: {job.customerNotes}
           </p>
+        )}
+        {job.bookingRequest?.customFieldsJson && (
+          <div className="border-t border-ink-100 px-5 py-4">
+            <CustomFieldsDisplay
+              fields={formFields}
+              values={job.bookingRequest.customFieldsJson as Record<string, unknown>}
+            />
+          </div>
         )}
       </Card>
 

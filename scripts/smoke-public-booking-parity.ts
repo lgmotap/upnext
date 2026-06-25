@@ -18,7 +18,12 @@ async function main() {
   console.log("▶ Public booking parity smoke\n");
 
   const profile = await prisma.businessProfile.findFirst({
-    where: { bookingEnabled: true },
+    where: {
+      bookingEnabled: true,
+      organization: {
+        services: { some: { isActive: true, isPublic: true, isAddon: false } },
+      },
+    },
     orderBy: { createdAt: "desc" },
     select: { publicSlug: true, organizationId: true, displayName: true },
   });

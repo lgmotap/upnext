@@ -68,6 +68,7 @@ model Organization {
   customerPortalTokens CustomerPortalToken[]
   apiKeys           ApiKey[]
   webhookEndpoints  WebhookEndpoint[]
+  bookingFormFields BookingFormField[]
 
   /// Stripe Connect account for customer payments (not UpNext SaaS billing).
   stripeConnectAccountId   String?
@@ -117,16 +118,30 @@ model BusinessProfile {
   description    String?
   onboardingCompletedAt DateTime?
   bookingEnabled        Boolean      @default(true)
-  minNoticeHours        Int          @default(24)
-  maxBookingDaysAhead   Int          @default(60)
-  slotIntervalMinutes   Int          @default(30)
+  minNoticeHours              Int          @default(24)
+  maxBookingDaysAhead         Int          @default(60)
+  slotIntervalMinutes         Int          @default(30)
+  bufferMinutesBetweenJobs    Int          @default(0)
+  providerCarryOverMinutes    Int          @default(0)
   notifyOwnerNewBooking              Boolean @default(true)
   notifyCustomerBookingConfirmation  Boolean @default(true)
   notifyCustomerReminder24h          Boolean @default(true)
   notifyCustomerReminder2h           Boolean @default(false)
   notifyCustomerJobCompleted         Boolean @default(true)
   notifyCustomerPaymentRequest       Boolean @default(true)
+  smsEnabled                         Boolean @default(false)
+  smsFromNumber                      String?
+  notifyCustomerSmsReminder24h       Boolean @default(false)
+  notifyCustomerSmsOnTheWay          Boolean @default(false)
+  notifyCustomerSmsRunningLate       Boolean @default(false)
+  notifyWorkerSmsJobAssigned         Boolean @default(false)
   customerPortalEnabled              Boolean @default(true)
+  portalPasswordLoginEnabled         Boolean @default(false)
+  portalFaqJson                      Json?
+  payAtBookingEnabled                Boolean @default(false)
+  requirePaymentAtBooking            Boolean @default(false)
+  customBookingHost                  String?  @unique
+  customBookingVerifiedAt            DateTime?
   createdAt             DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -155,7 +170,8 @@ model Service {
   jobs            Job[]
   jobSeries       JobSeries[]
   checklistTemplates ChecklistTemplate[]
-  pricingParameters ServicePricingParameter[]
+  pricingParameters   ServicePricingParameter[]
+  frequencyDiscounts  ServiceFrequencyDiscount[]
 
   @@index([organizationId])
   @@index([organizationId, isActive, isPublic])
@@ -232,6 +248,7 @@ model Customer {
   notes          String?
   tags           String[]          @default([])
   portalLastLoginAt DateTime?
+  portalUserId      String?  @unique
   stripeCustomerId  String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -276,6 +293,7 @@ model BookingRequest {
   status           BookingRequestStatus @default(pending)
   frequency        BookingFrequency     @default(one_time)
   customerNotes    String?
+  customFieldsJson Json?
   internalNotes    String?
   source           String               @default("public_booking")
   createdAt        DateTime             @default(now())
@@ -286,10 +304,36 @@ model BookingRequest {
   job              Job?
   addons           BookingRequestAddon[]
   parameters       BookingRequestParameter[]
+  paymentRecord    PaymentRecord?
 
   @@index([organizationId])
   @@index([organizationId, status])
   @@index([organizationId, requestedStartAt])
+}
+
+enum BookingFormFieldType {
+  text
+  textarea
+  select
+  checkbox
+}
+
+model BookingFormField {
+  id             String               @id @default(cuid())
+  organizationId String
+  key            String
+  label          String
+  fieldType      BookingFormFieldType @default(text)
+  optionsJson    Json?
+  required       Boolean              @default(false)
+  sortOrder      Int                  @default(0)
+  active         Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, key])
+  @@index([organizationId, active, sortOrder])
 }
 
 enum JobStatus {
@@ -370,6 +414,22 @@ model BookingRequestAddon {
 enum PricingParameterType {
   bedrooms
   bathrooms
+  half_bathrooms
+  square_feet
+}
+
+model ServiceFrequencyDiscount {
+  id             String           @id @default(cuid())
+  serviceId      String
+  frequency      BookingFrequency
+  percentOff     Int              @default(0)
+  amountOffCents Int              @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  service        Service          @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, frequency])
+  @@index([serviceId])
 }
 
 model ServicePricingParameter {
@@ -417,7 +477,8 @@ enum PaymentProvider {
 model PaymentRecord {
   id                      String          @id @default(cuid())
   organizationId          String
-  jobId                   String          @unique
+  jobId                   String?         @unique
+  bookingRequestId        String?         @unique
   customerId              String
   amountCents             Int
   currency                String          @default("USD")
@@ -431,7 +492,8 @@ model PaymentRecord {
   createdAt               DateTime        @default(now())
   updatedAt               DateTime        @updatedAt
   organization            Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  job                     Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job                     Job?            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  bookingRequest          BookingRequest? @relation(fields: [bookingRequestId], references: [id], onDelete: Cascade)
   customer                Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
@@ -458,6 +520,7 @@ enum NotificationRecipientType {
 
 enum NotificationChannel {
   email
+  sms
 }
 
 enum NotificationStatus {
@@ -633,6 +696,7 @@ model CustomerPortalToken {
 enum WebhookEventType {
   booking_created
   booking_accepted
+  booking_canceled
   job_completed
   customer_created
   payment_paid

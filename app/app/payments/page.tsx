@@ -26,9 +26,19 @@ function StatCard({
   );
 }
 
-export default async function PaymentsPage() {
+export default async function PaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/payments");
+
+  const params = await searchParams;
+  const statusFilter =
+    params.status === "pending" || params.status === "overdue" || params.status === "paid"
+      ? params.status
+      : undefined;
 
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
@@ -38,18 +48,30 @@ export default async function PaymentsPage() {
   const currency = org?.currency ?? "USD";
 
   const [payments, aggregates] = await Promise.all([
-    listPaymentRecordsForOrg(session.organizationId),
+    listPaymentRecordsForOrg(session.organizationId, statusFilter),
     paymentAggregatesForOrg(session.organizationId),
   ]);
 
   const overdueCount = payments.filter((p) => p.status === "overdue").length;
   const pendingCount = payments.filter((p) => p.status === "pending").length;
+  const filterLabel = statusFilter ? ` (${statusFilter})` : "";
 
   return (
     <>
       <PageHeader
-        title="Payments"
-        subtitle="Track what's paid, pending, and overdue."
+        title={`Payments${filterLabel}`}
+        subtitle={
+          statusFilter
+            ? `Showing ${payments.length} ${statusFilter} payment${payments.length === 1 ? "" : "s"}.`
+            : "Track what's paid, pending, and overdue."
+        }
+        action={
+          statusFilter ? (
+            <Link href="/app/payments" className="text-sm font-semibold text-brand-700 hover:underline">
+              Clear filter
+            </Link>
+          ) : undefined
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -86,16 +108,28 @@ export default async function PaymentsPage() {
               <span className="text-right">Updated</span>
             </div>
             <ul className="divide-y divide-ink-100">
-              {payments.map((p) => (
+              {payments.map((p) => {
+                const jobTitle =
+                  p.job?.title ??
+                  (p.bookingRequest
+                    ? `${p.bookingRequest.service.name} (booking)`
+                    : "Payment");
+                const href = p.jobId
+                  ? `/app/jobs/${p.jobId}`
+                  : p.bookingRequestId
+                    ? `/app/bookings/${p.bookingRequestId}`
+                    : "/app/payments";
+
+                return (
                 <li key={p.id}>
                   <Link
-                    href={`/app/jobs/${p.jobId}`}
+                    href={href}
                     className="grid grid-cols-2 gap-2 px-5 py-3.5 transition hover:bg-ink-50/60 md:grid-cols-[1.4fr_1.2fr_0.8fr_0.8fr_0.8fr] md:items-center md:gap-3"
                   >
                     <span className="text-sm font-semibold text-ink-950">
                       {p.customer.firstName} {p.customer.lastName}
                     </span>
-                    <span className="truncate text-sm text-ink-600">{p.job.title}</span>
+                    <span className="truncate text-sm text-ink-600">{jobTitle}</span>
                     <span className="text-sm font-semibold text-ink-900">
                       {formatMoney(p.amountCents, p.currency)}
                     </span>
@@ -108,7 +142,8 @@ export default async function PaymentsPage() {
                     </span>
                   </Link>
                 </li>
-              ))}
+              );
+              })}
             </ul>
           </>
         )}

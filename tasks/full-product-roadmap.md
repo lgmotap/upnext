@@ -96,4 +96,212 @@ Per `.cursor/rules/090-autonomous-sprint-execution.mdc` + `upnext-sprint-maratho
 4. Continue to next sprint without asking.
 5. Stop only on **BLOCKER** (secrets, ambiguous product).
 
-**Resume:** Sprint **17** → `tasks/sprint-17-crm-import.md`
+**Resume (full product v1):** Complete — see **Phase 2 P1 parity** below.
+
+---
+
+## Phase 2 — P1 parity (sprints 22 → 31)
+
+**Created:** 2026-06-24  
+**Context:** Competitor audit P1 gaps after sprints 14–21. Closes credible “same as ConvertLabs” sales objections without building website/marketing/quotes modules.
+
+**Prerequisites:** Sprint 21 complete except Resend prod domain (owner action).
+
+```
+Sprint 22  Scheduling depth — buffers, carry-over, frequency discounts
+Sprint 23  Pricing params — half-bath, sq ft
+Sprint 24  Pay at booking (optional toggle)
+Sprint 25  Custom booking domain — host routing impl
+Sprint 26  Portal — password login option + FAQ on rebook
+Sprint 27  API v1 expansion — availability, extras, frequencies, company, settings
+Sprint 28  Crew polish — embedded map, running-late ETA
+Sprint 29  SMS notifications
+Sprint 30  Custom booking fields (lite forms)
+Sprint 31  Dispatch scheduler — drag-drop board
+```
+
+**Agent resume:** Sprints **32–34 complete**. Next: **Phase 3** sprints **35–36** (company profile + onboarding UX). See `docs/audits/business-profile-gaps.md`.
+
+---
+
+## Phase 3 — Company profile & onboarding (sprints 35 → 36)
+
+**Created:** 2026-06-25  
+**Context:** Settings → Business rework exposed gaps vs ConvertLabs `/company` and onboarding wizard — logo, website, service-area consistency, Places, industry cards.
+
+```
+Sprint 35  Company profile parity — service area unify, logo upload, website URL
+Sprint 36  Onboarding & address UX — Google Places, industry cards, sign-up dedup
+```
+
+### Sprint → gap mapping
+
+| Sprint | Closes gap | CL reference |
+|--------|------------|--------------|
+| 35 | Shared service area UX; logo; website on profile + booking | `/company`, R1 logo |
+| 36 | Places address; industry cards; less duplicate sign-up asks | Onboarding wizard step 1–2 |
+
+### Phase 3 success criteria
+
+| # | Criterion | Verified by |
+|---|-----------|-------------|
+| 1 | Onboarding + settings produce same `serviceArea` format | `smoke:business-profile` |
+| 2 | Logo upload persists and shows on `/book/[slug]` | `smoke:business-profile` |
+| 3 | Places fills address when API key set; manual fallback works | `smoke:address-autocomplete` |
+| 4 | Industry cards on onboarding step 1 | `smoke:launch-onboarding` |
+
+### Phase 3 task files
+
+| Sprint | File |
+|--------|------|
+| 35 | `tasks/sprint-35-company-profile-parity.md` |
+| 36 | `tasks/sprint-36-onboarding-address-ux.md` |
+
+### Phase 3 backlog (not scheduled)
+
+- Service-area zip/radius enforcement
+- Branding colors on booking page
+- Editable `publicSlug`
+
+**Not planned:** AI business name suggestions (CL-only; out of MVP scope).
+
+See `tasks/backlog.md` P2.
+
+---
+
+## Phase 4 — Ops polish (sprints 37 → 42)
+
+**Created:** 2026-06-25  
+**Context:** System audit after Phase 3 — remaining 🟡 scorecard items in reports, CRM, inbox, manual booking, calendar, portal.  
+**Master audit:** `docs/audits/product-gaps-roadmap.md`
+
+```
+Sprint 37  Reports v2 — date range picker + CSV export
+Sprint 38  CRM depth — customer detail tabs + tags UI
+Sprint 39  Bookings inbox — pagination, filters, bulk decline
+Sprint 40  Manual booking — custom fields, payment section, review panel
+Sprint 41  Calendar — month view + conflict hints on week/month
+Sprint 42  Portal — customer reschedule + Book Again sidebar polish
+```
+
+### Sprint → gap mapping
+
+| Sprint | Closes gap | CL reference |
+|--------|------------|--------------|
+| 37 | Reports date range + export | `/booking/reports` |
+| 38 | Customer 7-tab lite + tags | Customers module Part 7 |
+| 39 | Inbox scale + bulk | Bookings module |
+| 40 | Manual book payment + fields | 10-tab wizard (practical subset) |
+| 41 | Month calendar + conflicts UI | Calendar |
+| 42 | Portal reschedule | `customer-portal.md` |
+
+### Phase 4 success criteria
+
+| # | Criterion | Verified by |
+|---|-----------|-------------|
+| 1 | Reports export CSV for date range | `smoke:reports` |
+| 2 | Customer tags save + filter | smoke CRM |
+| 3 | Bookings history paginated | `smoke:crm-lists` |
+| 4 | Manual booking includes custom fields | `smoke:manual-booking` |
+| 5 | Month view on `/app/calendar` | browser + build |
+| 6 | Portal reschedule within policy | `smoke:portal-reschedule` |
+
+### Phase 4 task files
+
+| Sprint | File |
+|--------|------|
+| 37 | `tasks/sprint-37-reports-v2.md` |
+| 38 | `tasks/sprint-38-crm-customer-depth.md` |
+| 39 | `tasks/sprint-39-bookings-inbox-scale.md` |
+| 40 | `tasks/sprint-40-manual-booking-parity.md` |
+| 41 | `tasks/sprint-41-calendar-month-conflicts.md` |
+| 42 | `tasks/sprint-42-portal-reschedule-ux.md` |
+
+**Agent resume after Phase 3:** `tasks/sprint-43-dashboard-ops-parity.md` → first unchecked `- [ ]`.
+
+---
+
+## Phase 5 — Dashboard parity (sprints 43 → 44)
+
+**Created:** 2026-06-25  
+**Context:** Dashboard vs ConvertLabs audit — ops queue semantics and post-onboarding analytics teaser. Core loop already ✅; this closes sales perception gap on the home screen.
+
+```
+Sprint 43  Dashboard ops — KPI queues, deep links, today enrichment, crew activity
+Sprint 44  Dashboard analytics — 30d snapshot, greeting, post-checklist business row
+```
+
+### Sprint → gap mapping
+
+| Sprint | Closes gap | CL reference |
+|--------|------------|--------------|
+| 43 | Ops KPI queues + Create Booking CTA | Dashboard top cards |
+| 43 | Today bookings rich rows + crew activity | Today Bookings + Activity |
+| 44 | 30-day booking/revenue snapshot | Bookings summary + gross revenue (lite) |
+| 44 | Time-aware greeting + business name | Dashboard header |
+
+### Phase 5 success criteria
+
+| # | Criterion | Verified by |
+|---|-----------|-------------|
+| 1 | KPI click lands on filtered jobs/payments/bookings | `smoke:dashboard` |
+| 2 | Dashboard header primary CTA is New booking | browser |
+| 3 | Today schedule shows address + price when data exists | `smoke:dashboard` |
+| 4 | Activity includes OTW/late from NotificationLog | `smoke:dashboard` |
+| 5 | After onboarding 100%, snapshot row visible | `smoke:dashboard` |
+| 6 | 30-day revenue teaser links to reports range | `smoke:dashboard` |
+
+### Phase 5 task files
+
+| Sprint | File |
+|--------|------|
+| 43 | `tasks/sprint-43-dashboard-ops-parity.md` |
+| 44 | `tasks/sprint-44-dashboard-analytics-snapshot.md` |
+
+**Out of scope (Phase 5):** MRR widget, retention rate, 90-day line chart, Help Center header link (backlog P2).
+
+---
+
+### Phase 2 → P1 gap mapping (sprints 22–31)
+
+| Sprint | Closes gap | CL reference |
+|--------|------------|--------------|
+| 22 | Buffer between jobs, carry-over, frequency % off | Time & Scheduling · Service Studio Frequencies |
+| 23 | Half-bath, sq ft pricing matrix | Pricing Parameters |
+| 24 | Pay at booking | Public form Credit Card step |
+| 25 | `book.customer.com` without redirect | Domains |
+| 26 | Password portal + FAQ sidebar | `customer-portal.md` |
+| 27 | API catalog sync | `api-reference.md` |
+| 28 | Map in crew drawer, late ETA | `provider-job-workflow.md` |
+| 29 | SMS reminders / OTW | Help + marketing claims |
+| 30 | Additional info fields | Settings → Forms |
+| 31 | Drag-drop scheduler | Calendar Scheduler tab |
+
+### Phase 2 success criteria
+
+| # | Criterion | Verified by |
+|---|-----------|-------------|
+| 1 | Back-to-back slots respect buffer | `smoke:scheduling-depth` |
+| 2 | Half-bath + sq ft adjust price | `smoke:pricing-params` |
+| 3 | Pay at book works when toggled on | `smoke:pay-at-booking` |
+| 4 | Custom host serves booking root | `smoke:custom-domain` |
+| 5 | Portal password + FAQ when enabled | `smoke:portal-password` |
+| 6 | API returns availability + company | `smoke:api` |
+| 7 | SMS sent when toggled (mock/live) | `smoke:sms` |
+| 8 | Custom fields on public book | `smoke:custom-booking-fields` |
+| 9 | Drag reschedule on scheduler | `smoke:scheduler` |
+
+### Phase 2 task files
+
+| Sprint | File |
+|--------|------|
+| 22 | `tasks/sprint-22-scheduling-depth.md` |
+| 23 | `tasks/sprint-23-pricing-params-expansion.md` |
+| 24 | `tasks/sprint-24-pay-at-booking.md` |
+| 25 | `tasks/sprint-25-custom-booking-domain.md` |
+| 26 | `tasks/sprint-26-portal-auth-ux.md` |
+| 27 | `tasks/sprint-27-api-v1-expansion.md` |
+| 28 | `tasks/sprint-28-crew-field-polish.md` |
+| 29 | `tasks/sprint-29-sms-notifications.md` |
+| 30 | `tasks/sprint-30-custom-booking-fields.md` |
+| 31 | `tasks/sprint-31-dispatch-scheduler.md` |

@@ -35,6 +35,8 @@ export async function PublicBookingView({
       error={data.error}
       embedded={data.embedded}
       returnPath={embedded ? "embed" : "full"}
+      payAtBooking={data.payAtBooking}
+      customFormFields={data.customFormFields}
     />
   );
 }

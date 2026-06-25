@@ -13,6 +13,9 @@ import { MAX_JOB_PHOTOS } from "@/lib/storage/job-photos";
 import { getJobPhotosWithUrls } from "@/server/services/job-photos";
 import { ensureJobChecklistItems } from "@/server/services/checklists";
 import { CrewStatusActions } from "@/components/crew/CrewStatusActions";
+import { CrewJobMap } from "@/components/crew/CrewJobMap";
+import { formatJobServicesLine } from "@/lib/jobs/service-line";
+import { isSameCalendarDay, googleMapsDirectionsUrl, formatAddressForMaps } from "@/lib/maps/address";
 import {
   markJobCompleteCrewAction,
   markJobInProgressAction,
@@ -52,6 +55,11 @@ export default async function CrewJobPage({
   const schedule = formatJobSchedule(jobWithChecklist.scheduledStartAt, jobWithChecklist.scheduledEndAt, timeZone);
   const customerName = `${jobWithChecklist.customer.firstName} ${jobWithChecklist.customer.lastName}`;
   const address = jobWithChecklist.customerAddress ?? jobWithChecklist.customer.addresses[0];
+  const addonNames = jobWithChecklist.bookingRequest?.addons.map((a) => a.name) ?? [];
+  const servicesLine = formatJobServicesLine(jobWithChecklist.service.name, addonNames);
+  const mapsQuery = formatAddressForMaps(address);
+  const directionsUrl = mapsQuery ? googleMapsDirectionsUrl(mapsQuery) : null;
+  const sameDay = isSameCalendarDay(jobWithChecklist.scheduledStartAt, timeZone);
 
   return (
     <div className="px-4 py-5">
@@ -79,19 +87,29 @@ export default async function CrewJobPage({
           <StatusBadge status={jobWithChecklist.status} />
         </div>
         <h1 className="mt-1 text-xl font-bold text-ink-950">{customerName}</h1>
-        <p className="text-sm text-ink-500">{jobWithChecklist.service.name}</p>
+        <p className="text-sm text-ink-500">{servicesLine}</p>
         <div className="mt-3 flex items-center justify-between rounded-xl bg-ink-50 px-3 py-2.5 text-sm text-ink-700">
-          <span className="inline-flex items-center gap-1.5">
-            <MapPin className="size-4 text-ink-400" /> {formatAddressLine(address)}
+          <span className="inline-flex min-w-0 items-center gap-1.5">
+            <MapPin className="size-4 shrink-0 text-ink-400" />{" "}
+            <span className="truncate">{formatAddressLine(address)}</span>
           </span>
-          <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
-            <Navigation className="size-3.5" /> Directions
-          </span>
+          {directionsUrl ? (
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center gap-1 font-semibold text-brand-700"
+            >
+              <Navigation className="size-3.5" /> Maps
+            </a>
+          ) : null}
         </div>
         {jobWithChecklist.customerNotes && (
           <p className="mt-3 rounded-lg bg-brand-50 px-3 py-2 text-sm text-ink-700">{jobWithChecklist.customerNotes}</p>
         )}
       </div>
+
+      <CrewJobMap address={address} addressLabel={formatAddressLine(address)} />
 
       {jobWithChecklist.checkedInAt && (
         <CheckInTimer
@@ -147,7 +165,11 @@ export default async function CrewJobPage({
         </div>
       )}
 
-      <CrewStatusActions jobId={jobWithChecklist.id} status={jobWithChecklist.status} />
+      <CrewStatusActions
+        jobId={jobWithChecklist.id}
+        status={jobWithChecklist.status}
+        isSameDay={sameDay}
+      />
 
       <div className="h-6" />
     </div>

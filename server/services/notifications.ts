@@ -13,6 +13,7 @@ import {
   wasNotificationSent,
 } from "@/server/repositories/notifications";
 import { getNotificationPreferences } from "@/server/repositories/notification-preferences";
+import { maybeSendCustomerSms } from "@/server/services/sms-notifications";
 import type {
   NotificationRecipientType,
   NotificationTemplate,
@@ -514,36 +515,60 @@ export async function notifyJobOnTheWay(organizationId: string, jobId: string): 
   });
   if (!job || !job.customer.email) return;
 
-  const already = await wasNotificationSent({
-    organizationId,
-    template: "job_on_the_way",
-    relatedId: jobId,
-    recipientEmail: job.customer.email,
-  });
-  if (already) return;
-
   const ctx = await getOrgDisplayContext(organizationId);
   if (!ctx) return;
 
   const when = formatDisplayDateTime(job.scheduledStartAt, ctx.timeZone);
   const name = `${job.customer.firstName} ${job.customer.lastName}`.trim();
 
-  await sendAndLogEmail({
+  const emailAlready = await wasNotificationSent({
     organizationId,
-    to: job.customer.email,
-    recipientType: "customer",
     template: "job_on_the_way",
-    relatedType: "job",
     relatedId: jobId,
-    subject: `On the way — ${ctx.businessName}`,
-    text: [
-      `Hi ${name},`,
-      "",
-      `Your ${ctx.businessName} crew is on the way for your ${job.title} appointment (${when}).`,
-      "",
-      contactFooter(ctx.phone, ctx.email),
-    ].join("\n"),
+    recipientEmail: job.customer.email,
+    channel: "email",
   });
+
+  if (!emailAlready) {
+    await sendAndLogEmail({
+      organizationId,
+      to: job.customer.email,
+      recipientType: "customer",
+      template: "job_on_the_way",
+      relatedType: "job",
+      relatedId: jobId,
+      subject: `On the way — ${ctx.businessName}`,
+      text: [
+        `Hi ${name},`,
+        "",
+        `Your ${ctx.businessName} crew is on the way for your ${job.title} appointment (${when}).`,
+        "",
+        contactFooter(ctx.phone, ctx.email),
+      ].join("\n"),
+    });
+  }
+
+  const smsPrefs = await getNotificationPreferences(organizationId);
+  const smsAlready =
+    job.customer.phone &&
+    (await wasNotificationSent({
+      organizationId,
+      template: "job_on_the_way",
+      relatedId: jobId,
+      recipientEmail: job.customer.phone,
+      channel: "sms",
+    }));
+
+  if (!smsAlready) {
+    await maybeSendCustomerSms(organizationId, smsPrefs?.notifyCustomerSmsOnTheWay, {
+      to: job.customer.phone,
+      recipientType: "customer",
+      template: "job_on_the_way",
+      relatedType: "job",
+      relatedId: jobId,
+      body: `${ctx.businessName}: We're on the way for your ${job.title} appointment (${when}).`,
+    });
+  }
 }
 
 export async function notifyJobRunningLate(
@@ -584,6 +609,16 @@ export async function notifyJobRunningLate(
       contactFooter(ctx.phone, ctx.email),
     ].join("\n"),
   });
+
+  const smsPrefs = await getNotificationPreferences(organizationId);
+  await maybeSendCustomerSms(organizationId, smsPrefs?.notifyCustomerSmsRunningLate, {
+    to: job.customer.phone,
+    recipientType: "customer",
+    template: "job_running_late",
+    relatedType: "job",
+    relatedId: jobId,
+    body: `${ctx.businessName}: Running late for ${job.title} (${when}). ${etaMinutes ? `ETA ~${etaMinutes} min.` : ""}`,
+  });
 }
 
 export async function sendJobReminderIfDue(
@@ -610,6 +645,7 @@ export async function sendJobReminderIfDue(
     template,
     relatedId: jobId,
     recipientEmail: job.customer.email,
+    channel: "email",
   });
   if (already) return false;
 
@@ -635,6 +671,28 @@ export async function sendJobReminderIfDue(
       contactFooter(ctx.phone, ctx.email),
     ].join("\n"),
   });
+
+  if (template === "booking_reminder_24h") {
+    const smsAlready =
+      job.customer.phone &&
+      (await wasNotificationSent({
+        organizationId,
+        template,
+        relatedId: jobId,
+        recipientEmail: job.customer.phone,
+        channel: "sms",
+      }));
+    if (!smsAlready) {
+      await maybeSendCustomerSms(organizationId, prefs?.notifyCustomerSmsReminder24h, {
+        to: job.customer.phone,
+        recipientType: "customer",
+        template,
+        relatedType: "job",
+        relatedId: jobId,
+        body: `Reminder: ${job.title} with ${ctx.businessName} is scheduled for ${when}.`,
+      });
+    }
+  }
 
   return true;
 }

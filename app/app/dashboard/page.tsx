@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { CalendarCheck, CalendarDays, ChevronRight, CreditCard, UserX } from "lucide-react";
 import { Card, CardHeader, PageHeader, StatCard, Avatar, AppButton } from "@/components/app/ui";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { GettingStartedChecklist } from "@/components/app/GettingStartedChecklist";
+import { BusinessSnapshot } from "@/components/app/BusinessSnapshot";
 import { BookingQuickActions } from "@/components/app/BookingQuickActions";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings, canManageBusiness } from "@/server/permissions/can";
@@ -13,6 +14,13 @@ import { getGettingStartedTasks } from "@/server/services/getting-started";
 import { ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 import { prisma } from "@/lib/db/prisma";
 
+const QUEUE_ICONS = {
+  booked_today: CalendarCheck,
+  scheduled_today: CalendarDays,
+  awaiting_payment: CreditCard,
+  unassigned_today: UserX,
+} as const;
+
 export default async function DashboardPage() {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/dashboard");
@@ -20,50 +28,79 @@ export default async function DashboardPage() {
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
     select: {
+      name: true,
       timezone: true,
       currency: true,
-      businessProfile: { select: { publicSlug: true } },
+      businessProfile: { select: { publicSlug: true, displayName: true } },
     },
   });
   const timeZone = org?.timezone ?? "America/New_York";
   const currency = org?.currency ?? "USD";
   const slug = org?.businessProfile?.publicSlug ?? "";
   const bookingUrl = slug ? getBookingPageUrl(slug) : "";
+  const displayName = org?.businessProfile?.displayName ?? org?.name ?? "your business";
 
   if (canManageBusiness(session)) {
     await ensureIndustryCatalogForOrg(session.organizationId);
   }
 
-  const [data, gettingStarted] = await Promise.all([
-    getDashboardData(
-      session.organizationId,
-      timeZone,
-      currency,
-      session.name ?? session.email.split("@")[0],
-    ),
-    getGettingStartedTasks(session.organizationId, bookingUrl || "Set up your booking page in Settings"),
-  ]);
+  const gettingStarted = await getGettingStartedTasks(
+    session.organizationId,
+    bookingUrl || "Set up your booking page in Settings",
+  );
+
+  const data = await getDashboardData(
+    session.organizationId,
+    timeZone,
+    currency,
+    session.name ?? session.email.split("@")[0],
+    displayName,
+    gettingStarted.percent,
+  );
   const canRespond = canManageBookings(session);
 
   return (
     <>
       <PageHeader
-        title={`Good morning, ${data.greetingName}`}
-        subtitle={`${data.dateLabel} · here's what's happening today.`}
-        action={<AppButton href="/app/calendar">View calendar</AppButton>}
+        title={data.greetingTitle}
+        subtitle={data.greetingSubtitle}
+        action={
+          <div className="flex flex-wrap gap-2">
+            {canRespond && <AppButton href="/app/bookings/new">New booking</AppButton>}
+            <AppButton href="/app/calendar" variant="outline">
+              View calendar
+            </AppButton>
+          </div>
+        }
       />
 
-      {bookingUrl && (
+      {gettingStarted.percent < 100 && bookingUrl ? (
         <GettingStartedChecklist
           tasks={gettingStarted.tasks}
           percent={gettingStarted.percent}
           bookingUrl={bookingUrl}
         />
-      )}
+      ) : data.showBusinessSnapshot && data.snapshot && bookingUrl ? (
+        <BusinessSnapshot
+          bookingUrl={bookingUrl}
+          snapshot={data.snapshot}
+          currency={currency}
+          reportsHref={`/app/reports?from=${data.snapshot.fromYmd}&to=${data.snapshot.toYmd}`}
+        />
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {data.stats.map((s) => (
-          <StatCard key={s.label} {...s} />
+        {data.queueStats.map((s) => (
+          <StatCard
+            key={s.id}
+            label={s.label}
+            value={s.value}
+            delta={s.delta}
+            href={s.href}
+            icon={QUEUE_ICONS[s.id]}
+            iconClassName={s.iconClassName}
+            showTrend={false}
+          />
         ))}
       </div>
 
@@ -83,16 +120,28 @@ export default async function DashboardPage() {
             <ul className="divide-y divide-ink-100">
               {data.todayJobs.map((j) => (
                 <li key={j.id}>
-                  <Link href={`/app/jobs/${j.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-ink-50/60">
+                  <Link
+                    href={`/app/jobs/${j.id}`}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-ink-50/60"
+                  >
                     <Avatar initials={j.customerInitials} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-ink-950">{j.customerName}</p>
                       <p className="truncate text-xs text-ink-500">
                         {j.serviceName} · {j.startTime}
+                        {j.addressLine && <> · {j.addressLine}</>}
                       </p>
+                      {j.frequencyLabel && (
+                        <span className="mt-1 inline-block rounded-full bg-ink-100 px-2 py-0.5 text-[10px] font-semibold text-ink-600">
+                          {j.frequencyLabel}
+                        </span>
+                      )}
                     </div>
+                    <span className="hidden text-sm font-semibold text-ink-900 sm:block">
+                      {j.priceLabel}
+                    </span>
                     {j.assigneeInitials && j.assigneeName && (
-                      <span className="hidden items-center gap-1.5 text-xs text-ink-500 sm:flex">
+                      <span className="hidden items-center gap-1.5 text-xs text-ink-500 md:flex">
                         <Avatar initials={j.assigneeInitials} className="size-6 bg-ink-100 text-ink-600" />
                         {j.assigneeName.split(" ")[0]}
                       </span>

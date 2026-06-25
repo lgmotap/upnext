@@ -6,12 +6,20 @@ import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { listActivePrimaryServicesForOrg, listActiveAddonServicesForOrg } from "@/server/repositories/services";
 import { listPricingParametersForServices } from "@/server/repositories/pricing-parameters";
-import { listCustomersForOrg } from "@/server/repositories/customers";
+import type { PricingParameterConfig } from "@/lib/pricing/parameters";
+import { listFrequencyDiscountsForServices } from "@/server/repositories/frequency-discounts";
+import { listActiveBookingFormFields } from "@/server/repositories/booking-form-fields";
 import { getAssignableMembers } from "@/server/repositories/team";
 import { getOrgAvailableDays, getOrgSlotsForDay } from "@/server/services/bookings";
+import { isPayAtBookingAvailable } from "@/server/services/pay-at-booking";
 import { prisma } from "@/lib/db/prisma";
 import type { BookableDay } from "@/lib/availability/calendar-ui";
+import { isStripeConfigured } from "@/server/services/payments";
 import { ManualBookingClient } from "./ManualBookingClient";
+
+function formatAddressLabel(line1: string, city: string, region: string, postalCode: string) {
+  return `${line1}, ${city}, ${region} ${postalCode}`;
+}
 
 function formatTime12h(hm: string): string {
   const [h, m] = hm.split(":").map(Number);
@@ -32,21 +40,36 @@ export default async function NewManualBookingPage({
   const params = await searchParams;
   const orgId = session.organizationId;
 
-  const [org, primaryServices, addonServices, customers, assignableMembers] = await Promise.all([
+  const [org, primaryServices, addonServices, customers, assignableMembers, businessProfile, customFormFields, payAtBookingAvailable] =
+    await Promise.all([
     prisma.organization.findUnique({
       where: { id: orgId },
-      select: { timezone: true },
+      select: { timezone: true, stripeConnectChargesEnabled: true },
     }),
     listActivePrimaryServicesForOrg(orgId),
     listActiveAddonServicesForOrg(orgId),
-    listCustomersForOrg(orgId),
+    prisma.customer.findMany({
+      where: { organizationId: orgId, addresses: { some: {} } },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      include: {
+        addresses: { orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] },
+      },
+    }),
     getAssignableMembers(orgId),
+    prisma.businessProfile.findUnique({
+      where: { organizationId: orgId },
+      select: { payAtBookingEnabled: true, requirePaymentAtBooking: true },
+    }),
+    listActiveBookingFormFields(orgId),
+    isPayAtBookingAvailable(orgId),
   ]);
 
   const serviceIds = [...primaryServices, ...addonServices].map((s) => s.id);
   const paramRows = await listPricingParametersForServices(serviceIds);
-  const paramsByService = new Map(
-    serviceIds.map((id) => [id, [] as { parameterType: "bedrooms" | "bathrooms"; unitPriceCents: number; includedUnits: number; maxUnits: number }[]]),
+  const discountRows = await listFrequencyDiscountsForServices(serviceIds);
+  const paramsByService = new Map(serviceIds.map((id) => [id, [] as PricingParameterConfig[]]));
+  const discountsByService = new Map(
+    serviceIds.map((id) => [id, [] as { frequency: "weekly" | "biweekly" | "monthly" | "one_time"; percentOff: number; amountOffCents: number }[]]),
   );
   for (const row of paramRows) {
     paramsByService.get(row.serviceId)?.push({
@@ -54,6 +77,13 @@ export default async function NewManualBookingPage({
       unitPriceCents: row.unitPriceCents,
       includedUnits: row.includedUnits,
       maxUnits: row.maxUnits,
+    });
+  }
+  for (const row of discountRows) {
+    discountsByService.get(row.serviceId)?.push({
+      frequency: row.frequency,
+      percentOff: row.percentOff,
+      amountOffCents: row.amountOffCents,
     });
   }
 
@@ -65,6 +95,7 @@ export default async function NewManualBookingPage({
     currency: s.currency,
     description: s.description,
     pricingParameters: paramsByService.get(s.id) ?? [],
+    frequencyDiscounts: discountsByService.get(s.id) ?? [],
   });
 
   const timeZone = org?.timezone ?? "America/New_York";
@@ -80,32 +111,35 @@ export default async function NewManualBookingPage({
     initialDays = daysResult?.days ?? [];
     initialDate = initialDays[0]?.date ?? "";
     if (initialDate) {
-      const slots = (await getOrgSlotsForDay(orgId, initialServiceId, initialDate)) ?? [];
+      const slotResult = await getOrgSlotsForDay(orgId, initialServiceId, initialDate);
+      const slots = slotResult?.slots ?? [];
       initialSlots = slots.map((s) => ({ date: s.date, time: s.time, label: formatTime12h(s.time) }));
       initialTime = initialSlots[0]?.time ?? "";
     }
   }
 
-  const customerOptions = customers
-    .filter((c) => c.addresses.length > 0)
-    .map((c) => {
-    const address = c.addresses[0];
-    const addressLine = address
-      ? `${address.line1}, ${address.city}, ${address.region} ${address.postalCode}`
-      : "No address";
-    return {
-      id: c.id,
-      label: `${c.firstName} ${c.lastName}`,
-      email: c.email,
-      addressLine,
-    };
-  });
+  const customerOptions = customers.map((c) => ({
+    id: c.id,
+    label: `${c.firstName} ${c.lastName}`,
+    email: c.email,
+    addresses: c.addresses.map((a) => ({
+      id: a.id,
+      isDefault: a.isDefault,
+      label: formatAddressLabel(a.line1, a.city, a.region, a.postalCode),
+    })),
+  }));
 
   const memberOptions = assignableMembers.map((m) => ({
     id: m.id,
     label: m.user.name || m.user.email,
     role: m.role,
   }));
+
+  const showPaymentStep =
+    Boolean(businessProfile?.payAtBookingEnabled) &&
+    Boolean(org?.stripeConnectChargesEnabled) &&
+    isStripeConfigured() &&
+    payAtBookingAvailable;
 
   const initialCustomerId =
     params.customerId && customerOptions.some((c) => c.id === params.customerId)
@@ -149,6 +183,11 @@ export default async function NewManualBookingPage({
           initialCustomerId={initialCustomerId}
           initialDate={initialDate}
           initialTime={initialTime}
+          customFormFields={customFormFields}
+          payAtBooking={{
+            showPaymentStep,
+            requirePaymentAtBooking: Boolean(businessProfile?.requirePaymentAtBooking),
+          }}
         />
       </Card>
     </>

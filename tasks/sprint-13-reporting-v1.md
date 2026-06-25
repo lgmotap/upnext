@@ -13,6 +13,8 @@
 
 ## Deferred
 
-- [ ] CSV export
-- [ ] Date range picker
-- [ ] Charts library / CL-style analytics tabs
+## Deferred to sprint 37
+
+- [ ] CSV export → `tasks/sprint-37-reports-v2.md`
+- [ ] Date range picker → `tasks/sprint-37-reports-v2.md`
+- [ ] Charts library / CL-style analytics tabs → `tasks/sprint-37-reports-v2.md` (lite scope)

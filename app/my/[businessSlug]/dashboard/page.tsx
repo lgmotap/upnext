@@ -8,7 +8,7 @@ export default async function CustomerPortalDashboardPage({
   searchParams,
 }: {
   params: Promise<{ businessSlug: string }>;
-  searchParams: Promise<{ error?: string; cancelled?: string; tab?: string; card?: string; paid?: string }>;
+  searchParams: Promise<{ error?: string; cancelled?: string; rescheduled?: string; tab?: string; card?: string; paid?: string }>;
 }) {
   const { businessSlug } = await params;
   const query = await searchParams;
@@ -38,12 +38,15 @@ export default async function CustomerPortalDashboardPage({
       bookAgainUrl={data.bookAgainUrl}
       prefill={data.prefill}
       primaryServices={data.primaryServices}
+      faq={data.faq}
       stripePaymentsEnabled={data.stripePaymentsEnabled}
       savedPaymentMethods={data.savedPaymentMethods}
+      cleaningPlan={data.cleaningPlan}
       initialTab={initialTab}
       flash={{
         error: query.error ? decodeURIComponent(query.error) : undefined,
         cancelled: query.cancelled === "1",
+        rescheduled: query.rescheduled === "1",
         cardAdded: query.card === "added",
         paid: query.paid === "1",
       }}

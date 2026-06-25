@@ -21,14 +21,27 @@ import { updateJobStatus } from "@/server/services/jobs";
 import { pauseJobSeries } from "@/server/services/recurring-jobs";
 import {
   canCustomerCancelBooking,
+  canCustomerRescheduleBooking,
   portalCancelBlockedMessage,
+  portalRescheduleBlockedMessage,
 } from "@/lib/portal/cancel-policy";
+import {
+  getRescheduleDaysForBooking,
+  getRescheduleDaysForJob,
+  getRescheduleSlotsForBooking,
+  getRescheduleSlotsForJob,
+  rescheduleBookingRequest,
+  rescheduleJob,
+} from "@/server/services/scheduling";
 import {
   notifyBookingCancelledByCustomer,
   notifyCustomerPortalLink,
 } from "@/server/services/notifications";
+import { emitOrgWebhook } from "@/server/services/webhooks";
 import type { PortalSession } from "@/lib/portal/session";
 import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
+import { ensurePortalFaqDefaults, getPortalFaqFromProfile } from "@/server/services/portal-faq";
+import { ensurePortalSupabaseUser } from "@/server/services/portal-auth";
 import {
   isPortalStripePaymentsEnabled,
   listSavedPaymentMethods,
@@ -100,6 +113,16 @@ export async function requestCustomerPortalMagicLink(
     businessName: profile.displayName,
     authUrl,
   });
+
+  if (profile.portalPasswordLoginEnabled) {
+    await ensurePortalSupabaseUser({
+      organizationId: profile.organizationId,
+      customerId: customer.id,
+      email: customer.email,
+      businessSlug,
+      sendPasswordSetup: !customer.portalUserId,
+    });
+  }
 
   return { ok: true };
 }
@@ -173,6 +196,16 @@ export async function sendCustomerPortalLinkFromOwner(
     businessName: profile.displayName,
     authUrl,
   });
+
+  if (profile.portalPasswordLoginEnabled) {
+    await ensurePortalSupabaseUser({
+      organizationId,
+      customerId,
+      email: customer.email,
+      businessSlug: profile.publicSlug,
+      sendPasswordSetup: !customer.portalUserId,
+    });
+  }
 
   return { ok: true };
 }
@@ -257,18 +290,28 @@ export async function getPortalDashboardData(session: PortalSession) {
   const bookingsWithPolicy = bookings.map((b) => ({
     ...b,
     canCancel: canCustomerCancelBooking(b, minNoticeHours),
+    canReschedule: canCustomerRescheduleBooking(b, minNoticeHours),
   }));
+
+  const cleaningPlan = buildPortalCleaningPlan(bookingsWithPolicy);
+
+  await ensurePortalFaqDefaults(session.organizationId);
+  const faq = getPortalFaqFromProfile(profile);
 
   return {
     businessName: profile.displayName,
     customerName: `${customer.firstName} ${customer.lastName}`.trim(),
     bookings: bookingsWithPolicy,
-    payments,
+    payments: payments.filter(
+      (p): p is typeof p & { job: NonNullable<(typeof p)["job"]> } => p.job != null,
+    ),
     minNoticeHours,
     stripePaymentsEnabled,
     savedPaymentMethods,
     prefill: customerToPrefill(customer),
     bookAgainUrl: createPrefillLink(profile.publicSlug, customer.id, session.organizationId),
+    faq,
+    cleaningPlan,
     primaryServices: primaryServices.map((s) => ({
       id: s.id,
       name: s.name,
@@ -330,5 +373,138 @@ export async function cancelBookingFromPortal(
   }
 
   await notifyBookingCancelledByCustomer(session.organizationId, bookingRequestId);
+  emitOrgWebhook(session.organizationId, "booking_canceled", {
+    bookingRequestId,
+    source: "customer_portal",
+  });
   return { ok: true };
+}
+
+const FREQUENCY_LABELS: Record<string, string> = {
+  one_time: "One-time",
+  weekly: "Weekly",
+  biweekly: "Every 2 weeks",
+  monthly: "Monthly",
+};
+
+function buildPortalCleaningPlan(
+  bookings: Awaited<ReturnType<typeof listCustomerPortalBookings>>,
+) {
+  const now = new Date();
+  const upcoming = bookings.filter(
+    (b) =>
+      ["pending", "accepted"].includes(b.status) && new Date(b.requestedStartAt) > now,
+  );
+  const ref = upcoming[0] ?? bookings[0];
+  if (!ref) return null;
+
+  const addr = ref.job?.customerAddress ?? ref.customer.addresses[0] ?? null;
+  const addressLine = addr
+    ? `${addr.line1}, ${addr.city}, ${addr.region} ${addr.postalCode}`
+    : null;
+  if (!addressLine) return null;
+
+  const next = upcoming[0];
+  return {
+    serviceName: ref.service.name,
+    addonNames: ref.addons.map((a) => a.name),
+    frequency: FREQUENCY_LABELS[ref.frequency] ?? ref.frequency,
+    addressLine,
+    nextVisitAt: next ? next.requestedStartAt : null,
+  };
+}
+
+async function getPortalBookingForSession(session: PortalSession, bookingRequestId: string) {
+  return prisma.bookingRequest.findFirst({
+    where: {
+      id: bookingRequestId,
+      organizationId: session.organizationId,
+      customerId: session.customerId,
+    },
+    include: { job: { select: { id: true, status: true } } },
+  });
+}
+
+export async function getPortalRescheduleDays(session: PortalSession, bookingRequestId: string) {
+  const profile = await getBusinessProfileBySlug(session.businessSlug);
+  if (!profile || profile.organizationId !== session.organizationId) return null;
+
+  const booking = await getPortalBookingForSession(session, bookingRequestId);
+  if (!booking) return null;
+
+  const minNoticeHours = profile.minNoticeHours ?? 24;
+  if (!canCustomerRescheduleBooking(booking, minNoticeHours)) return null;
+
+  if (booking.job && !["completed", "cancelled"].includes(booking.job.status)) {
+    return getRescheduleDaysForJob(session.organizationId, booking.job.id);
+  }
+  if (booking.status === "pending") {
+    return getRescheduleDaysForBooking(session.organizationId, bookingRequestId);
+  }
+  return null;
+}
+
+export async function getPortalRescheduleSlots(
+  session: PortalSession,
+  bookingRequestId: string,
+  dateYmd: string,
+) {
+  const profile = await getBusinessProfileBySlug(session.businessSlug);
+  if (!profile || profile.organizationId !== session.organizationId) return null;
+
+  const booking = await getPortalBookingForSession(session, bookingRequestId);
+  if (!booking) return null;
+
+  const minNoticeHours = profile.minNoticeHours ?? 24;
+  if (!canCustomerRescheduleBooking(booking, minNoticeHours)) return null;
+
+  if (booking.job && !["completed", "cancelled"].includes(booking.job.status)) {
+    return getRescheduleSlotsForJob(session.organizationId, booking.job.id, dateYmd);
+  }
+  if (booking.status === "pending") {
+    return getRescheduleSlotsForBooking(session.organizationId, bookingRequestId, dateYmd);
+  }
+  return null;
+}
+
+export async function rescheduleBookingFromPortal(
+  session: PortalSession,
+  bookingRequestId: string,
+  dateYmd: string,
+  timeHm: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const profile = await getBusinessProfileBySlug(session.businessSlug);
+  if (!profile || profile.organizationId !== session.organizationId) {
+    return { ok: false, error: "Portal not available." };
+  }
+
+  const minNoticeHours = profile.minNoticeHours ?? 24;
+  const booking = await getPortalBookingForSession(session, bookingRequestId);
+  if (!booking) return { ok: false, error: "Booking not found." };
+
+  if (!canCustomerRescheduleBooking(booking, minNoticeHours)) {
+    return { ok: false, error: portalRescheduleBlockedMessage(minNoticeHours) };
+  }
+
+  if (booking.job && !["completed", "cancelled"].includes(booking.job.status)) {
+    const result = await rescheduleJob(
+      session.organizationId,
+      booking.job.id,
+      dateYmd,
+      timeHm,
+    );
+    return result.ok ? { ok: true } : result;
+  }
+
+  if (booking.status === "pending") {
+    const result = await rescheduleBookingRequest(
+      session.organizationId,
+      bookingRequestId,
+      dateYmd,
+      timeHm,
+    );
+    return result.ok ? { ok: true } : result;
+  }
+
+  return { ok: false, error: "This booking cannot be rescheduled online." };
 }

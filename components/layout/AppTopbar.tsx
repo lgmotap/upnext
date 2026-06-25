@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { Search, ArrowUpRight } from "lucide-react";
-import { Avatar } from "@/components/app/ui";
 import { useCommandPalette } from "@/components/app/CommandPalette";
 import type { WorkspaceShellData } from "@/server/services/workspace-shell";
 import { MobileNav } from "./MobileNav";
 import { NewActionMenu } from "./NewActionMenu";
+import { NotificationBell } from "./NotificationBell";
+import { ProfileMenu } from "./ProfileMenu";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 export function AppTopbar({
   workspace,
@@ -61,7 +63,12 @@ export function AppTopbar({
           Marketing site <ArrowUpRight className="size-3.5" />
         </Link>
         <NewActionMenu />
-        <Avatar initials={initials} className="bg-brand-200" />
+        {workspace && <NotificationBell workspace={workspace} />}
+        {workspace ? (
+          <ProfileMenu workspace={workspace} />
+        ) : (
+          <UserAvatar initials={initials} className="bg-brand-200" />
+        )}
       </div>
     </header>
   );

@@ -7,12 +7,14 @@ import { canManageServices } from "@/server/permissions/can";
 import {
   availabilityRuleSchema,
   bookingWindowSchema,
+  schedulingPolicySchema,
   blackoutDateSchema,
 } from "@/server/validators/availability";
 import {
   addBlackoutDate,
   removeBlackoutDate,
   saveBookingWindow,
+  saveSchedulingPolicy,
   saveWeeklyAvailability,
 } from "@/server/services/availability";
 
@@ -63,6 +65,27 @@ export async function saveBookingWindowAction(formData: FormData): Promise<void>
   }
 
   await saveBookingWindow(session.organizationId, parsed.data);
+  revalidatePath("/app/settings/availability");
+  revalidatePath("/book");
+  redirect("/app/settings/availability?saved=1");
+}
+
+export async function saveSchedulingPolicyAction(formData: FormData): Promise<void> {
+  const session = await getAppSession();
+  if (!session || !canManageServices(session)) {
+    redirectWithError("/app/settings/availability", "Permission denied");
+  }
+
+  const parsed = schedulingPolicySchema.safeParse({
+    bufferMinutesBetweenJobs: formData.get("bufferMinutesBetweenJobs"),
+    providerCarryOverMinutes: formData.get("providerCarryOverMinutes"),
+  });
+
+  if (!parsed.success) {
+    redirectWithError("/app/settings/availability", "Invalid scheduling gap settings");
+  }
+
+  await saveSchedulingPolicy(session.organizationId, parsed.data);
   revalidatePath("/app/settings/availability");
   revalidatePath("/book");
   redirect("/app/settings/availability?saved=1");

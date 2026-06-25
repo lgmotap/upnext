@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 
 export function findCustomerByEmailForOrg(organizationId: string, email: string) {
   return prisma.customer.findFirst({
@@ -51,6 +52,7 @@ export function listCustomerOutstandingPayments(organizationId: string, customer
     where: {
       organizationId,
       customerId,
+      jobId: { not: null },
       status: { in: ["pending", "overdue", "not_requested"] },
     },
     orderBy: { createdAt: "desc" },
@@ -103,5 +105,25 @@ export function updateCustomerPortalEnabled(organizationId: string, enabled: boo
   return prisma.businessProfile.update({
     where: { organizationId },
     data: { customerPortalEnabled: enabled },
+  });
+}
+
+export function updatePortalSettings(
+  organizationId: string,
+  data: {
+    customerPortalEnabled: boolean;
+    portalPasswordLoginEnabled?: boolean;
+    portalFaqJson?: Prisma.InputJsonValue;
+  },
+) {
+  return prisma.businessProfile.update({
+    where: { organizationId },
+    data: {
+      customerPortalEnabled: data.customerPortalEnabled,
+      ...(data.portalPasswordLoginEnabled !== undefined
+        ? { portalPasswordLoginEnabled: data.portalPasswordLoginEnabled }
+        : {}),
+      ...(data.portalFaqJson !== undefined ? { portalFaqJson: data.portalFaqJson } : {}),
+    },
   });
 }

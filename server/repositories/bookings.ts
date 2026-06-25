@@ -1,15 +1,104 @@
 import { prisma } from "@/lib/db/prisma";
-import type { BookingFrequency, BookingRequestStatus, PricingParameterType } from "@/generated/prisma/client";
+import type { BookingFrequency, BookingRequestStatus, PricingParameterType, Prisma } from "@/generated/prisma/client";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/pagination";
 
-export function listBookingRequestsForOrg(organizationId: string, status?: BookingRequestStatus) {
+const bookingRequestListInclude = {
+  customer: { include: { addresses: { where: { isDefault: true }, take: 1 } } },
+  service: true,
+  addons: true,
+  parameters: true,
+} as const;
+
+export type BookingHistoryStatusFilter =
+  | BookingRequestStatus
+  | "all"
+  | "history";
+
+export type BookingDateRangeFilter = "7d" | "30d" | "all";
+
+export type ListBookingRequestsOptions = {
+  status?: BookingHistoryStatusFilter;
+  q?: string;
+  range?: BookingDateRangeFilter;
+  page?: number;
+  pageSize?: number;
+  pendingOnly?: boolean;
+};
+
+function buildBookingWhere(
+  organizationId: string,
+  options: ListBookingRequestsOptions,
+): Prisma.BookingRequestWhereInput {
+  const where: Prisma.BookingRequestWhereInput = { organizationId };
+
+  if (options.pendingOnly) {
+    where.status = "pending";
+  } else if (!options.status || options.status === "history") {
+    where.status = { not: "pending" };
+  } else if (options.status !== "all") {
+    where.status = options.status;
+  }
+
+  const q = options.q?.trim();
+  if (q) {
+    where.customer = {
+      OR: [
+        { firstName: { contains: q, mode: "insensitive" } },
+        { lastName: { contains: q, mode: "insensitive" } },
+        { email: { contains: q, mode: "insensitive" } },
+      ],
+    };
+  }
+
+  const range = options.range ?? "all";
+  if (range === "7d" || range === "30d") {
+    const since = new Date();
+    since.setUTCDate(since.getUTCDate() - (range === "7d" ? 7 : 30));
+    where.createdAt = { gte: since };
+  }
+
+  return where;
+}
+
+export function countBookingRequestsForOrg(
+  organizationId: string,
+  options: ListBookingRequestsOptions = {},
+) {
+  return prisma.bookingRequest.count({
+    where: buildBookingWhere(organizationId, options),
+  });
+}
+
+export function listBookingRequestsForOrg(
+  organizationId: string,
+  options: ListBookingRequestsOptions = {},
+) {
+  const page = options.page ?? 1;
+  const pageSize = options.pageSize ?? DEFAULT_LIST_PAGE_SIZE;
   return prisma.bookingRequest.findMany({
-    where: { organizationId, ...(status ? { status } : {}) },
+    where: buildBookingWhere(organizationId, options),
     orderBy: { createdAt: "desc" },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    include: bookingRequestListInclude,
+  });
+}
+
+export function listPendingBookingsInRange(
+  organizationId: string,
+  rangeStart: Date,
+  rangeEnd: Date,
+) {
+  return prisma.bookingRequest.findMany({
+    where: {
+      organizationId,
+      status: "pending",
+      requestedStartAt: { gte: rangeStart, lt: rangeEnd },
+    },
+    orderBy: { requestedStartAt: "asc" },
     include: {
-      customer: { include: { addresses: { where: { isDefault: true }, take: 1 } } },
-      service: true,
-      addons: true,
-      parameters: true,
+      customer: { select: { firstName: true, lastName: true } },
+      service: { select: { name: true } },
     },
   });
 }
@@ -53,6 +142,7 @@ export function createBookingRequest(data: {
   requestedStartAt: Date;
   requestedEndAt: Date;
   customerNotes?: string | null;
+  customFieldsJson?: Record<string, string | boolean> | null;
   source?: "public_booking" | "manual" | "recurring";
   frequency?: BookingFrequency;
   parameters?: Array<{ parameterType: PricingParameterType; units: number }>;
@@ -71,6 +161,7 @@ export function createBookingRequest(data: {
       requestedStartAt: data.requestedStartAt,
       requestedEndAt: data.requestedEndAt,
       customerNotes: data.customerNotes || null,
+      customFieldsJson: data.customFieldsJson ?? undefined,
       source: data.source ?? "public_booking",
       frequency: data.frequency ?? "one_time",
       ...(data.parameters?.length

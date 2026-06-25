@@ -33,7 +33,8 @@ async function main() {
   await saveWeeklyAvailability(org.id, { rules: defaultWeeklyRules() });
   const days = (await getOrgAvailableDays(org.id, service.id))?.days ?? [];
   if (days.length === 0) throw new Error("No days");
-  const slots = (await getOrgSlotsForDay(org.id, service.id, days[0].date)) ?? [];
+  const slotResult = await getOrgSlotsForDay(org.id, service.id, days[0].date);
+  const slots = slotResult?.slots ?? [];
   if (slots.length === 0) throw new Error("No slots");
 
   const customer = await prisma.customer.findFirst({

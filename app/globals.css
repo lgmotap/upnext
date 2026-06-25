@@ -146,3 +146,62 @@ h2 {
   outline: 2px solid var(--color-brand-400);
   outline-offset: 2px;
 }
+
+/* Google PlaceAutocompleteElement — match UpNext `ring-1 ring-ink-200` inputs.
+   Surface ring/radius/font are applied in JS after mount (Google CSS loads later).
+   ::part rules style the shadow-DOM input and suggestion list. */
+.upnext-place-autocomplete-host {
+  position: relative;
+  z-index: 1;
+  display: block;
+  overflow: visible;
+  width: 100%;
+}
+
+.upnext-place-autocomplete-host:focus-within {
+  z-index: 50;
+}
+
+.upnext-place-autocomplete-host gmp-place-autocomplete::part(focus-ring) {
+  display: none !important;
+}
+
+.upnext-place-autocomplete-host gmp-place-autocomplete::part(input) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0.625rem 0.875rem !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--color-ink-900) !important;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.upnext-place-autocomplete-host gmp-place-autocomplete::part(input)::placeholder {
+  color: var(--color-ink-400) !important;
+}
+
+.upnext-place-autocomplete-host gmp-place-autocomplete::part(prediction-list) {
+  margin-top: 0.25rem;
+  border: 1px solid var(--color-ink-200);
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.upnext-place-autocomplete-host gmp-place-autocomplete::part(prediction-item) {
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--color-ink-900);
+}
+
+.upnext-place-autocomplete-host gmp-place-autocomplete::part(prediction-item-selected) {
+  background: var(--color-brand-50);
+}

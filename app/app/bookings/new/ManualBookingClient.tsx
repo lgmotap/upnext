@@ -1,23 +1,31 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, Clock, Plus, UserPlus, Repeat } from "lucide-react";
+import { Check, ChevronDown, Clock, CreditCard, Plus, UserPlus, Repeat } from "lucide-react";
 import { BookingMonthCalendar } from "@/components/booking/BookingMonthCalendar";
+import { CustomBookingFields } from "@/components/booking/CustomBookingFields";
 import { BOOKING_FREQUENCY_OPTIONS } from "@/lib/booking/frequency";
 import { formatMoney } from "@/lib/money/format";
 import { monthKeyFromYmd, type BookableDay } from "@/lib/availability/calendar-ui";
+import { formatDisplayDateTime, localDateTimeToUtc } from "@/lib/datetime/timezone";
 import { submitManualBookingAction } from "@/server/actions/manual-booking";
 import {
   fetchManualAvailableDaysAction,
   fetchManualSlotsForDayAction,
 } from "@/server/actions/manual-booking-slots";
-import type { BookingFrequency, PricingParameterType } from "@/generated/prisma/client";
+import type { BookingFormField, BookingFrequency, PricingParameterType } from "@/generated/prisma/client";
 import { PricingParametersFields } from "@/components/booking/PricingParametersFields";
+import { AddressAutocompleteFields } from "@/components/maps/AddressAutocompleteFields";
 import {
   bookingPriceCents,
   defaultParameterValues,
   type PricingParameterConfig,
 } from "@/lib/pricing/parameters";
+import {
+  applyFrequencyDiscount,
+  discountLabelForFrequency,
+  type FrequencyDiscountConfig,
+} from "@/lib/pricing/frequency-discount";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
@@ -30,13 +38,14 @@ type ServiceOption = {
   currency: string;
   description: string | null;
   pricingParameters: PricingParameterConfig[];
+  frequencyDiscounts: FrequencyDiscountConfig[];
 };
 
 type CustomerOption = {
   id: string;
   label: string;
   email: string;
-  addressLine: string;
+  addresses: Array<{ id: string; label: string; isDefault: boolean }>;
 };
 
 type MemberOption = {
@@ -52,12 +61,14 @@ function computeTotals(
   addons: ServiceOption[],
   paramConfigs: PricingParameterConfig[],
   paramValues: Partial<Record<PricingParameterType, number>>,
+  frequency: BookingFrequency,
 ) {
-  if (!primary) return { priceCents: 0, durationMinutes: 0, currency: "USD" };
+  if (!primary) return { priceCents: 0, durationMinutes: 0, currency: "USD", subtotalCents: 0 };
   const addonTotal = addons.reduce((s, a) => s + a.basePriceCents, 0);
-  const priceCents = bookingPriceCents(primary.basePriceCents, addonTotal, paramConfigs, paramValues);
+  const subtotalCents = bookingPriceCents(primary.basePriceCents, addonTotal, paramConfigs, paramValues);
+  const priceCents = applyFrequencyDiscount(subtotalCents, frequency, primary.frequencyDiscounts);
   const durationMinutes = primary.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
-  return { priceCents, durationMinutes, currency: primary.currency };
+  return { priceCents, subtotalCents, durationMinutes, currency: primary.currency };
 }
 
 export function ManualBookingClient({
@@ -72,6 +83,8 @@ export function ManualBookingClient({
   initialCustomerId = "",
   initialDate,
   initialTime,
+  customFormFields = [],
+  payAtBooking = { showPaymentStep: false, requirePaymentAtBooking: false },
 }: {
   timeZone: string;
   primaryServices: ServiceOption[];
@@ -84,6 +97,8 @@ export function ManualBookingClient({
   initialCustomerId?: string;
   initialDate: string;
   initialTime: string;
+  customFormFields?: BookingFormField[];
+  payAtBooking?: { showPaymentStep: boolean; requirePaymentAtBooking: boolean };
 }) {
   const [customerMode, setCustomerMode] = useState<"existing" | "new">(
     customers.length > 0 ? "existing" : "new",
@@ -105,9 +120,29 @@ export function ManualBookingClient({
   );
   const [pending, startTransition] = useTransition();
   const [assignMembershipId, setAssignMembershipId] = useState("");
+  const [customerAddressId, setCustomerAddressId] = useState("");
+  const [paymentMode, setPaymentMode] = useState<"bill_later" | "collect_now">("bill_later");
+
+  const selectedCustomer = customers.find((c) => c.id === customerId);
+  const selectedMember = assignableMembers.find((m) => m.id === assignMembershipId);
+  const frequencyLabel =
+    BOOKING_FREQUENCY_OPTIONS.find((o) => o.value === frequency)?.label ?? frequency;
+  const whenLabel =
+    date && time
+      ? formatDisplayDateTime(localDateTimeToUtc(date, time, timeZone), timeZone)
+      : "—";
+
+  useEffect(() => {
+    if (customerMode !== "existing" || !selectedCustomer) {
+      setCustomerAddressId("");
+      return;
+    }
+    const defaultAddr =
+      selectedCustomer.addresses.find((a) => a.isDefault) ?? selectedCustomer.addresses[0];
+    setCustomerAddressId(defaultAddr?.id ?? "");
+  }, [customerMode, customerId, selectedCustomer]);
 
   const addonKey = addonIds.slice().sort().join(",");
-
   const selectedPrimary = primaryServices.find((s) => s.id === serviceId);
   const selectedAddons = addonServices.filter((a) => addonIds.includes(a.id));
   const paramConfigs = selectedPrimary?.pricingParameters ?? [];
@@ -115,8 +150,8 @@ export function ManualBookingClient({
     defaultParameterValues(paramConfigs) as Record<PricingParameterType, number>,
   );
   const totals = useMemo(
-    () => computeTotals(selectedPrimary, selectedAddons, paramConfigs, paramValues),
-    [selectedPrimary, selectedAddons, paramConfigs, paramValues],
+    () => computeTotals(selectedPrimary, selectedAddons, paramConfigs, paramValues, frequency),
+    [selectedPrimary, selectedAddons, paramConfigs, paramValues, frequency],
   );
 
   function selectService(nextId: string) {
@@ -193,6 +228,9 @@ export function ManualBookingClient({
       {customerMode === "existing" && customerId ? (
         <input type="hidden" name="customerId" value={customerId} />
       ) : null}
+      {customerMode === "existing" && customerAddressId ? (
+        <input type="hidden" name="customerAddressId" value={customerAddressId} />
+      ) : null}
       {addonIds.map((id) => (
         <input key={id} type="hidden" name="addonServiceIds" value={id} />
       ))}
@@ -215,18 +253,42 @@ export function ManualBookingClient({
           customers.length === 0 ? (
             <p className="text-sm text-ink-500">No customers yet — add a new customer below.</p>
           ) : (
-            <select
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-              className={input}
-              required
-            >
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label} · {c.email}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-3">
+              <select
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value)}
+                className={input}
+                required
+              >
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label} · {c.email}
+                  </option>
+                ))}
+              </select>
+              {selectedCustomer && selectedCustomer.addresses.length > 1 ? (
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-400">
+                    Service address
+                  </label>
+                  <select
+                    value={customerAddressId}
+                    onChange={(e) => setCustomerAddressId(e.target.value)}
+                    className={input}
+                    required
+                  >
+                    {selectedCustomer.addresses.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.label}
+                        {a.isDefault ? " (default)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : selectedCustomer?.addresses[0] ? (
+                <p className="text-sm text-ink-500">{selectedCustomer.addresses[0].label}</p>
+              ) : null}
+            </div>
           )
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -236,13 +298,15 @@ export function ManualBookingClient({
               <Field label="Email" name="email" type="email" required />
             </div>
             <Field label="Phone" name="phone" />
-            <div className="sm:col-span-2">
-              <Field label="Street address" name="line1" required />
-            </div>
-            <Field label="Apt / suite" name="line2" />
-            <Field label="City" name="city" required />
-            <Field label="State / region" name="region" required />
-            <Field label="Postal code" name="postalCode" required />
+            <AddressAutocompleteFields
+              compact
+              className="sm:col-span-2 grid gap-3 sm:grid-cols-2"
+              defaults={{ line1: "", line2: "", city: "", region: "", postalCode: "" }}
+              line1Name="line1"
+              line2Name="line2"
+              regionAsSelect
+              idPrefix="manual-book-addr"
+            />
           </div>
         )}
       </Section>
@@ -322,7 +386,12 @@ export function ManualBookingClient({
 
       <Section title="How often?" step="3">
         <div className="grid gap-2 sm:grid-cols-2">
-          {BOOKING_FREQUENCY_OPTIONS.map((opt) => (
+          {BOOKING_FREQUENCY_OPTIONS.map((opt) => {
+            const badge =
+              selectedPrimary && opt.value !== "one_time"
+                ? discountLabelForFrequency(opt.value, selectedPrimary.frequencyDiscounts)
+                : null;
+            return (
             <button
               key={opt.value}
               type="button"
@@ -336,10 +405,16 @@ export function ManualBookingClient({
               <p className="flex items-center gap-1.5 font-semibold text-ink-950">
                 <Repeat className="size-3.5 text-brand-600" />
                 {opt.label}
+                {badge && (
+                  <span className="ml-1 rounded-full bg-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-900">
+                    {badge}
+                  </span>
+                )}
               </p>
               <p className="mt-0.5 text-xs text-ink-500">{opt.description}</p>
             </button>
-          ))}
+          );
+          })}
         </div>
       </Section>
 
@@ -416,16 +491,132 @@ export function ManualBookingClient({
             )}
           </div>
         )}
+
+        {customFormFields.length > 0 && (
+          <div className="mt-4">
+            <CustomBookingFields fields={customFormFields} />
+          </div>
+        )}
       </Section>
+
+      {payAtBooking.showPaymentStep && (
+        <Section title="Payment" step="6">
+          <div className="space-y-2">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-ink-200">
+              <input
+                type="radio"
+                name="paymentMode"
+                value="bill_later"
+                checked={paymentMode === "bill_later"}
+                onChange={() => setPaymentMode("bill_later")}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="block text-sm font-semibold text-ink-900">Bill later</span>
+                <span className="text-xs text-ink-500">
+                  Schedule the job now; collect payment from the job or customer profile later.
+                </span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 px-4 py-3 ring-1 ring-brand-200">
+              <input
+                type="radio"
+                name="paymentMode"
+                value="collect_now"
+                checked={paymentMode === "collect_now"}
+                onChange={() => setPaymentMode("collect_now")}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900">
+                  <CreditCard className="size-4 text-brand-700" />
+                  Collect payment now
+                </span>
+                <span className="text-xs text-ink-500">
+                  Redirects to Stripe Checkout after the job is created
+                  {selectedPrimary ? ` · ${formatMoney(totals.priceCents, totals.currency)}` : ""}.
+                </span>
+              </span>
+            </label>
+          </div>
+          {payAtBooking.requirePaymentAtBooking && (
+            <p className="mt-2 text-xs font-medium text-amber-800">
+              Your settings prefer payment at booking — you can still bill later for phone/walk-in orders.
+            </p>
+          )}
+        </Section>
+      )}
+
+      <details className="group rounded-2xl bg-white p-5 ring-1 ring-ink-100 shadow-soft">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold text-ink-950">
+          <span>Review booking</span>
+          <ChevronDown className="size-4 text-ink-400 transition group-open:rotate-180" />
+        </summary>
+        <dl className="mt-4 space-y-2 text-sm">
+          <ReviewRow
+            label="Customer"
+            value={
+              customerMode === "existing" && selectedCustomer
+                ? `${selectedCustomer.label} · ${selectedCustomer.email}`
+                : "New customer"
+            }
+          />
+          {customerMode === "existing" && selectedCustomer && (
+            <ReviewRow
+              label="Address"
+              value={
+                selectedCustomer.addresses.find((a) => a.id === customerAddressId)?.label ??
+                selectedCustomer.addresses[0]?.label ??
+                "—"
+              }
+            />
+          )}
+          <ReviewRow label="Service" value={selectedPrimary?.name ?? "—"} />
+          {selectedAddons.length > 0 && (
+            <ReviewRow label="Add-ons" value={selectedAddons.map((a) => a.name).join(", ")} />
+          )}
+          <ReviewRow label="Frequency" value={frequencyLabel} />
+          <ReviewRow label="When" value={whenLabel} />
+          <ReviewRow
+            label="Worker"
+            value={selectedMember ? `${selectedMember.label} (${selectedMember.role})` : "Unassigned"}
+          />
+          <ReviewRow
+            label="Total"
+            value={
+              selectedPrimary
+                ? `${formatMoney(totals.priceCents, totals.currency)} · ${totals.durationMinutes} min`
+                : "—"
+            }
+          />
+          {payAtBooking.showPaymentStep && (
+            <ReviewRow
+              label="Payment"
+              value={paymentMode === "collect_now" ? "Collect now (Stripe)" : "Bill later"}
+            />
+          )}
+        </dl>
+      </details>
 
       <button
         type="submit"
         disabled={pending || !date || !time || days.length === 0}
         className="w-full rounded-2xl bg-brand-400 px-4 py-3.5 text-sm font-bold text-brand-950 hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {pending ? "Creating job…" : "Create booking & schedule job"}
+        {pending ? "Creating job…" : paymentMode === "collect_now" && payAtBooking.showPaymentStep
+          ? "Create booking & collect payment"
+          : "Create booking & schedule job"}
       </button>
     </form>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-wrap justify-between gap-x-4 gap-y-0.5 border-b border-ink-50 pb-2 last:border-0">
+      <dt className="text-ink-500">{label}</dt>
+      <dd className="font-medium text-ink-900">{value}</dd>
+    </div>
   );
 }
 

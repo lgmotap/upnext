@@ -26,6 +26,8 @@ type SlotInput = {
   maxBookingDaysAhead: number;
   slotIntervalMinutes: number;
   serviceDurationMinutes: number;
+  /** Travel/setup time after service end when fitting slots in a day window. */
+  carryOverMinutes?: number;
   now?: Date;
 };
 
@@ -53,6 +55,8 @@ function computeAllSlots(input: SlotInput): AvailableSlot[] {
   const earliest = new Date(now.getTime() + input.minNoticeHours * 60 * 60 * 1000);
   const todayYmd = formatYmdInTimezone(now, input.timeZone);
   const endYmd = addDaysYmd(todayYmd, input.maxBookingDaysAhead);
+  const carryOver = input.carryOverMinutes ?? 0;
+  const slotFootprintMinutes = input.serviceDurationMinutes + carryOver;
 
   const rulesByDay = Object.fromEntries(input.rules.map((r) => [r.dayOfWeek, r]));
   const slots: AvailableSlot[] = [];
@@ -65,7 +69,7 @@ function computeAllSlots(input: SlotInput): AvailableSlot[] {
     if (rule?.isActive) {
       const startMin = parseHmToMinutes(rule.startTime);
       const endMin = parseHmToMinutes(rule.endTime);
-      for (let m = startMin; m + input.serviceDurationMinutes <= endMin; m += input.slotIntervalMinutes) {
+      for (let m = startMin; m + slotFootprintMinutes <= endMin; m += input.slotIntervalMinutes) {
         const time = minutesToHm(m);
         const startAt = localDateTimeToUtc(cursor, time, input.timeZone);
         const endAt = new Date(startAt.getTime() + input.serviceDurationMinutes * 60_000);

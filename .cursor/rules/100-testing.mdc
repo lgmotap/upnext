@@ -8,6 +8,7 @@ Vitest for unit/integration, Playwright for e2e. Add/update tests with any busin
 ## Agent obligation (required before marking work done)
 - **Run tests yourself** in the terminal — do not tell the user to test unless blocked (missing secrets, manual OAuth, etc.).
 - Minimum for feature work: `npm run db:validate`, relevant smoke script (`npm run smoke:e2e`, `npm run smoke:booking`), and typecheck/lint on touched paths.
+- **After every sprint or UI feature:** run `npm run build` and confirm every **new or changed route** compiles (no client bundle pulling `pg`, `dns`, `fs`, or `@/lib/db/prisma`). Client components (`"use client"`) must not import server-only modules — split into `lib/*` (pure) vs `server/*` (Prisma/DB).
 - If Stripe/Resend keys are missing, still run DB smoke + document what could not be exercised.
 - Report exact commands run and pass/fail in the handoff summary.
 

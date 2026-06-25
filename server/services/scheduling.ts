@@ -1,3 +1,4 @@
+import { assignJobToMember } from "@/server/repositories/assignments";
 import { prisma } from "@/lib/db/prisma";
 import {
   getAvailableDays,
@@ -6,6 +7,8 @@ import {
   type AvailableSlot,
   type SlotDay,
 } from "@/lib/availability/slots";
+import { filterSlotsByJobConflicts } from "@/lib/scheduling/conflicts";
+import type { SchedulingPolicy } from "@/lib/scheduling/policy";
 import {
   listBlackoutDates,
   getBookingSettings,
@@ -21,6 +24,7 @@ import {
 type SlotContext = {
   timeZone: string;
   slotInput: Parameters<typeof getAvailableDays>[0];
+  schedulingPolicy: SchedulingPolicy;
 };
 
 async function loadOwnerSlotContext(
@@ -41,9 +45,14 @@ async function loadOwnerSlotContext(
   ]);
 
   const profile = org.businessProfile;
+  const schedulingPolicy = {
+    bufferMinutesBetweenJobs: profile.bufferMinutesBetweenJobs ?? 0,
+    providerCarryOverMinutes: profile.providerCarryOverMinutes ?? 0,
+  };
 
   return {
     timeZone: org.timezone,
+    schedulingPolicy,
     slotInput: {
       timeZone: org.timezone,
       rules,
@@ -52,43 +61,22 @@ async function loadOwnerSlotContext(
       maxBookingDaysAhead: booking?.maxBookingDaysAhead ?? profile.maxBookingDaysAhead,
       slotIntervalMinutes: booking?.slotIntervalMinutes ?? profile.slotIntervalMinutes,
       serviceDurationMinutes,
+      carryOverMinutes: schedulingPolicy.providerCarryOverMinutes,
     },
   };
 }
 
-async function filterJobConflicts(
-  organizationId: string,
-  slots: AvailableSlot[],
-  excludeJobId?: string,
-): Promise<AvailableSlot[]> {
-  if (slots.length === 0) return slots;
-
-  const rangeStart = slots.reduce((min, s) => (s.startAt < min ? s.startAt : min), slots[0].startAt);
-  const rangeEnd = slots.reduce((max, s) => (s.endAt > max ? s.endAt : max), slots[0].endAt);
-
-  const conflicts = await prisma.job.findMany({
-    where: {
-      organizationId,
-      status: { notIn: ["cancelled", "completed"] },
-      ...(excludeJobId ? { id: { not: excludeJobId } } : {}),
-      scheduledStartAt: { lt: rangeEnd },
-      scheduledEndAt: { gt: rangeStart },
-    },
-    select: { scheduledStartAt: true, scheduledEndAt: true },
-  });
-
-  if (conflicts.length === 0) return slots;
-
-  return slots.filter(
-    (slot) =>
-      !conflicts.some(
-        (c) => slot.startAt < c.scheduledEndAt && slot.endAt > c.scheduledStartAt,
-      ),
-  );
-}
-
 function durationMinutesFromRange(start: Date, end: Date): number {
   return Math.max(15, Math.round((end.getTime() - start.getTime()) / 60_000));
+}
+
+async function filterConflicts(
+  organizationId: string,
+  slots: AvailableSlot[],
+  policy: SchedulingPolicy,
+  excludeJobId?: string,
+) {
+  return filterSlotsByJobConflicts(organizationId, slots, policy, excludeJobId);
 }
 
 export async function getRescheduleDaysForJob(
@@ -121,7 +109,7 @@ export async function getRescheduleSlotsForJob(
   if (!ctx) return null;
 
   const slots = getSlotsForDate(ctx.slotInput, dateYmd);
-  return filterJobConflicts(organizationId, slots, jobId);
+  return filterConflicts(organizationId, slots, ctx.schedulingPolicy, jobId);
 }
 
 export async function rescheduleJob(
@@ -129,6 +117,7 @@ export async function rescheduleJob(
   jobId: string,
   dateYmd: string,
   timeHm: string,
+  membershipId?: string | null,
 ) {
   const job = await getJobForOrg(organizationId, jobId);
   if (!job || job.status === "completed" || job.status === "cancelled") {
@@ -136,14 +125,14 @@ export async function rescheduleJob(
   }
 
   const duration = durationMinutesFromRange(job.scheduledStartAt, job.scheduledEndAt);
-  const assigneeId = job.assignments[0]?.membershipId;
+  const assigneeId = membershipId ?? job.assignments[0]?.membershipId;
   const ctx = await loadOwnerSlotContext(organizationId, duration, assigneeId);
   if (!ctx) return { ok: false as const, error: "Scheduling is not configured" };
 
   const slot = isSlotAvailable(ctx.slotInput, dateYmd, timeHm);
   if (!slot) return { ok: false as const, error: "Selected time is not available" };
 
-  const [available] = await filterJobConflicts(organizationId, [slot], jobId);
+  const [available] = await filterConflicts(organizationId, [slot], ctx.schedulingPolicy, jobId);
   if (!available) return { ok: false as const, error: "That time conflicts with another job" };
 
   await prisma.$transaction(async (tx) => {
@@ -165,6 +154,11 @@ export async function rescheduleJob(
       });
     }
   });
+
+  if (membershipId && membershipId !== job.assignments[0]?.membershipId) {
+    const assigned = await assignJobToMember(jobId, membershipId, organizationId);
+    if (!assigned) return { ok: false as const, error: "Could not assign worker" };
+  }
 
   await notifyJobRescheduled(organizationId, jobId);
   return { ok: true as const };
@@ -197,7 +191,7 @@ export async function getRescheduleSlotsForBooking(
   if (!ctx) return null;
 
   const slots = getSlotsForDate(ctx.slotInput, dateYmd);
-  return filterJobConflicts(organizationId, slots);
+  return filterConflicts(organizationId, slots, ctx.schedulingPolicy);
 }
 
 export async function rescheduleBookingRequest(
@@ -218,7 +212,7 @@ export async function rescheduleBookingRequest(
   const slot = isSlotAvailable(ctx.slotInput, dateYmd, timeHm);
   if (!slot) return { ok: false as const, error: "Selected time is not available" };
 
-  const [available] = await filterJobConflicts(organizationId, [slot]);
+  const [available] = await filterConflicts(organizationId, [slot], ctx.schedulingPolicy);
   if (!available) return { ok: false as const, error: "That time conflicts with another job" };
 
   await prisma.bookingRequest.update({

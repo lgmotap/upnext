@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isTwilioConfigured } from "@/lib/sms/twilio";
 
 export const notificationSettingsSchema = z.object({
   notifyOwnerNewBooking: z.coerce.boolean(),
@@ -9,7 +10,17 @@ export const notificationSettingsSchema = z.object({
   notifyCustomerPaymentRequest: z.coerce.boolean(),
 });
 
+export const smsNotificationSettingsSchema = z.object({
+  smsEnabled: z.coerce.boolean(),
+  smsFromNumber: z.string().trim().max(30).optional(),
+  notifyCustomerSmsReminder24h: z.coerce.boolean(),
+  notifyCustomerSmsOnTheWay: z.coerce.boolean(),
+  notifyCustomerSmsRunningLate: z.coerce.boolean(),
+  notifyWorkerSmsJobAssigned: z.coerce.boolean(),
+});
+
 export type NotificationSettingsInput = z.infer<typeof notificationSettingsSchema>;
+export type SmsNotificationSettingsInput = z.infer<typeof smsNotificationSettingsSchema>;
 
 export const NOTIFICATION_SETTING_META = [
   {
@@ -43,3 +54,32 @@ export const NOTIFICATION_SETTING_META = [
     desc: "Email a payment link when requested.",
   },
 ];
+
+export const SMS_NOTIFICATION_SETTING_META = [
+  {
+    key: "notifyCustomerSmsReminder24h" as const,
+    label: "24-hour SMS reminder",
+    desc: "Text customers the day before their job.",
+  },
+  {
+    key: "notifyCustomerSmsOnTheWay" as const,
+    label: "On the way SMS",
+    desc: "Text when crew taps On the way.",
+  },
+  {
+    key: "notifyCustomerSmsRunningLate" as const,
+    label: "Running late SMS",
+    desc: "Text when crew notifies running late.",
+  },
+  {
+    key: "notifyWorkerSmsJobAssigned" as const,
+    label: "Job assigned SMS (worker)",
+    desc: "Text assigned worker when phone is on file (future).",
+  },
+];
+
+export function twilioSetupHint(): string {
+  return isTwilioConfigured()
+    ? "Twilio credentials detected — set your sending number below."
+    : "Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER to enable live SMS. Without them, SMS is logged as mock/skipped.";
+}

@@ -1,14 +1,37 @@
 import { prisma } from "@/lib/db/prisma";
 import { formatMoney } from "@/lib/money/format";
 import { getWeekRange } from "@/lib/datetime/calendar";
-import { addDaysYmd, formatYmdInTimezone, localDateTimeToUtc } from "@/lib/datetime/timezone";
+import {
+  addDaysYmd,
+  formatDisplayDateTime,
+  formatYmdInTimezone,
+  localDateTimeToUtc,
+} from "@/lib/datetime/timezone";
 import { paymentAggregatesForOrg } from "@/server/repositories/payments";
+import { sumPaidInRange, getThirtyDaySnapshot, last30DayBounds } from "@/lib/reporting/period-stats";
+
+export { getThirtyDaySnapshot, last30DayBounds } from "@/lib/reporting/period-stats";
 
 export type ReportingPeriodStats = {
   label: string;
   revenueCents: number;
   jobsCompleted: number;
   newBookings: number;
+};
+
+export type ReportingRangeStats = ReportingPeriodStats & {
+  fromYmd: string;
+  toYmd: string;
+  exportRowCount: number;
+};
+
+export type ReportingExportRow = {
+  date: string;
+  customer: string;
+  service: string;
+  jobStatus: string;
+  amount: string;
+  paymentStatus: string;
 };
 
 export type ReportingData = {
@@ -30,18 +53,6 @@ function monthBoundsUtc(ymd: string, timeZone: string) {
     start: localDateTimeToUtc(startYmd, "00:00", timeZone),
     end: localDateTimeToUtc(nextMonth, "00:00", timeZone),
   };
-}
-
-async function sumPaidInRange(organizationId: string, start: Date, end: Date) {
-  const rows = await prisma.paymentRecord.findMany({
-    where: {
-      organizationId,
-      status: "paid",
-      paidAt: { gte: start, lt: end },
-    },
-    select: { amountCents: true },
-  });
-  return rows.reduce((s, r) => s + r.amountCents, 0);
 }
 
 async function countJobsCompletedInRange(organizationId: string, start: Date, end: Date) {
@@ -119,4 +130,76 @@ export async function getReportingData(organizationId: string, timeZone: string,
 
 export function formatReportingMoney(cents: number, currency: string) {
   return formatMoney(cents, currency);
+}
+
+export async function getReportingRangeStats(
+  organizationId: string,
+  timeZone: string,
+  currency: string,
+  start: Date,
+  end: Date,
+  label: string,
+  fromYmd: string,
+  toYmd: string,
+): Promise<ReportingRangeStats> {
+  const [revenueCents, jobsCompleted, newBookings, exportRowCount] = await Promise.all([
+    sumPaidInRange(organizationId, start, end),
+    countJobsCompletedInRange(organizationId, start, end),
+    countBookingsInRange(organizationId, start, end),
+    prisma.job.count({
+      where: {
+        organizationId,
+        scheduledStartAt: { gte: start, lt: end },
+        status: { not: "cancelled" },
+      },
+    }),
+  ]);
+
+  return {
+    label,
+    fromYmd,
+    toYmd,
+    revenueCents,
+    jobsCompleted,
+    newBookings,
+    exportRowCount,
+  };
+}
+
+export async function getReportingExportRows(
+  organizationId: string,
+  start: Date,
+  end: Date,
+  timeZone: string,
+  currency: string,
+): Promise<ReportingExportRow[]> {
+  const jobs = await prisma.job.findMany({
+    where: {
+      organizationId,
+      scheduledStartAt: { gte: start, lt: end },
+      status: { not: "cancelled" },
+    },
+    orderBy: { scheduledStartAt: "asc" },
+    include: {
+      customer: true,
+      service: true,
+      paymentRecord: true,
+    },
+  });
+
+  return jobs.map((job) => {
+    const customerName = `${job.customer.firstName} ${job.customer.lastName}`.trim();
+    const payment = job.paymentRecord;
+    const amountCents = payment?.amountCents ?? job.priceCents;
+    const payCurrency = payment?.currency ?? job.currency ?? currency;
+
+    return {
+      date: formatDisplayDateTime(job.scheduledStartAt, timeZone),
+      customer: customerName,
+      service: job.service.name,
+      jobStatus: job.status.replaceAll("_", " "),
+      amount: formatMoney(amountCents, payCurrency),
+      paymentStatus: payment?.status?.replaceAll("_", " ") ?? "not requested",
+    };
+  });
 }

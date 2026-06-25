@@ -9,18 +9,21 @@ type Tab = "link" | "embed";
 
 export function BookingLinkCard({
   url,
+  embedHtml: embedHtmlProp,
   publicSlug,
   showMisconfigWarning = false,
   className = "",
 }: {
   url: string;
-  publicSlug: string;
+  /** Precomputed embed HTML (supports custom domains). Falls back to slug-based embed. */
+  embedHtml?: string;
+  publicSlug?: string;
   showMisconfigWarning?: boolean;
   className?: string;
 }) {
   const [tab, setTab] = useState<Tab>("link");
   const [copied, setCopied] = useState(false);
-  const embedHtml = getBookingEmbedHtml(publicSlug);
+  const embedHtml = embedHtmlProp ?? (publicSlug ? getBookingEmbedHtml(publicSlug) : "");
 
   const copy = async (text: string) => {
     try {

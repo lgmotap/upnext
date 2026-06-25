@@ -11,10 +11,12 @@ function parseAddonIds(value: unknown): string[] {
   return s.split(",").map((id) => id.trim()).filter(Boolean);
 }
 
-const optionalInt = z.preprocess(
-  (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
-  z.number().int().min(0).max(20).optional(),
-);
+function optionalIntParam(max: number) {
+  return z.preprocess(
+    (v) => (v === "" || v === undefined || v === null ? undefined : Number(v)),
+    z.number().int().min(0).max(max).optional(),
+  );
+}
 
 export const publicBookingSchema = z.object({
   businessSlug: z.string().min(1).max(80),
@@ -33,8 +35,11 @@ export const publicBookingSchema = z.object({
   postalCode: z.string().min(1).max(20).trim(),
   customerNotes: z.string().max(2000).trim().optional().or(z.literal("")),
   frequency: z.enum(["one_time", "weekly", "biweekly", "monthly"]).default("one_time"),
-  bedrooms: optionalInt,
-  bathrooms: optionalInt,
+  bedrooms: optionalIntParam(10),
+  bathrooms: optionalIntParam(8),
+  half_bathrooms: optionalIntParam(6),
+  square_feet: optionalIntParam(10000),
+  customFieldsJson: z.record(z.string(), z.union([z.string(), z.boolean()])).optional(),
 });
 
 export type PublicBookingInput = z.input<typeof publicBookingSchema>;
@@ -58,8 +63,16 @@ export const manualBookingSchema = z
     customerNotes: z.string().max(2000).trim().optional().or(z.literal("")),
     assignMembershipId: z.string().optional().or(z.literal("")),
     frequency: z.enum(["one_time", "weekly", "biweekly", "monthly"]).default("one_time"),
-    bedrooms: optionalInt,
-    bathrooms: optionalInt,
+    bedrooms: optionalIntParam(10),
+    bathrooms: optionalIntParam(8),
+    half_bathrooms: optionalIntParam(6),
+    square_feet: optionalIntParam(10000),
+    collectPaymentNow: z.preprocess(
+      (v) => v === "on" || v === true || v === "true" || v === "collect_now",
+      z.boolean().optional(),
+    ),
+    customerAddressId: z.string().optional().or(z.literal("")),
+    customFieldsJson: z.record(z.string(), z.union([z.string(), z.boolean()])).optional(),
   })
   .superRefine((data, ctx) => {
     const hasExisting = Boolean(data.customerId?.trim());

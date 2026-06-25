@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { AlertCircle, Check, Plus, Repeat } from "lucide-react";
+import { AlertCircle, Check, CreditCard, Plus, Repeat } from "lucide-react";
 import { BookingMonthCalendar } from "@/components/booking/BookingMonthCalendar";
 import { PublicServiceCard } from "@/components/booking/PublicServiceCard";
 import { BOOKING_FREQUENCY_OPTIONS } from "@/lib/booking/frequency";
@@ -20,6 +20,13 @@ import {
   defaultParameterValues,
   type PricingParameterConfig,
 } from "@/lib/pricing/parameters";
+import {
+  applyFrequencyDiscount,
+  discountLabelForFrequency,
+} from "@/lib/pricing/frequency-discount";
+import { CustomBookingFields } from "@/components/booking/CustomBookingFields";
+import { AddressAutocompleteFields } from "@/components/maps/AddressAutocompleteFields";
+import type { BookingFormField } from "@/generated/prisma/client";
 
 const input =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
@@ -29,15 +36,17 @@ function computeTotals(
   addons: PublicService[],
   paramConfigs: PricingParameterConfig[],
   paramValues: Partial<Record<PricingParameterType, number>>,
+  frequency: BookingFrequency,
 ) {
-  if (!primary) return { priceCents: 0, durationMinutes: 0, currency: "USD" };
+  if (!primary) return { priceCents: 0, durationMinutes: 0, currency: "USD", subtotalCents: 0 };
   const addonTotal = addons.reduce((s, a) => s + a.basePriceCents, 0);
-  const priceCents = bookingPriceCents(primary.basePriceCents, addonTotal, paramConfigs, paramValues);
+  const subtotalCents = bookingPriceCents(primary.basePriceCents, addonTotal, paramConfigs, paramValues);
+  const priceCents = applyFrequencyDiscount(subtotalCents, frequency, primary.frequencyDiscounts);
   const durationMinutes = primary.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
-  return { priceCents, durationMinutes, currency: primary.currency };
+  return { priceCents, subtotalCents, durationMinutes, currency: primary.currency };
 }
 
-function buildSteps(hasAddons: boolean, hasParams: boolean) {
+function buildSteps(hasAddons: boolean, hasParams: boolean, showPayment: boolean) {
   let n = 1;
   const next = () => String(n++);
   return {
@@ -48,6 +57,7 @@ function buildSteps(hasAddons: boolean, hasParams: boolean) {
     date: next(),
     time: next(),
     details: next(),
+    payment: showPayment ? next() : null,
   };
 }
 
@@ -66,6 +76,8 @@ export function PublicBookingClient({
   error,
   embedded = false,
   returnPath = "full",
+  payAtBooking = { showPaymentStep: false, requirePaymentAtBooking: false },
+  customFormFields = [],
 }: {
   businessSlug: string;
   timeZone: string;
@@ -92,6 +104,11 @@ export function PublicBookingClient({
   error?: string;
   embedded?: boolean;
   returnPath?: "embed" | "full";
+  payAtBooking?: {
+    showPaymentStep: boolean;
+    requirePaymentAtBooking: boolean;
+  };
+  customFormFields?: BookingFormField[];
 }) {
   const [serviceId, setServiceId] = useState(initialServiceId);
   const [addonIds, setAddonIds] = useState<string[]>([]);
@@ -113,14 +130,14 @@ export function PublicBookingClient({
   );
 
   const steps = useMemo(
-    () => buildSteps(addonServices.length > 0, paramConfigs.length > 0),
-    [addonServices.length, paramConfigs.length],
+    () => buildSteps(addonServices.length > 0, paramConfigs.length > 0, payAtBooking.showPaymentStep),
+    [addonServices.length, paramConfigs.length, payAtBooking.showPaymentStep],
   );
   const addonKey = addonIds.slice().sort().join(",");
 
   const totals = useMemo(
-    () => computeTotals(selectedPrimary, selectedAddons, paramConfigs, paramValues),
-    [selectedPrimary, selectedAddons, paramConfigs, paramValues],
+    () => computeTotals(selectedPrimary, selectedAddons, paramConfigs, paramValues, frequency),
+    [selectedPrimary, selectedAddons, paramConfigs, paramValues, frequency],
   );
 
   function selectService(nextId: string) {
@@ -185,15 +202,34 @@ export function PublicBookingClient({
         {!embedded && (
           <header className="overflow-hidden rounded-3xl bg-brand-950 p-5 text-white shadow-float sm:p-8">
             <div className="flex items-center gap-3">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-lg font-bold text-brand-950">
-                {business.displayName.charAt(0)}
-              </span>
+              {business.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={business.logoUrl}
+                  alt=""
+                  className="size-11 shrink-0 rounded-2xl object-cover ring-1 ring-white/20"
+                />
+              ) : (
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-lg font-bold text-brand-950">
+                  {business.displayName.charAt(0)}
+                </span>
+              )}
               <div className="min-w-0">
                 <h1 className="truncate text-xl font-bold">{business.displayName}</h1>
                 <p className="text-sm text-white/60">
                   {business.serviceArea ? `${business.serviceArea} · ` : ""}
                   Book online in a few steps
                 </p>
+                {business.websiteUrl && (
+                  <a
+                    href={business.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-block truncate text-sm text-brand-300 hover:text-brand-200"
+                  >
+                    Visit website
+                  </a>
+                )}
               </div>
             </div>
           </header>
@@ -201,10 +237,32 @@ export function PublicBookingClient({
 
         {embedded && (
           <div className="mb-4 border-b border-ink-100 pb-3">
-            <h1 className="text-lg font-bold text-ink-950">{business.displayName}</h1>
-            {business.serviceArea && (
-              <p className="text-sm text-ink-500">{business.serviceArea}</p>
-            )}
+            <div className="flex items-center gap-3">
+              {business.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={business.logoUrl}
+                  alt=""
+                  className="size-10 shrink-0 rounded-xl object-cover ring-1 ring-ink-100"
+                />
+              ) : null}
+              <div className="min-w-0">
+                <h1 className="text-lg font-bold text-ink-950">{business.displayName}</h1>
+                {business.serviceArea && (
+                  <p className="text-sm text-ink-500">{business.serviceArea}</p>
+                )}
+                {business.websiteUrl && (
+                  <a
+                    href={business.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-brand-700 hover:underline"
+                  >
+                    Visit website
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
@@ -296,7 +354,7 @@ export function PublicBookingClient({
           {steps.params && paramConfigs.length > 0 && (
             <Section step={steps.params} title="Home size">
               <p className="mb-3 text-sm text-ink-500">
-                Your base price includes some bedrooms and bathrooms; extra units are added to the total.
+                Your base price includes some home-size units; extras are added to the total.
               </p>
               <PricingParametersFields
                 configs={paramConfigs}
@@ -311,7 +369,12 @@ export function PublicBookingClient({
               Recurring schedules are noted on your request. Your provider will confirm details.
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
-              {BOOKING_FREQUENCY_OPTIONS.map((opt) => (
+              {BOOKING_FREQUENCY_OPTIONS.map((opt) => {
+                const badge =
+                  selectedPrimary && opt.value !== "one_time"
+                    ? discountLabelForFrequency(opt.value, selectedPrimary.frequencyDiscounts)
+                    : null;
+                return (
                 <button
                   key={opt.value}
                   type="button"
@@ -325,10 +388,16 @@ export function PublicBookingClient({
                   <p className="flex items-center gap-1.5 font-semibold text-ink-950">
                     <Repeat className="size-3.5 text-brand-600" />
                     {opt.label}
+                    {badge && (
+                      <span className="ml-1 rounded-full bg-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-900">
+                        {badge}
+                      </span>
+                    )}
                   </p>
                   <p className="mt-0.5 text-xs text-ink-500">{opt.description}</p>
                 </button>
-              ))}
+              );
+              })}
             </div>
           </Section>
 
@@ -375,20 +444,50 @@ export function PublicBookingClient({
               <input name="lastName" required placeholder="Last name" defaultValue={prefill?.lastName} className={input} />
               <input name="email" type="email" required placeholder="Email" defaultValue={prefill?.email} className={`sm:col-span-2 ${input}`} />
               <input name="phone" type="tel" placeholder="Phone (optional)" defaultValue={prefill?.phone} className={`sm:col-span-2 ${input}`} />
-              <input name="line1" required placeholder="Street address" defaultValue={prefill?.line1} className={`sm:col-span-2 ${input}`} />
-              <input name="line2" placeholder="Apt / suite (optional)" defaultValue={prefill?.line2} className={`sm:col-span-2 ${input}`} />
-              <input name="city" required placeholder="City" defaultValue={prefill?.city} className={input} />
-              <input name="region" required placeholder="State / region" defaultValue={prefill?.region} className={input} />
-              <input name="postalCode" required placeholder="ZIP / postal code" defaultValue={prefill?.postalCode} className={input} />
-              <textarea
-                name="customerNotes"
-                rows={2}
-                placeholder="Notes for the team (optional)"
-                defaultValue={prefill?.customerNotes}
-                className={`sm:col-span-2 ${input}`}
+              <AddressAutocompleteFields
+                compact
+                className="sm:col-span-2 grid gap-3 sm:grid-cols-2"
+                defaults={{
+                  line1: prefill?.line1 ?? "",
+                  line2: prefill?.line2 ?? "",
+                  city: prefill?.city ?? "",
+                  region: prefill?.region ?? "",
+                  postalCode: prefill?.postalCode ?? "",
+                }}
+                line1Name="line1"
+                line2Name="line2"
+                regionAsSelect={false}
+                idPrefix="book-addr"
               />
+              {customFormFields.length > 0 ? (
+                <div className="sm:col-span-2">
+                  <CustomBookingFields fields={customFormFields} />
+                </div>
+              ) : (
+                <textarea
+                  name="customerNotes"
+                  rows={2}
+                  placeholder="Notes for the team (optional)"
+                  defaultValue={prefill?.customerNotes}
+                  className={`sm:col-span-2 ${input}`}
+                />
+              )}
             </div>
           </Section>
+
+          {steps.payment && (
+            <Section step={steps.payment} title="Payment">
+              <p className="mb-3 text-sm text-ink-500">
+                {payAtBooking.requirePaymentAtBooking
+                  ? "Complete secure checkout to confirm your booking."
+                  : "Pay now with card, or request the booking and pay later."}
+              </p>
+              <div className="flex items-center gap-2 rounded-xl bg-ink-50 px-3 py-2 text-sm text-ink-700 ring-1 ring-ink-100">
+                <CreditCard className="size-4 shrink-0 text-ink-400" />
+                <span>Powered by Stripe — your card is charged when checkout completes.</span>
+              </div>
+            </Section>
+          )}
 
           {selectedPrimary && (
             <div className="rounded-2xl bg-ink-50 px-4 py-3 text-sm ring-1 ring-ink-100">
@@ -413,23 +512,58 @@ export function PublicBookingClient({
                 </span>
                 <span>{formatMoney(totals.priceCents, totals.currency)}</span>
               </div>
+              {totals.subtotalCents > totals.priceCents && (
+                <p className="mt-1 text-right text-xs font-semibold text-brand-700">
+                  Recurring discount (was {formatMoney(totals.subtotalCents, totals.currency)})
+                </p>
+              )}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={!date || !time || !selectedPrimary || pending}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3.5 text-base font-bold text-brand-950 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4"
-          >
-            <Check className="size-5" /> Request booking
-            {selectedPrimary && (
-              <span className="text-sm font-semibold opacity-80">
-                · {formatMoney(totals.priceCents, totals.currency)}
-              </span>
+          <div className="flex flex-col gap-2">
+            {payAtBooking.showPaymentStep && (
+              <button
+                type="submit"
+                name="payAtBooking"
+                value="on"
+                disabled={!date || !time || !selectedPrimary || pending}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3.5 text-base font-bold text-brand-950 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4"
+              >
+                <CreditCard className="size-5" />
+                {payAtBooking.requirePaymentAtBooking ? "Continue to payment" : "Pay & book"}
+                {selectedPrimary && (
+                  <span className="text-sm font-semibold opacity-80">
+                    · {formatMoney(totals.priceCents, totals.currency)}
+                  </span>
+                )}
+              </button>
             )}
-          </button>
+            {(!payAtBooking.showPaymentStep || !payAtBooking.requirePaymentAtBooking) && (
+              <button
+                type="submit"
+                disabled={!date || !time || !selectedPrimary || pending}
+                className={`flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-base font-bold transition disabled:cursor-not-allowed disabled:opacity-50 sm:py-4 ${
+                  payAtBooking.showPaymentStep
+                    ? "bg-ink-100 text-ink-800 ring-1 ring-ink-200 hover:bg-ink-200"
+                    : "bg-brand-400 text-brand-950 hover:bg-brand-300"
+                }`}
+              >
+                <Check className="size-5" /> Request booking
+                {selectedPrimary && (
+                  <span className="text-sm font-semibold opacity-80">
+                    · {formatMoney(totals.priceCents, totals.currency)}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
           <p className={`text-center text-xs text-ink-400 ${embedded ? "" : "pb-4"}`}>
-            You&apos;ll get a confirmation email. {business.displayName} will confirm your time shortly.
+            {payAtBooking.showPaymentStep && payAtBooking.requirePaymentAtBooking
+              ? "You'll be redirected to Stripe to complete payment."
+              : "You'll get a confirmation email. "}
+            {!payAtBooking.requirePaymentAtBooking && (
+              <>{business.displayName} will confirm your time shortly.</>
+            )}
           </p>
         </form>
       </div>

@@ -34,7 +34,8 @@ async function main() {
   const days = daysResult?.days ?? [];
   if (days.length === 0) throw new Error("No available days");
 
-  const slots = (await getOrgSlotsForDay(org.id, service.id, days[0].date)) ?? [];
+  const slotResult = await getOrgSlotsForDay(org.id, service.id, days[0].date);
+  const slots = slotResult?.slots ?? [];
   if (slots.length === 0) throw new Error("No slots");
 
   const result = await createManualBooking(org.id, {

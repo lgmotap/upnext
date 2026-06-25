@@ -19,6 +19,7 @@
 ## Settings polish
 - [x] **Wire `/app/settings/business`** to BusinessProfile (replace mock; Save works)
 - [x] Business settings: copy public booking link (reuse onboarding pattern)
+- [x] **Follow-up sprint 35:** logo, website, unified service area with onboarding
 - [x] Notifications settings: persist toggles per org; connect to sprint 06 senders
 - [x] Billing settings: Stripe Connect status + link to onboarding
 - [x] Empty / loading / error states on dashboard + settings

@@ -3,6 +3,8 @@ import { serviceTypes } from "@/lib/config";
 type ServiceType = (typeof serviceTypes)[number];
 
 import { resolveIconKeyForServiceName } from "@/lib/onboarding/service-icons";
+import type { BookingFrequency, PricingParameterType } from "@/generated/prisma/client";
+import { PRICING_PARAMETER_LIMITS } from "@/lib/pricing/parameters";
 
 export type CatalogService = {
   name: string;
@@ -12,17 +14,52 @@ export type CatalogService = {
   isAddon: boolean;
   iconKey: string;
   pricingParameters?: Array<{
-    parameterType: "bedrooms" | "bathrooms";
+    parameterType: PricingParameterType;
     unitPriceCents: number;
     includedUnits: number;
     maxUnits: number;
   }>;
+  frequencyDiscounts?: Array<{
+    frequency: BookingFrequency;
+    percentOff: number;
+    amountOffCents?: number;
+  }>;
 };
 
-/** Default bed/bath pricing for residential cleaning primary services. */
+/** Default recurring discounts for residential cleaning (CL-style). */
+export const RESIDENTIAL_CLEANING_FREQUENCY_DISCOUNTS: NonNullable<
+  CatalogService["frequencyDiscounts"]
+> = [
+  { frequency: "weekly", percentOff: 10 },
+  { frequency: "biweekly", percentOff: 5 },
+];
+
+/** Default home-size pricing for residential cleaning primary services (CL-style). */
 export const RESIDENTIAL_CLEANING_PRICING_PARAMS: NonNullable<CatalogService["pricingParameters"]> = [
-  { parameterType: "bedrooms", unitPriceCents: 1500, includedUnits: 2, maxUnits: 10 },
-  { parameterType: "bathrooms", unitPriceCents: 2000, includedUnits: 1, maxUnits: 8 },
+  {
+    parameterType: "bedrooms",
+    unitPriceCents: PRICING_PARAMETER_LIMITS.bedrooms.defaultUnitPriceCents,
+    includedUnits: PRICING_PARAMETER_LIMITS.bedrooms.defaultIncludedUnits,
+    maxUnits: PRICING_PARAMETER_LIMITS.bedrooms.maxUnits,
+  },
+  {
+    parameterType: "bathrooms",
+    unitPriceCents: PRICING_PARAMETER_LIMITS.bathrooms.defaultUnitPriceCents,
+    includedUnits: PRICING_PARAMETER_LIMITS.bathrooms.defaultIncludedUnits,
+    maxUnits: PRICING_PARAMETER_LIMITS.bathrooms.maxUnits,
+  },
+  {
+    parameterType: "half_bathrooms",
+    unitPriceCents: PRICING_PARAMETER_LIMITS.half_bathrooms.defaultUnitPriceCents,
+    includedUnits: PRICING_PARAMETER_LIMITS.half_bathrooms.defaultIncludedUnits,
+    maxUnits: PRICING_PARAMETER_LIMITS.half_bathrooms.maxUnits,
+  },
+  {
+    parameterType: "square_feet",
+    unitPriceCents: PRICING_PARAMETER_LIMITS.square_feet.defaultUnitPriceCents,
+    includedUnits: PRICING_PARAMETER_LIMITS.square_feet.defaultIncludedUnits,
+    maxUnits: PRICING_PARAMETER_LIMITS.square_feet.maxUnits,
+  },
 ];
 
 export type IndustryCatalog = {
@@ -38,6 +75,7 @@ function svc(
   basePriceCents: number,
   isAddon = false,
   pricingParameters?: CatalogService["pricingParameters"],
+  frequencyDiscounts?: CatalogService["frequencyDiscounts"],
 ): CatalogService {
   return {
     name,
@@ -46,6 +84,7 @@ function svc(
     basePriceCents,
     isAddon,
     pricingParameters,
+    frequencyDiscounts,
     iconKey: resolveIconKeyForServiceName(name, isAddon),
   };
 }
@@ -62,6 +101,7 @@ const catalogs: Record<ServiceType, IndustryCatalog> = {
         15000,
         false,
         RESIDENTIAL_CLEANING_PRICING_PARAMS,
+        RESIDENTIAL_CLEANING_FREQUENCY_DISCOUNTS,
       ),
       svc(
         "Deep Cleaning",
@@ -70,6 +110,7 @@ const catalogs: Record<ServiceType, IndustryCatalog> = {
         22000,
         false,
         RESIDENTIAL_CLEANING_PRICING_PARAMS,
+        RESIDENTIAL_CLEANING_FREQUENCY_DISCOUNTS,
       ),
       svc(
         "Move In / Move Out Cleaning",
@@ -78,6 +119,7 @@ const catalogs: Record<ServiceType, IndustryCatalog> = {
         30000,
         false,
         RESIDENTIAL_CLEANING_PRICING_PARAMS,
+        RESIDENTIAL_CLEANING_FREQUENCY_DISCOUNTS,
       ),
       svc(
         "Post-Construction Clean",

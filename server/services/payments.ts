@@ -7,6 +7,7 @@ import {
   wasWebhookEventProcessed,
 } from "@/server/repositories/payments";
 import { markPaymentPaidFromStripe } from "@/server/services/portal-payments";
+import { fulfillPayAtBookingPayment } from "@/server/services/pay-at-booking";
 import { notifyPaymentRequest } from "@/server/services/notifications";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
@@ -202,6 +203,9 @@ export async function handleStripeWebhookEvent(event: Stripe.Event) {
 
       if (paymentIntentId && organizationId) {
         await markPaymentPaidFromStripe(paymentRecordId, organizationId, paymentIntentId);
+        if (session.metadata?.payAtBooking === "true") {
+          await fulfillPayAtBookingPayment(paymentRecordId, organizationId);
+        }
       } else {
         await prisma.paymentRecord.updateMany({
           where: { id: paymentRecordId, organizationId: organizationId ?? undefined },

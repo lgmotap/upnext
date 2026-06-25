@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/db/prisma";
+import type { NotificationTemplate } from "@/generated/prisma/client";
 import { formatMoney } from "@/lib/money/format";
-import { getWeekRange } from "@/lib/datetime/calendar";
+import { getWeekRange, getDayBoundsUtc, formatAddressLine } from "@/lib/datetime/calendar";
+import { formatRelativeTime } from "@/lib/datetime/relative";
+import { formatGreetingSubtitle, formatGreetingTitle, getGreetingPeriod } from "@/lib/datetime/greeting";
+import { templateLabel } from "@/lib/notifications/labels";
+import { frequencyLabel } from "@/lib/booking/frequency";
+import { getThirtyDaySnapshot, type ThirtyDaySnapshot } from "@/lib/reporting/period-stats";
 import {
   addDaysYmd,
   formatDisplayDateTime,
@@ -8,13 +14,14 @@ import {
   formatYmdInTimezone,
   localDateTimeToUtc,
 } from "@/lib/datetime/timezone";
-import { formatRelativeTime } from "@/lib/datetime/relative";
 
-export type DashboardStat = {
+export type DashboardQueueStat = {
+  id: "booked_today" | "scheduled_today" | "awaiting_payment" | "unassigned_today";
   label: string;
   value: string;
   delta?: string;
-  trend?: "up" | "down";
+  href: string;
+  iconClassName: string;
 };
 
 export type DashboardJobRow = {
@@ -26,6 +33,9 @@ export type DashboardJobRow = {
   assigneeName: string | null;
   assigneeInitials: string | null;
   status: string;
+  addressLine: string | null;
+  priceLabel: string;
+  frequencyLabel: string | null;
 };
 
 export type DashboardBookingRow = {
@@ -44,8 +54,12 @@ export type DashboardActivityRow = {
 
 export type DashboardData = {
   greetingName: string;
+  greetingTitle: string;
+  greetingSubtitle: string;
   dateLabel: string;
-  stats: DashboardStat[];
+  showBusinessSnapshot: boolean;
+  snapshot: ThirtyDaySnapshot | null;
+  queueStats: DashboardQueueStat[];
   todayJobs: DashboardJobRow[];
   pendingBookings: DashboardBookingRow[];
   pendingCount: number;
@@ -53,6 +67,12 @@ export type DashboardData = {
   weekRevenueTotalLabel: string;
   activity: DashboardActivityRow[];
 };
+
+const CREW_TEMPLATES: NotificationTemplate[] = [
+  "job_on_the_way",
+  "job_running_late",
+  "job_completed",
+];
 
 function initials(name: string): string {
   return name
@@ -64,32 +84,32 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-function getDayBoundsUtc(todayYmd: string, timeZone: string) {
-  const start = localDateTimeToUtc(todayYmd, "00:00", timeZone);
-  const end = localDateTimeToUtc(addDaysYmd(todayYmd, 1), "00:00", timeZone);
-  return { start, end };
-}
-
 export async function getDashboardData(
   organizationId: string,
   timeZone: string,
   currency: string,
   userName: string | null,
+  displayName: string,
+  gettingStartedPercent: number,
 ): Promise<DashboardData> {
   const now = new Date();
   const todayYmd = formatYmdInTimezone(now, timeZone);
   const { start: todayStart, end: todayEnd } = getDayBoundsUtc(todayYmd, timeZone);
   const { rangeStart, rangeEnd, days: weekDays } = getWeekRange(timeZone, now);
+  const crewSince = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
   const [
     todayJobsRaw,
     pendingBookingsRaw,
-    bookingsThisWeekCount,
     paidThisWeek,
     paymentAgg,
     recentBookings,
     recentJobs,
     recentPayments,
+    bookedTodayCount,
+    unassignedTodayCount,
+    crewLogs,
+    snapshot,
   ] = await Promise.all([
     prisma.job.findMany({
       where: {
@@ -101,6 +121,9 @@ export async function getDashboardData(
       include: {
         customer: true,
         service: true,
+        customerAddress: true,
+        bookingRequest: { select: { frequency: true } },
+        jobSeries: { select: { frequency: true } },
         assignments: { include: { membership: { include: { user: true } } }, take: 1 },
       },
     }),
@@ -109,12 +132,6 @@ export async function getDashboardData(
       orderBy: { createdAt: "desc" },
       take: 5,
       include: { customer: true, service: true },
-    }),
-    prisma.bookingRequest.count({
-      where: {
-        organizationId,
-        createdAt: { gte: rangeStart, lt: rangeEnd },
-      },
     }),
     prisma.paymentRecord.findMany({
       where: {
@@ -148,13 +165,37 @@ export async function getDashboardData(
       take: 8,
       include: { customer: true, job: { select: { title: true } } },
     }),
+    prisma.bookingRequest.count({
+      where: {
+        organizationId,
+        status: "accepted",
+        updatedAt: { gte: todayStart, lt: todayEnd },
+      },
+    }),
+    prisma.job.count({
+      where: {
+        organizationId,
+        scheduledStartAt: { gte: todayStart, lt: todayEnd },
+        status: { notIn: ["cancelled"] },
+        assignments: { none: {} },
+      },
+    }),
+    prisma.notificationLog.findMany({
+      where: {
+        organizationId,
+        template: { in: CREW_TEMPLATES },
+        sentAt: { gte: crewSince },
+      },
+      orderBy: { sentAt: "desc" },
+      take: 15,
+    }),
+    gettingStartedPercent >= 100 ? getThirtyDaySnapshot(organizationId, timeZone, now) : null,
   ]);
 
   const pendingCount = await prisma.bookingRequest.count({
     where: { organizationId, status: "pending" },
   });
 
-  const completedToday = todayJobsRaw.filter((j) => j.status === "completed").length;
   const weekRevenueCents = paidThisWeek.reduce((sum, p) => sum + p.amountCents, 0);
 
   let outstandingCents = 0;
@@ -164,30 +205,38 @@ export async function getDashboardData(
     outstandingCount += row._count;
   }
 
-  const stats: DashboardStat[] = [
+  const queueStats: DashboardQueueStat[] = [
     {
-      label: "Jobs today",
+      id: "booked_today",
+      label: "Booked today",
+      value: String(bookedTodayCount),
+      delta: bookedTodayCount === 1 ? "1 accepted today" : `${bookedTodayCount} accepted today`,
+      href: "/app/bookings?status=accepted",
+      iconClassName: "bg-emerald-100 text-emerald-700",
+    },
+    {
+      id: "scheduled_today",
+      label: "Scheduled today",
       value: String(todayJobsRaw.length),
-      delta: completedToday > 0 ? `${completedToday} completed` : undefined,
-      trend: "up",
+      delta: todayJobsRaw.length === 1 ? "1 job" : `${todayJobsRaw.length} jobs`,
+      href: "/app/jobs?date=today",
+      iconClassName: "bg-sky-100 text-sky-700",
     },
     {
-      label: "Pending requests",
-      value: String(pendingCount),
-      delta: pendingCount > 0 ? `${pendingCount} awaiting` : undefined,
-      trend: pendingCount > 0 ? "up" : "down",
+      id: "awaiting_payment",
+      label: "Awaiting payment",
+      value: String(outstandingCount),
+      delta: formatMoney(outstandingCents, currency) + " pending",
+      href: "/app/payments?status=pending",
+      iconClassName: "bg-amber-100 text-amber-800",
     },
     {
-      label: "Revenue this week",
-      value: formatMoney(weekRevenueCents, currency),
-      delta: `${bookingsThisWeekCount} new booking${bookingsThisWeekCount === 1 ? "" : "s"}`,
-      trend: "up",
-    },
-    {
-      label: "Outstanding",
-      value: formatMoney(outstandingCents, currency),
-      delta: outstandingCount > 0 ? `${outstandingCount} to chase` : undefined,
-      trend: outstandingCount > 0 ? "down" : "up",
+      id: "unassigned_today",
+      label: "Needs assignment",
+      value: String(unassignedTodayCount),
+      delta: unassignedTodayCount > 0 ? "Unassigned today" : "All assigned",
+      href: "/app/jobs?date=today&unassigned=1",
+      iconClassName: "bg-rose-100 text-rose-700",
     },
   ];
 
@@ -195,6 +244,8 @@ export async function getDashboardData(
     const customerName = `${job.customer.firstName} ${job.customer.lastName}`.trim();
     const assignee = job.assignments[0]?.membership.user;
     const assigneeName = assignee?.name ?? assignee?.email ?? null;
+    const freq =
+      job.jobSeries?.frequency ?? job.bookingRequest?.frequency ?? null;
     return {
       id: job.id,
       customerName,
@@ -204,6 +255,9 @@ export async function getDashboardData(
       assigneeName,
       assigneeInitials: assigneeName ? initials(assigneeName) : null,
       status: job.status,
+      addressLine: job.customerAddress ? formatAddressLine(job.customerAddress) : null,
+      priceLabel: formatMoney(job.priceCents, job.currency ?? currency),
+      frequencyLabel: freq ? frequencyLabel(freq) : null,
     };
   });
 
@@ -267,6 +321,36 @@ export async function getDashboardData(
     });
   }
 
+  const crewJobIds = crewLogs.map((l) => l.relatedId).filter(Boolean) as string[];
+  const crewJobs =
+    crewJobIds.length > 0
+      ? await prisma.job.findMany({
+          where: { organizationId, id: { in: crewJobIds } },
+          include: { customer: true },
+        })
+      : [];
+  const jobCustomerById = new Map(crewJobs.map((j) => [j.id, j]));
+
+  for (const log of crewLogs) {
+    if (!log.relatedId) continue;
+    const job = jobCustomerById.get(log.relatedId);
+    const customerName = job
+      ? `${job.customer.firstName} ${job.customer.lastName}`.trim()
+      : "customer";
+    const duplicate = activityEvents.some(
+      (e) =>
+        e.what.includes(log.relatedId!) &&
+        Math.abs(e.at.getTime() - log.sentAt.getTime()) < 5 * 60_000,
+    );
+    if (duplicate) continue;
+    activityEvents.push({
+      who: "Team",
+      what: `${templateLabel(log.template)} — ${customerName}`,
+      when: formatRelativeTime(log.sentAt, now),
+      at: log.sentAt,
+    });
+  }
+
   activityEvents.sort((a, b) => b.at.getTime() - a.at.getTime());
   const activity = activityEvents.slice(0, 10);
 
@@ -277,12 +361,17 @@ export async function getDashboardData(
     day: "numeric",
   }).format(now);
 
-  const firstName = (userName ?? "there").split(" ")[0];
+  const firstName = (userName ?? "there").split(" ")[0]!;
+  const greetingPeriod = getGreetingPeriod(now, timeZone);
 
   return {
     greetingName: firstName,
+    greetingTitle: formatGreetingTitle(greetingPeriod, displayName),
+    greetingSubtitle: formatGreetingSubtitle(firstName, dateLabel),
     dateLabel,
-    stats,
+    showBusinessSnapshot: gettingStartedPercent >= 100,
+    snapshot,
+    queueStats,
     todayJobs,
     pendingBookings,
     pendingCount,

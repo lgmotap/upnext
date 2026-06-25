@@ -9,7 +9,7 @@ export function CalendarWeekNav({ weekStartYmd, isCurrentWeek }: { weekStartYmd:
   return (
     <div className="flex items-center gap-1">
       <Link
-        href={`/app/calendar?week=${prevWeek}`}
+        href={`/app/calendar?view=week&week=${prevWeek}`}
         aria-label="Previous week"
         className="flex size-9 items-center justify-center rounded-full text-ink-600 ring-1 ring-ink-200 hover:bg-ink-50"
       >
@@ -17,14 +17,14 @@ export function CalendarWeekNav({ weekStartYmd, isCurrentWeek }: { weekStartYmd:
       </Link>
       {!isCurrentWeek && (
         <Link
-          href="/app/calendar"
+          href="/app/calendar?view=week"
           className="rounded-full px-3 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
         >
           Today
         </Link>
       )}
       <Link
-        href={`/app/calendar?week=${nextWeek}`}
+        href={`/app/calendar?view=week&week=${nextWeek}`}
         aria-label="Next week"
         className="flex size-9 items-center justify-center rounded-full text-ink-600 ring-1 ring-ink-200 hover:bg-ink-50"
       >

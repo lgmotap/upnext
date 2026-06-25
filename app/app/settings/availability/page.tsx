@@ -14,6 +14,7 @@ import {
 import {
   saveWeeklyAvailabilityAction,
   saveBookingWindowAction,
+  saveSchedulingPolicyAction,
   addBlackoutDateAction,
   removeBlackoutDateAction,
 } from "@/server/actions/availability";
@@ -60,6 +61,8 @@ export default async function AvailabilitySettingsPage({
   const minNoticeHours = booking?.minNoticeHours ?? 24;
   const maxBookingDaysAhead = booking?.maxBookingDaysAhead ?? 60;
   const slotIntervalMinutes = booking?.slotIntervalMinutes ?? 30;
+  const bufferMinutesBetweenJobs = booking?.bufferMinutesBetweenJobs ?? 0;
+  const providerCarryOverMinutes = booking?.providerCarryOverMinutes ?? 0;
 
   return (
     <div className="space-y-4">
@@ -168,6 +171,52 @@ export default async function AvailabilitySettingsPage({
                 className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
               >
                 Save booking window
+              </button>
+            </div>
+          )}
+        </form>
+      </Card>
+
+      <Card>
+        <CardHeader title="Scheduling gaps" />
+        <form action={saveSchedulingPolicyAction} className="grid gap-4 p-5 sm:grid-cols-2">
+          <Field label="Buffer between jobs (minutes)">
+            <input
+              name="bufferMinutesBetweenJobs"
+              type="number"
+              min={0}
+              max={240}
+              step={5}
+              defaultValue={bufferMinutesBetweenJobs}
+              disabled={!canEdit}
+              className={`w-full ${input}`}
+            />
+            <p className="mt-1 text-xs text-ink-500">
+              Minimum gap after a job ends before the next booking can start.
+            </p>
+          </Field>
+          <Field label="Provider carry-over (minutes)">
+            <input
+              name="providerCarryOverMinutes"
+              type="number"
+              min={0}
+              max={240}
+              step={5}
+              defaultValue={providerCarryOverMinutes}
+              disabled={!canEdit}
+              className={`w-full ${input}`}
+            />
+            <p className="mt-1 text-xs text-ink-500">
+              Travel and setup time added after each service when calculating available slots.
+            </p>
+          </Field>
+          {canEdit && (
+            <div className="sm:col-span-2">
+              <button
+                type="submit"
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              >
+                Save scheduling gaps
               </button>
             </div>
           )}

@@ -7,6 +7,7 @@ import { resolveIconKeyForServiceName } from "@/lib/onboarding/service-icons";
 import { saveWeeklyAvailability } from "@/server/services/availability";
 import { defaultWeeklyRules } from "@/server/validators/availability";
 import { replaceServicePricingParameters } from "@/server/repositories/pricing-parameters";
+import { replaceServiceFrequencyDiscounts } from "@/server/repositories/frequency-discounts";
 
 export const DEFAULT_BUSINESS_TYPE = "Residential Cleaning";
 
@@ -130,13 +131,23 @@ export async function seedIndustryCatalog(
   );
 
   for (const item of toCreate) {
-    if (!item.pricingParameters?.length) continue;
     const created = await prisma.service.findFirst({
       where: { organizationId, name: item.name },
       select: { id: true },
     });
-    if (created) {
+    if (!created) continue;
+    if (item.pricingParameters?.length) {
       await replaceServicePricingParameters(created.id, item.pricingParameters);
+    }
+    if (item.frequencyDiscounts?.length) {
+      await replaceServiceFrequencyDiscounts(
+        created.id,
+        item.frequencyDiscounts.map((d) => ({
+          frequency: d.frequency,
+          percentOff: d.percentOff,
+          amountOffCents: d.amountOffCents ?? 0,
+        })),
+      );
     }
   }
 

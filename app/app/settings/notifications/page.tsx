@@ -1,15 +1,24 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, CardHeader } from "@/components/app/ui";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBusiness } from "@/server/permissions/can";
 import { getNotificationPreferences } from "@/server/repositories/notification-preferences";
-import { updateNotificationSettingsAction } from "@/server/actions/notification-settings";
-import { NOTIFICATION_SETTING_META } from "@/server/validators/notification-settings";
+import {
+  updateNotificationSettingsAction,
+  updateSmsNotificationSettingsAction,
+} from "@/server/actions/notification-settings";
+import {
+  NOTIFICATION_SETTING_META,
+  SMS_NOTIFICATION_SETTING_META,
+  twilioSetupHint,
+} from "@/server/validators/notification-settings";
+import { isTwilioConfigured } from "@/lib/sms/twilio";
 
 export default async function NotificationSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; saved?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; sms_saved?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/settings/notifications");
@@ -27,51 +36,146 @@ export default async function NotificationSettingsPage({
     notifyCustomerPaymentRequest: prefs?.notifyCustomerPaymentRequest ?? true,
   };
 
+  const smsValues = {
+    smsEnabled: prefs?.smsEnabled ?? false,
+    smsFromNumber: prefs?.smsFromNumber ?? "",
+    notifyCustomerSmsReminder24h: prefs?.notifyCustomerSmsReminder24h ?? false,
+    notifyCustomerSmsOnTheWay: prefs?.notifyCustomerSmsOnTheWay ?? false,
+    notifyCustomerSmsRunningLate: prefs?.notifyCustomerSmsRunningLate ?? false,
+    notifyWorkerSmsJobAssigned: prefs?.notifyWorkerSmsJobAssigned ?? false,
+  };
+
   return (
-    <Card>
-      <CardHeader title="Email notifications" />
-      {params.error && (
-        <p className="mx-5 mt-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 ring-1 ring-rose-100">
-          {params.error === "denied" ? "You do not have permission to change these settings." : "Could not save settings."}
-        </p>
-      )}
-      {params.saved === "1" && (
-        <p className="mx-5 mt-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
-          Notification settings saved.
-        </p>
-      )}
-      <form action={updateNotificationSettingsAction}>
-        <ul className="divide-y divide-ink-100">
-          {NOTIFICATION_SETTING_META.map((s) => (
-            <li key={s.key} className="flex items-center gap-4 px-5 py-3.5">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader title="Email notifications" />
+        {params.error && (
+          <p className="mx-5 mt-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 ring-1 ring-rose-100">
+            {params.error === "denied"
+              ? "You do not have permission to change these settings."
+              : "Could not save settings."}
+          </p>
+        )}
+        {params.saved === "1" && (
+          <p className="mx-5 mt-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+            Email notification settings saved.
+          </p>
+        )}
+        <form action={updateNotificationSettingsAction}>
+          <ul className="divide-y divide-ink-100">
+            {NOTIFICATION_SETTING_META.map((s) => (
+              <li key={s.key} className="flex items-center gap-4 px-5 py-3.5">
+                <div className="min-w-0 flex-1">
+                  <label htmlFor={s.key} className="text-sm font-semibold text-ink-950">
+                    {s.label}
+                  </label>
+                  <p className="text-xs text-ink-500">{s.desc}</p>
+                </div>
+                <input
+                  id={s.key}
+                  name={s.key}
+                  type="checkbox"
+                  defaultChecked={values[s.key]}
+                  disabled={!canEdit}
+                  className="size-5 rounded border-ink-300 text-brand-600 focus:ring-brand-400"
+                />
+              </li>
+            ))}
+          </ul>
+        {canEdit && (
+          <div className="border-t border-ink-100 px-5 py-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="submit"
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              >
+                Save email settings
+              </button>
+              <Link href="/app/communications" className="text-sm font-semibold text-brand-700 hover:underline">
+                View delivery log
+              </Link>
+            </div>
+          </div>
+        )}
+        </form>
+      </Card>
+
+      <Card>
+        <CardHeader title="SMS notifications" />
+        <p className="mx-5 -mt-2 text-sm text-ink-500">{twilioSetupHint()}</p>
+        {params.sms_saved === "1" && (
+          <p className="mx-5 mt-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+            SMS settings saved.
+          </p>
+        )}
+        <form action={updateSmsNotificationSettingsAction} className="mt-2">
+          <div className="border-b border-ink-100 px-5 py-3.5">
+            <label className="flex items-center gap-4">
               <div className="min-w-0 flex-1">
-                <label htmlFor={s.key} className="text-sm font-semibold text-ink-950">
-                  {s.label}
-                </label>
-                <p className="text-xs text-ink-500">{s.desc}</p>
+                <span className="text-sm font-semibold text-ink-950">Enable SMS</span>
+                <p className="text-xs text-ink-500">
+                  Send texts when toggles below are on. Skips customers without a phone number.
+                </p>
               </div>
               <input
-                id={s.key}
-                name={s.key}
+                name="smsEnabled"
                 type="checkbox"
-                defaultChecked={values[s.key]}
+                defaultChecked={smsValues.smsEnabled}
                 disabled={!canEdit}
                 className="size-5 rounded border-ink-300 text-brand-600 focus:ring-brand-400"
               />
-            </li>
-          ))}
-        </ul>
-        {canEdit && (
-          <div className="border-t border-ink-100 px-5 py-4">
-            <button
-              type="submit"
-              className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
-            >
-              Save notification settings
-            </button>
+            </label>
           </div>
-        )}
-      </form>
-    </Card>
+          <div className="border-b border-ink-100 px-5 py-3.5">
+            <label htmlFor="smsFromNumber" className="block text-sm font-semibold text-ink-950">
+              From number
+            </label>
+            <p className="mb-2 text-xs text-ink-500">
+              E.164 format (e.g. +15551234567). Defaults to{" "}
+              {isTwilioConfigured() ? "TWILIO_FROM_NUMBER" : "env when Twilio is configured"}.
+            </p>
+            <input
+              id="smsFromNumber"
+              name="smsFromNumber"
+              type="tel"
+              defaultValue={smsValues.smsFromNumber}
+              disabled={!canEdit}
+              placeholder="+15551234567"
+              className="w-full max-w-xs rounded-xl bg-white px-3.5 py-2.5 text-sm ring-1 ring-ink-200"
+            />
+          </div>
+          <ul className="divide-y divide-ink-100">
+            {SMS_NOTIFICATION_SETTING_META.map((s) => (
+              <li key={s.key} className="flex items-center gap-4 px-5 py-3.5">
+                <div className="min-w-0 flex-1">
+                  <label htmlFor={s.key} className="text-sm font-semibold text-ink-950">
+                    {s.label}
+                  </label>
+                  <p className="text-xs text-ink-500">{s.desc}</p>
+                </div>
+                <input
+                  id={s.key}
+                  name={s.key}
+                  type="checkbox"
+                  defaultChecked={smsValues[s.key]}
+                  disabled={!canEdit}
+                  className="size-5 rounded border-ink-300 text-brand-600 focus:ring-brand-400"
+                />
+              </li>
+            ))}
+          </ul>
+          {canEdit && (
+            <div className="border-t border-ink-100 px-5 py-4">
+              <button
+                type="submit"
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              >
+                Save SMS settings
+              </button>
+            </div>
+          )}
+        </form>
+      </Card>
+    </div>
   );
 }

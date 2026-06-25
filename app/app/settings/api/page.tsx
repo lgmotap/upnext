@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Card, PageHeader } from "@/components/app/ui";
+import { Card } from "@/components/app/ui";
 import { FormSubmitButton } from "@/components/app/FormSubmitButton";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBilling } from "@/server/permissions/can";
@@ -16,7 +16,6 @@ import {
   deactivateWebhookAction,
   revokeApiKeyAction,
 } from "@/server/actions/api-settings";
-import { SettingsTabs } from "../SettingsTabs";
 
 export default async function ApiSettingsPage({
   searchParams,
@@ -42,11 +41,9 @@ export default async function ApiSettingsPage({
 
   return (
     <>
-      <PageHeader
-        title="Settings"
-        subtitle="API keys and webhooks for integrations (Zapier, custom tools)."
-      />
-      <SettingsTabs />
+      <p className="mb-4 text-sm text-ink-500">
+        API keys and webhooks for integrations (Zapier, custom tools).
+      </p>
 
       {params.error && (
         <p className="mb-4 rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 ring-1 ring-rose-100">

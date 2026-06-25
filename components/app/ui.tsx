@@ -60,25 +60,33 @@ export function StatCard({
   delta,
   trend = "up",
   icon: Icon,
+  href,
+  iconClassName = "bg-brand-100 text-brand-700",
+  showTrend = true,
 }: {
   label: string;
   value: string;
   delta?: string;
   trend?: "up" | "down";
   icon?: LucideIcon;
+  href?: string;
+  iconClassName?: string;
+  showTrend?: boolean;
 }) {
-  return (
-    <Card className="p-5">
+  const inner = (
+    <Card className={`p-5 ${href ? "h-full transition hover:ring-2 hover:ring-brand-200" : ""}`}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-ink-500">{label}</p>
         {Icon && (
-          <span className="flex size-8 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+          <span
+            className={`flex size-8 items-center justify-center rounded-xl ${iconClassName}`}
+          >
             <Icon className="size-4" />
           </span>
         )}
       </div>
       <p className="mt-2 text-3xl font-bold tracking-tight text-ink-950">{value}</p>
-      {delta && (
+      {delta && showTrend && (
         <p
           className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold ${
             trend === "up" ? "text-brand-700" : "text-rose-600"
@@ -88,8 +96,18 @@ export function StatCard({
           {delta}
         </p>
       )}
+      {delta && !showTrend && <p className="mt-1 text-xs font-medium text-ink-500">{delta}</p>}
     </Card>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block rounded-2xl">
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
 }
 
 /** Small primary button for product screens (clay/green CTA reuse). */
@@ -122,12 +140,33 @@ export function AppButton({
   return <button className={cls}>{children}</button>;
 }
 
-export function Avatar({ initials, className = "" }: { initials: string; className?: string }) {
+export function Avatar({
+  initials,
+  imageUrl,
+  className = "",
+}: {
+  initials: string;
+  imageUrl?: string | null;
+  className?: string;
+}) {
+  if (imageUrl) {
+    return (
+      <span
+        className={`relative inline-flex size-8 shrink-0 overflow-hidden rounded-full bg-ink-100 ${className}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imageUrl} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
+      </span>
+    );
+  }
+
+  const label = initials.trim() || "?";
+
   return (
     <span
       className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-800 ${className}`}
     >
-      {initials}
+      {label}
     </span>
   );
 }

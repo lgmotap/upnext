@@ -9,6 +9,8 @@ import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
 import { formatMoney } from "@/lib/money/format";
 import { bookingPriceCents, PRICING_PARAMETER_LABELS } from "@/lib/pricing/parameters";
 import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
+import { listBookingFormFields } from "@/server/repositories/booking-form-fields";
+import { CustomFieldsDisplay } from "@/components/app/CustomFieldsDisplay";
 import { getAppSession } from "@/server/permissions/session";
 import { canManageBookings } from "@/server/permissions/can";
 import { getBookingRequestForOrg } from "@/server/repositories/bookings";
@@ -49,6 +51,9 @@ export default async function BookingDetailPage({
   const schedule = formatJobSchedule(booking.requestedStartAt, booking.requestedEndAt, timeZone);
   const addonTotal = booking.addons.reduce((sum, a) => sum + a.priceCents, 0);
   const paramConfigs = await listPricingParametersForService(booking.serviceId);
+  const formFields = booking.customFieldsJson
+    ? await listBookingFormFields(session.organizationId)
+    : [];
   const paramValues = Object.fromEntries(booking.parameters.map((p) => [p.parameterType, p.units]));
   const priceCents = bookingPriceCents(
     booking.service.basePriceCents,
@@ -211,6 +216,11 @@ export default async function BookingDetailPage({
                   <p className="rounded-xl bg-ink-50 px-4 py-3 text-sm text-ink-700">{booking.customerNotes}</p>
                 </div>
               )}
+
+              <CustomFieldsDisplay
+                fields={formFields}
+                values={booking.customFieldsJson as Record<string, unknown> | null}
+              />
             </div>
           </Card>
 

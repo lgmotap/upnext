@@ -7,6 +7,7 @@ const clientSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().url().optional().default("http://localhost:3000"),
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: z.string().optional(),
 });
 
 const serverSchema = clientSchema.extend({

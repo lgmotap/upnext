@@ -1,4 +1,5 @@
 import type { PricingParameterConfig } from "@/lib/pricing/parameters";
+import type { FrequencyDiscountConfig } from "@/lib/pricing/frequency-discount";
 
 export type PublicService = {
   id: string;
@@ -10,6 +11,7 @@ export type PublicService = {
   isAddon: boolean;
   iconKey: string | null;
   pricingParameters: PricingParameterConfig[];
+  frequencyDiscounts: FrequencyDiscountConfig[];
 };
 
 export type PublicBusiness = {
@@ -18,6 +20,8 @@ export type PublicBusiness = {
   description: string | null;
   phone?: string | null;
   email?: string | null;
+  websiteUrl?: string | null;
+  logoUrl?: string | null;
   customerPortalEnabled?: boolean;
 };
 

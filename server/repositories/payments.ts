@@ -1,12 +1,29 @@
 import { prisma } from "@/lib/db/prisma";
 import type { PaymentStatus } from "@/generated/prisma/client";
 
+export function listPaymentRecordsForCustomer(organizationId: string, customerId: string) {
+  return prisma.paymentRecord.findMany({
+    where: { organizationId, customerId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      job: { select: { id: true, title: true, scheduledStartAt: true } },
+    },
+  });
+}
+
 export function listPaymentRecordsForOrg(organizationId: string, status?: PaymentStatus) {
   return prisma.paymentRecord.findMany({
     where: { organizationId, ...(status ? { status } : {}) },
     orderBy: { createdAt: "desc" },
     include: {
       job: { select: { id: true, title: true, scheduledStartAt: true } },
+      bookingRequest: {
+        select: {
+          id: true,
+          requestedStartAt: true,
+          service: { select: { name: true } },
+        },
+      },
       customer: { select: { id: true, firstName: true, lastName: true, email: true } },
     },
   });

@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/db/prisma";
+import { avatarUrlFromMetadata } from "@/lib/user/avatar";
 
 export type AppSession = {
   userId: string;
   email: string;
   name: string | null;
+  avatarUrl: string | null;
   organizationId: string;
   membershipId: string;
   role: "owner" | "admin" | "dispatcher" | "worker" | "viewer";
@@ -27,10 +29,15 @@ export async function getAppSession(): Promise<AppSession | null> {
 
   if (!membership) return null;
 
+  const avatarUrl =
+    membership.user.avatarUrl ??
+    avatarUrlFromMetadata(user.user_metadata as Record<string, unknown> | undefined);
+
   return {
     userId: user.id,
     email: user.email,
     name: membership.user.name,
+    avatarUrl,
     organizationId: membership.organizationId,
     membershipId: membership.id,
     role: membership.role,

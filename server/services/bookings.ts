@@ -30,7 +30,7 @@ import { assignJobToMember } from "@/server/repositories/assignments";
 import { captureServerEvent } from "@/lib/posthog/server";
 import { AnalyticsEvents } from "@/lib/posthog/events";
 import { emitOrgWebhook } from "@/server/services/webhooks";
-import type { Service } from "@/generated/prisma/client";
+import type { PricingParameterType, Service } from "@/generated/prisma/client";
 import type { PricingParameterConfig } from "@/lib/pricing/parameters";
 import {
   bookingPriceCents,
@@ -38,6 +38,18 @@ import {
   parseParameterInput,
 } from "@/lib/pricing/parameters";
 import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
+import {
+  listFrequencyDiscountsForService,
+  toFrequencyDiscountConfigs,
+} from "@/server/repositories/frequency-discounts";
+import { applyFrequencyDiscount } from "@/lib/pricing/frequency-discount";
+import { filterSlotsByJobConflicts } from "@/lib/scheduling/conflicts";
+import type { SchedulingPolicy } from "@/lib/scheduling/policy";
+import type { BookingFrequency } from "@/generated/prisma/client";
+import {
+  createBookingCheckoutSession,
+  isPayAtBookingAvailable,
+} from "@/server/services/pay-at-booking";
 
 export type PublicBookingContext = {
   organizationId: string;
@@ -57,9 +69,30 @@ type LoadedBookingContext = {
     maxBookingDaysAhead: number;
     slotIntervalMinutes: number;
     serviceDurationMinutes: number;
+    carryOverMinutes: number;
   };
+  schedulingPolicy: SchedulingPolicy;
   context: PublicBookingContext;
 };
+
+function schedulingPolicyFromProfile(profile: {
+  bufferMinutesBetweenJobs?: number;
+  providerCarryOverMinutes?: number;
+}): SchedulingPolicy {
+  return {
+    bufferMinutesBetweenJobs: profile.bufferMinutesBetweenJobs ?? 0,
+    providerCarryOverMinutes: profile.providerCarryOverMinutes ?? 0,
+  };
+}
+
+async function filterLoadedSlots(
+  organizationId: string,
+  slots: AvailableSlot[],
+  policy: SchedulingPolicy,
+  excludeJobId?: string,
+) {
+  return filterSlotsByJobConflicts(organizationId, slots, policy, excludeJobId);
+}
 
 async function loadSlotContext(
   businessSlug: string,
@@ -104,6 +137,7 @@ async function loadSlotContext(
 
   const serviceDurationMinutes =
     service.durationMinutes + addons.reduce((sum, a) => sum + a.durationMinutes, 0);
+  const schedulingPolicy = schedulingPolicyFromProfile(profile);
 
   return {
     profile,
@@ -117,7 +151,9 @@ async function loadSlotContext(
       maxBookingDaysAhead: booking?.maxBookingDaysAhead ?? profile.maxBookingDaysAhead,
       slotIntervalMinutes: booking?.slotIntervalMinutes ?? profile.slotIntervalMinutes,
       serviceDurationMinutes,
+      carryOverMinutes: schedulingPolicy.providerCarryOverMinutes,
     },
+    schedulingPolicy,
     context: {
       organizationId: profile.organizationId,
       timeZone: profile.organization.timezone,
@@ -131,22 +167,29 @@ export function bookingTotals(
   addons: Service[],
   paramConfigs: PricingParameterConfig[] = [],
   paramValues: Record<string, number> = {},
+  frequency: BookingFrequency = "one_time",
+  frequencyDiscounts: Array<{
+    frequency: BookingFrequency;
+    percentOff: number;
+    amountOffCents: number;
+  }> = [],
 ) {
   const addonTotal = addons.reduce((s, a) => s + a.basePriceCents, 0);
-  const priceCents = bookingPriceCents(service.basePriceCents, addonTotal, paramConfigs, paramValues);
+  const subtotal = bookingPriceCents(service.basePriceCents, addonTotal, paramConfigs, paramValues);
+  const priceCents = applyFrequencyDiscount(subtotal, frequency, frequencyDiscounts);
   const durationMinutes = service.durationMinutes + addons.reduce((s, a) => s + a.durationMinutes, 0);
   const label =
     addons.length > 0
       ? `${service.name} + ${addons.map((a) => a.name).join(", ")}`
       : service.name;
-  return { priceCents, durationMinutes, label, currency: service.currency };
+  return { priceCents, subtotalCents: subtotal, durationMinutes, label, currency: service.currency };
 }
 
 async function resolveParameterValues(
   serviceId: string,
-  raw: { bedrooms?: unknown; bathrooms?: unknown },
+  raw: Partial<Record<PricingParameterType, unknown>>,
 ): Promise<
-  | { ok: true; configs: PricingParameterConfig[]; values: Record<"bedrooms" | "bathrooms", number> }
+  | { ok: true; configs: PricingParameterConfig[]; values: Record<PricingParameterType, number> }
   | { ok: false; error: string }
 > {
   const rows = await listPricingParametersForService(serviceId);
@@ -157,10 +200,10 @@ async function resolveParameterValues(
     maxUnits: r.maxUnits,
   }));
   if (configs.length === 0) {
-    return { ok: true, configs, values: {} as Record<"bedrooms" | "bathrooms", number> };
+    return { ok: true, configs, values: {} as Record<PricingParameterType, number> };
   }
   const defaults = defaultParameterValues(configs);
-  const merged: { bedrooms?: unknown; bathrooms?: unknown } = {};
+  const merged: Partial<Record<PricingParameterType, unknown>> = {};
   for (const config of configs) {
     const rawVal = raw[config.parameterType];
     merged[config.parameterType] =
@@ -189,17 +232,27 @@ export async function getPublicSlotsForDay(
 ): Promise<AvailableSlot[] | null> {
   const loaded = await loadSlotContext(businessSlug, serviceId, addonServiceIds);
   if (!loaded) return null;
-  return getSlotsForDate(loaded.slotInput, dateYmd);
+  const slots = getSlotsForDate(loaded.slotInput, dateYmd);
+  return filterLoadedSlots(loaded.profile.organizationId, slots, loaded.schedulingPolicy);
 }
 
 type SlotInput = LoadedBookingContext["slotInput"];
+
+type OrgSlotLoaded = {
+  slotInput: SlotInput;
+  service: Service;
+  addons: Service[];
+  timeZone: string;
+  schedulingPolicy: SchedulingPolicy;
+};
 
 async function loadOrgSlotContext(
   organizationId: string,
   serviceId: string,
   addonServiceIds: string[] = [],
   membershipId?: string,
-): Promise<{ slotInput: SlotInput; service: Service; addons: Service[]; timeZone: string } | null> {
+  options?: { durationMinutesOverride?: number },
+): Promise<OrgSlotLoaded | null> {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
     include: { businessProfile: true },
@@ -238,13 +291,19 @@ async function loadOrgSlotContext(
   ]);
 
   const profile = org.businessProfile;
-  const serviceDurationMinutes =
+  const computedDuration =
     service.durationMinutes + addons.reduce((sum, a) => sum + a.durationMinutes, 0);
+  const serviceDurationMinutes =
+    options?.durationMinutesOverride && options.durationMinutesOverride > 0
+      ? options.durationMinutesOverride
+      : computedDuration;
+  const schedulingPolicy = schedulingPolicyFromProfile(profile);
 
   return {
     service,
     addons,
     timeZone: org.timezone,
+    schedulingPolicy,
     slotInput: {
       timeZone: org.timezone,
       rules,
@@ -253,6 +312,7 @@ async function loadOrgSlotContext(
       maxBookingDaysAhead: booking?.maxBookingDaysAhead ?? profile.maxBookingDaysAhead,
       slotIntervalMinutes: booking?.slotIntervalMinutes ?? profile.slotIntervalMinutes,
       serviceDurationMinutes,
+      carryOverMinutes: schedulingPolicy.providerCarryOverMinutes,
     },
   };
 }
@@ -274,10 +334,19 @@ export async function getOrgSlotsForDay(
   dateYmd: string,
   addonServiceIds: string[] = [],
   membershipId?: string,
-): Promise<AvailableSlot[] | null> {
-  const loaded = await loadOrgSlotContext(organizationId, serviceId, addonServiceIds, membershipId);
+  options?: { durationMinutesOverride?: number },
+): Promise<{ slots: AvailableSlot[]; timeZone: string } | null> {
+  const loaded = await loadOrgSlotContext(
+    organizationId,
+    serviceId,
+    addonServiceIds,
+    membershipId,
+    options,
+  );
   if (!loaded) return null;
-  return getSlotsForDate(loaded.slotInput, dateYmd);
+  const slots = getSlotsForDate(loaded.slotInput, dateYmd);
+  const filtered = await filterLoadedSlots(organizationId, slots, loaded.schedulingPolicy);
+  return { slots: filtered, timeZone: loaded.timeZone };
 }
 
 export async function createManualBooking(organizationId: string, raw: ManualBookingInput) {
@@ -287,6 +356,15 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
 
   const slot = isSlotAvailable(loaded.slotInput, input.date, input.time);
   if (!slot) return { ok: false as const, error: "Selected time is no longer available" };
+
+  const [availableSlot] = await filterLoadedSlots(
+    organizationId,
+    [slot],
+    loaded.schedulingPolicy,
+  );
+  if (!availableSlot) {
+    return { ok: false as const, error: "That time conflicts with another job" };
+  }
 
   const assignId = input.assignMembershipId?.trim();
   if (assignId) {
@@ -312,6 +390,8 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
   const paramResult = await resolveParameterValues(loaded.service.id, {
     bedrooms: input.bedrooms,
     bathrooms: input.bathrooms,
+    half_bathrooms: input.half_bathrooms,
+    square_feet: input.square_feet,
   });
   if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
 
@@ -322,6 +402,10 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
     if (!existing) return { ok: false as const, error: "Customer not found" };
     if (existing.addresses.length === 0) {
       return { ok: false as const, error: "Customer has no address on file" };
+    }
+    const addressId = input.customerAddressId?.trim();
+    if (addressId && !existing.addresses.some((a) => a.id === addressId)) {
+      return { ok: false as const, error: "Selected address not found for this customer" };
     }
     customerId = existing.id;
   } else {
@@ -362,13 +446,14 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
     organizationId,
     customerId,
     serviceId: loaded.service.id,
-    requestedStartAt: slot.startAt,
-    requestedEndAt: slot.endAt,
+    requestedStartAt: availableSlot.startAt,
+    requestedEndAt: availableSlot.endAt,
     customerNotes: input.customerNotes || null,
+    customFieldsJson: input.customFieldsJson ?? null,
     source: "manual",
     frequency: input.frequency,
     parameters: Object.entries(paramResult.values).map(([parameterType, units]) => ({
-      parameterType: parameterType as "bedrooms" | "bathrooms",
+      parameterType: parameterType as PricingParameterType,
       units,
     })),
     addons: loaded.addons.map((a) => ({
@@ -381,6 +466,14 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
 
   const jobResult = await createJobFromBookingRequest(organizationId, booking.id);
   if (!jobResult.ok) return jobResult;
+
+  const selectedAddressId = input.customerAddressId?.trim();
+  if (selectedAddressId) {
+    await prisma.job.update({
+      where: { id: jobResult.jobId },
+      data: { customerAddressId: selectedAddressId },
+    });
+  }
 
   const assignIdForJob = input.assignMembershipId?.trim();
   if (assignIdForJob) {
@@ -403,7 +496,7 @@ export async function createManualBooking(organizationId: string, raw: ManualBoo
     serviceId: loaded.service.id,
     status: "accepted",
     source: "manual",
-    requestedStartAt: slot.startAt.toISOString(),
+    requestedStartAt: availableSlot.startAt.toISOString(),
   });
 
   return {
@@ -421,9 +514,20 @@ export async function createPublicBooking(raw: PublicBookingInput) {
   const slot = isSlotAvailable(loaded.slotInput, input.date, input.time);
   if (!slot) return { ok: false as const, error: "Selected time is no longer available" };
 
+  const [availableSlot] = await filterLoadedSlots(
+    loaded.profile.organizationId,
+    [slot],
+    loaded.schedulingPolicy,
+  );
+  if (!availableSlot) {
+    return { ok: false as const, error: "That time conflicts with another job" };
+  }
+
   const paramResult = await resolveParameterValues(loaded.service.id, {
     bedrooms: input.bedrooms,
     bathrooms: input.bathrooms,
+    half_bathrooms: input.half_bathrooms,
+    square_feet: input.square_feet,
   });
   if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
 
@@ -456,18 +560,29 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     });
   }
 
-  const totals = bookingTotals(loaded.service, loaded.addons, paramResult.configs, paramResult.values);
+  const discountRows = await listFrequencyDiscountsForService(loaded.service.id);
+  const frequencyDiscounts = toFrequencyDiscountConfigs(discountRows);
+
+  const totals = bookingTotals(
+    loaded.service,
+    loaded.addons,
+    paramResult.configs,
+    paramResult.values,
+    input.frequency,
+    frequencyDiscounts,
+  );
 
   const booking = await createBookingRequest({
     organizationId: loaded.profile.organizationId,
     customerId: customer.id,
     serviceId: loaded.service.id,
-    requestedStartAt: slot.startAt,
-    requestedEndAt: slot.endAt,
+    requestedStartAt: availableSlot.startAt,
+    requestedEndAt: availableSlot.endAt,
     customerNotes: input.customerNotes || null,
+    customFieldsJson: input.customFieldsJson ?? null,
     frequency: input.frequency,
     parameters: Object.entries(paramResult.values).map(([parameterType, units]) => ({
-      parameterType: parameterType as "bedrooms" | "bathrooms",
+      parameterType: parameterType as PricingParameterType,
       units,
     })),
     addons: loaded.addons.map((a) => ({
@@ -484,7 +599,7 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     customerEmail: input.email,
     customerName: `${input.firstName} ${input.lastName}`.trim(),
     serviceName: totals.label,
-    requestedStartAt: slot.startAt,
+    requestedStartAt: availableSlot.startAt,
     timeZone: loaded.profile.organization.timezone,
     businessName: loaded.profile.displayName,
   });
@@ -501,10 +616,140 @@ export async function createPublicBooking(raw: PublicBookingInput) {
     serviceId: loaded.service.id,
     status: "pending",
     source: "public_booking",
-    requestedStartAt: slot.startAt.toISOString(),
+    requestedStartAt: availableSlot.startAt.toISOString(),
   });
 
   return { ok: true as const, bookingRequestId: booking.id };
+}
+
+export async function createPublicBookingCheckout(raw: PublicBookingInput) {
+  const input = publicBookingSchema.parse(raw);
+  const loaded = await loadSlotContext(input.businessSlug, input.serviceId, input.addonServiceIds);
+  if (!loaded) return { ok: false as const, error: "Business or service not found" };
+
+  const payAvailable = await isPayAtBookingAvailable(loaded.profile.organizationId);
+  if (!payAvailable) {
+    return { ok: false as const, error: "Online payment at booking is not available" };
+  }
+
+  const slot = isSlotAvailable(loaded.slotInput, input.date, input.time);
+  if (!slot) return { ok: false as const, error: "Selected time is no longer available" };
+
+  const [availableSlot] = await filterLoadedSlots(
+    loaded.profile.organizationId,
+    [slot],
+    loaded.schedulingPolicy,
+  );
+  if (!availableSlot) {
+    return { ok: false as const, error: "That time conflicts with another job" };
+  }
+
+  const paramResult = await resolveParameterValues(loaded.service.id, {
+    bedrooms: input.bedrooms,
+    bathrooms: input.bathrooms,
+    half_bathrooms: input.half_bathrooms,
+    square_feet: input.square_feet,
+  });
+  if (!paramResult.ok) return { ok: false as const, error: paramResult.error };
+
+  let customer = await findCustomerByEmail(loaded.profile.organizationId, input.email);
+
+  if (customer) {
+    await updateCustomerContact(customer.id, loaded.profile.organizationId, {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      phone: input.phone || null,
+    });
+  } else {
+    customer = await createCustomerWithAddress(loaded.profile.organizationId, {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      phone: input.phone || null,
+      line1: input.line1,
+      line2: input.line2 || null,
+      city: input.city,
+      region: input.region,
+      postalCode: input.postalCode,
+      customerNotes: input.customerNotes || null,
+    });
+    emitOrgWebhook(loaded.profile.organizationId, "customer_created", {
+      customerId: customer.id,
+      email: customer.email,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+    });
+  }
+
+  const discountRows = await listFrequencyDiscountsForService(loaded.service.id);
+  const frequencyDiscounts = toFrequencyDiscountConfigs(discountRows);
+  const totals = bookingTotals(
+    loaded.service,
+    loaded.addons,
+    paramResult.configs,
+    paramResult.values,
+    input.frequency,
+    frequencyDiscounts,
+  );
+
+  const booking = await createBookingRequest({
+    organizationId: loaded.profile.organizationId,
+    customerId: customer.id,
+    serviceId: loaded.service.id,
+    requestedStartAt: availableSlot.startAt,
+    requestedEndAt: availableSlot.endAt,
+    customerNotes: input.customerNotes || null,
+    frequency: input.frequency,
+    parameters: Object.entries(paramResult.values).map(([parameterType, units]) => ({
+      parameterType: parameterType as PricingParameterType,
+      units,
+    })),
+    addons: loaded.addons.map((a) => ({
+      serviceId: a.id,
+      name: a.name,
+      priceCents: a.basePriceCents,
+      durationMinutes: a.durationMinutes,
+    })),
+  });
+
+  const checkout = await createBookingCheckoutSession({
+    organizationId: loaded.profile.organizationId,
+    businessSlug: input.businessSlug,
+    bookingRequestId: booking.id,
+    customerId: customer.id,
+    customerEmail: input.email,
+    serviceLabel: totals.label,
+    amountCents: totals.priceCents,
+    currency: loaded.service.currency,
+  });
+
+  if (!checkout.ok || !checkout.url) {
+    return { ok: false as const, error: checkout.error ?? "Could not start checkout" };
+  }
+
+  captureServerEvent(loaded.profile.organizationId, AnalyticsEvents.bookingRequestCreated, {
+    bookingRequestId: booking.id,
+    source: "public_booking",
+    serviceId: loaded.service.id,
+    payAtBooking: true,
+  });
+
+  emitOrgWebhook(loaded.profile.organizationId, "booking_created", {
+    bookingRequestId: booking.id,
+    customerId: customer.id,
+    serviceId: loaded.service.id,
+    status: "pending",
+    source: "public_booking",
+    requestedStartAt: availableSlot.startAt.toISOString(),
+    payAtBooking: true,
+  });
+
+  return {
+    ok: true as const,
+    checkoutUrl: checkout.url,
+    bookingRequestId: booking.id,
+    paymentRecordId: checkout.paymentRecordId,
+  };
 }
 
 export async function declineBookingRequest(organizationId: string, bookingRequestId: string) {

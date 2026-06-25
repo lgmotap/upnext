@@ -32,11 +32,30 @@ async function main() {
   const ctx = await loadPortalContext(profile.publicSlug);
   if (!ctx) throw new Error(`loadPortalContext returned null for ${profile.publicSlug}`);
 
-  const customer = await prisma.customer.findFirst({
+  let customer = await prisma.customer.findFirst({
     where: { organizationId: profile.organizationId },
     orderBy: { createdAt: "desc" },
   });
-  if (!customer) throw new Error("No customer for org — run smoke:e2e first");
+  if (!customer) {
+    customer = await prisma.customer.create({
+      data: {
+        organizationId: profile.organizationId,
+        firstName: "Portal",
+        lastName: "Smoke",
+        email: `portal-smoke+${Date.now()}@upnext.local`,
+        addresses: {
+          create: {
+            line1: "1 Portal Ln",
+            city: "Austin",
+            region: "TX",
+            postalCode: "78701",
+            isDefault: true,
+          },
+        },
+      },
+    });
+    console.log("✓ Created smoke customer");
+  }
 
   const tokenRow = await prisma.customerPortalToken.create({
     data: {

@@ -7,6 +7,8 @@ import { canManageBilling } from "@/server/permissions/can";
 import { getOrgStripeConnect } from "@/server/repositories/payments";
 import { isStripeConfigured, syncStripeConnectStatus } from "@/server/services/payments";
 import { startStripeConnectAction, syncStripeConnectAction } from "@/server/actions/payments";
+import { updatePayAtBookingSettingsAction } from "@/server/actions/billing-settings";
+import { prisma } from "@/lib/db/prisma";
 
 const plans = [
   {
@@ -35,7 +37,7 @@ const plans = [
 export default async function BillingSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ stripe?: string; error?: string }>;
+  searchParams: Promise<{ stripe?: string; error?: string; saved?: string }>;
 }) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/settings/billing");
@@ -49,6 +51,13 @@ export default async function BillingSettingsPage({
   }
 
   const connect = await getOrgStripeConnect(session.organizationId);
+  const businessProfile = await prisma.businessProfile.findUnique({
+    where: { organizationId: session.organizationId },
+    select: {
+      payAtBookingEnabled: true,
+      requirePaymentAtBooking: true,
+    },
+  });
 
   return (
     <div className="space-y-4">
@@ -84,7 +93,13 @@ export default async function BillingSettingsPage({
 
           {params.stripe === "return" && connect?.stripeConnectChargesEnabled && (
             <p className="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900 ring-1 ring-brand-100">
-              Stripe Connect is ready — you can send payment links from job pages.
+              Stripe Connect is ready — you can send payment links from job pages or enable pay at booking below.
+            </p>
+          )}
+
+          {params.saved === "pay_at_booking" && (
+            <p className="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900 ring-1 ring-brand-100">
+              Pay at booking settings saved.
             </p>
           )}
 
@@ -117,6 +132,54 @@ export default async function BillingSettingsPage({
 
           {!canBilling && (
             <p className="text-xs text-ink-400">Only the organization owner can manage Stripe Connect.</p>
+          )}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Pay at booking (optional)" />
+        <div className="space-y-4 p-5">
+          <p className="text-sm text-ink-600">
+            Off by default — customers can still pay via payment link after the job. When enabled, your public
+            booking page adds a secure Stripe checkout step (requires Connect above).
+          </p>
+          {!connect?.stripeConnectChargesEnabled && (
+            <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-100">
+              Connect Stripe and complete onboarding before enabling pay at booking.
+            </p>
+          )}
+          {canBilling ? (
+            <form action={updatePayAtBookingSettingsAction} className="space-y-3">
+              <label className="flex items-center gap-2 text-sm text-ink-800">
+                <input
+                  type="checkbox"
+                  name="payAtBookingEnabled"
+                  defaultChecked={businessProfile?.payAtBookingEnabled ?? false}
+                  className="rounded"
+                  disabled={!connect?.stripeConnectChargesEnabled}
+                />
+                Show payment step on public booking page
+              </label>
+              <label className="flex items-center gap-2 text-sm text-ink-800">
+                <input
+                  type="checkbox"
+                  name="requirePaymentAtBooking"
+                  defaultChecked={businessProfile?.requirePaymentAtBooking ?? false}
+                  className="rounded"
+                  disabled={!connect?.stripeConnectChargesEnabled}
+                />
+                Require successful checkout before booking is submitted
+              </label>
+              <button
+                type="submit"
+                disabled={!connect?.stripeConnectChargesEnabled}
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-semibold text-brand-950 hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Save pay at booking
+              </button>
+            </form>
+          ) : (
+            <p className="text-xs text-ink-400">Only the organization owner can change this setting.</p>
           )}
         </div>
       </Card>

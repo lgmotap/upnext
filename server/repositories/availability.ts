@@ -21,6 +21,8 @@ export function getBookingSettings(organizationId: string) {
       minNoticeHours: true,
       maxBookingDaysAhead: true,
       slotIntervalMinutes: true,
+      bufferMinutesBetweenJobs: true,
+      providerCarryOverMinutes: true,
     },
   });
 }

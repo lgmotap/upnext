@@ -13,13 +13,27 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
 }
+
+/** Dev HMR can keep a singleton from before `prisma generate` added new models. */
+function isStalePrismaClient(client: PrismaClient): boolean {
+  const delegate = (client as PrismaClient & { bookingFormField?: { findMany?: unknown } }).bookingFormField;
+  return delegate?.findMany == null;
+}
+
+function getPrismaClient(): PrismaClient {
+  const cached = globalForPrisma.prisma;
+  if (cached && !isStalePrismaClient(cached)) {
+    return cached;
+  }
+  const client = createPrismaClient();
+  globalForPrisma.prisma = client;
+  return client;
+}
+
+export const prisma = getPrismaClient();

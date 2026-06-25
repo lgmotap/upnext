@@ -1,7 +1,9 @@
 # ConvertLabs parity — status snapshot
 
-**As of:** 2026-06-24 (post sprint 18 worker availability)  
+**As of:** 2026-06-25 (Phase 4 complete; Phase 5 **43–44** next)  
 **Baseline research:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (2026-06-24 — **stale**, use this doc for current status)  
+**Profile gaps:** `docs/audits/business-profile-gaps.md`  
+**Full gap map:** `docs/audits/product-gaps-roadmap.md`  
 **Full audit plan:** `tasks/competitor-parity-audit-plan.md`
 
 ---
@@ -11,11 +13,12 @@
 | Dimension | vs ConvertLabs | UpNext position |
 |-----------|----------------|-----------------|
 | **Core loop** (book → job → crew → pay) | ~90% | **Shipped** — smokes green |
-| **Owner daily ops** | ~75% | Strong; missing drag scheduler, quotes, dispatch board |
+| **Owner daily ops** | ~85% | Strong; dashboard CL parity in **43–44** |
 | **Crew web** | **Ahead** on checklist + photos | CL web portal thinner than UpNext `/crew` |
 | **Customer portal** | ~80% | v1 + cancel policy + saved Stripe cards |
 | **Public booking** | ~90% | Frequency + embed + bed/bath pricing params |
-| **Platform / API** | ~15% | Intentionally deferred |
+| **Platform / API** | ~75% | v1 read + webhooks + expansion (sprint 27) |
+| **Onboarding / company profile** | ~90% | Places, industry cards, logo, service area — **35–36 done** |
 | **Website / marketing** | 0% | Intentionally out of scope |
 
 **Launch blocker:** Resend production domain only (`tasks/launch-checklist.md`).
@@ -36,16 +39,16 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 | Pricing parameters (bed/bath) | Unit ranges | ServicePricingParameter + booking flows | ✅ |
 | Availability + slots | Rules + provider carry-over | Org rules + per-worker intersection | ✅ |
 | Booking inbox accept/decline | `/booking/bookings` | `/app/bookings` | ✅ |
-| Owner manual booking | 10-tab wizard | `/app/bookings/new` + frequency | 🟡 (slimmer, no payment tab) |
-| Calendar | Week + Scheduler tab | Week view + week nav | 🟡 (no drag-drop) |
+| Owner manual booking | 10-tab wizard | `/app/bookings/new` + frequency | 🟡 **40** |
+| Calendar | Week + Scheduler tab | Week view + `/calendar/scheduler` drag board | ✅ sprint 31 |
 | Job list + detail | Deep drawer | `/app/jobs`, `/app/jobs/[id]` | ✅ |
 | Assign provider | Wizard tab | Job detail + team | ✅ |
 | Reschedule | Owner + portal | Job + pending booking modal | ✅ |
 | Job lifecycle | Check-in/out + OTW/late | scheduled → in_progress → completed + OTW/late | ✅ |
-| Payment at booking | Stripe on form | Payment link post-job | 🟡 (MVP by design) |
+| Payment at booking | Stripe on form | Optional toggle (off by default) | ✅ sprint 24 |
 | Payment status tracking | Dashboard + invoices | PaymentRecord + `/app/payments` | ✅ |
 | Email notifications | 3 audiences | 8 types + NotificationLog + cron | ✅ |
-| Dashboard | Widgets | Real data + Getting Started | ✅ |
+| Dashboard | Widgets | Real data + Getting Started; **43–44** ops queues + analytics | 🟡 **43–44** |
 | Global search ⌘K | Header | CommandPalette | ✅ |
 
 ### 2. Field / crew
@@ -60,41 +63,44 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 | On The Way / Running Late | Drawer actions | Crew buttons + email | ✅ |
 | Open Jobs self-claim | Tab exists | Dispatcher assign only | ➖ P1 |
 | Per-worker availability | Grid | `/app/team/[id]/availability` + manual booking filter | ✅ |
-| Embedded map | In drawer | Directions link only | 🟡 |
+| Embedded map | In drawer | Google Maps embed on crew job | ✅ sprint 28 |
 
 ### 3. Customer-facing
 
 | Capability | CL | UpNext | Status |
 |------------|-----|--------|--------|
-| Customer portal | Email/password, 3 tabs | Magic link `/my/[slug]` | 🟡 |
+| Customer portal | Email/password, 3 tabs | Magic link + optional password | 🟡 sprint 26 |
 | Book Again prefilled | Portal tab | Portal + `?prefill=` + query params | ✅ |
 | Booking history | Table + cancel | Dashboard tab + owner cancel | 🟡 (portal cancel policy-bound) |
-| Saved payment methods | Stripe cards tab | Not built | ❌ P1 |
+| Saved payment methods | Stripe cards tab | Portal Payments tab | ✅ sprint 16 |
 | Public booking ICS | Unknown | Confirmation `.ics` | ✅ |
-| Custom domain booking | Domains + WP | `/book/[slug]` on UpNext domain | 🟡 P1 |
+| Custom domain booking | Domains + WP | Verified custom host routing | ✅ sprint 25 |
 | Website builder | WordPress hub | Not built | ➖ P2 |
 
 ### 4. CRM, team, settings
 
 | Capability | CL | UpNext | Status |
 |------------|-----|--------|--------|
-| Customer list + detail | 7 tabs | List + detail + notes/address | 🟡 |
+| Customer list + detail | 7 tabs | List + detail + notes/address | 🟡 **38** |
 | Multiple addresses | Yes | Schema + UI modals | ✅ |
 | Team / providers | CRUD + magic link | `/app/team` + invite flow | ✅ |
 | RBAC tiers | Admin/staff/viewer | owner/admin/dispatcher/worker/viewer | ✅ |
-| Settings — business | `/company` | Wired `/app/settings/business` | ✅ |
+| Settings — business | `/company` | Sectioned form + logo + website + service area | ✅ sprint 35 |
 | Settings — notifications | 3 audiences | 6 toggles persisted | ✅ |
 | Settings — portals | Booking + customer URLs | Portals tab + BookingLinkCard | ✅ |
 | Settings — billing | SaaS + Connect | Stripe Connect UI | ✅ |
-| Reports | `/booking/reports` | `/app/reports` v1 | 🟡 (basic vs CL depth) |
+| Reports | `/booking/reports` | `/app/reports` v1 | 🟡 **37** |
+| Communication log | Email history | `/app/communications` | ✅ sprint 33 |
 | Quotes / invoices / discounts | Full modules | Not built | ➖ P2 |
-| API + webhooks | v1 read + 5 events | Not built | ➖ P1 |
+| API + webhooks | v1 read + 5 events | `/api/v1/*` + webhooks + expansion | ✅ sprint 20 + 27 |
 
 ### 5. Onboarding & activation
 
 | Capability | CL | UpNext | Status |
 |------------|-----|--------|--------|
-| Industry wizard | 4-step + AI name | Onboarding + catalog seed | 🟡 **W** (simpler) |
+| Industry wizard | 4-step + Places + cards | 4-step + catalog + Places/cards | ✅ **35–36** |
+| Company logo / website | On `/company` | Upload + public booking display | ✅ sprint 35 |
+| Service area UX | Location-driven | Coverage selector (onboarding + settings) | ✅ sprint 35 |
 | Getting Started % | `/get-started` | Dashboard checklist | ✅ |
 | Copy booking link | Checklist CTA | Settings + dashboard + Portals | ✅ |
 | Stripe Connect in checklist | Yes | Settings billing | ✅ |
@@ -103,15 +109,50 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 
 ## Gaps that matter for sales ("same as ConvertLabs")
 
-### Must close for credible parity (P1 — next sprints)
+### Closed in sprints 14–21 ✅
 
-1. **Recurring engine** — frequency stored but no auto job generation
-2. **Pricing parameters** — cleaning vertical (bed/bath/sq ft)
-3. **Customer portal** — saved cards, cancel policy UI, password option
-4. **Pay-at-booking** (optional) — or clear positioning vs payment link
-5. **Per-worker availability** — for multi-crew scheduling
-6. **CSV customer import**
-7. **Custom domain** for `/book/[slug]`
+1. Recurring JobSeries + cron — sprint 14  
+2. Pricing parameters bed/bath — sprint 15 (half-bath/sq ft → **sprint 23**)  
+3. Portal cancel + saved cards — sprint 16 (password → **sprint 26**)  
+4. CSV customer import — sprint 17  
+5. Per-worker availability — sprint 18  
+6. Read API + webhooks — sprint 20  
+7. Custom domain doc — sprint 21 (host routing → **sprint 25**)
+
+### P1 — scheduled (sprints 22–31) ✅ complete
+
+See `tasks/full-product-roadmap.md` Phase 2.
+
+### Phase 3 — company profile & onboarding (sprints 35–36)
+
+| Sprint | Gap |
+|--------|-----|
+| 35 | Service area unify; logo upload; website URL |
+| 36 | Google Places; industry cards; sign-up/name dedup |
+
+Detail: `docs/audits/business-profile-gaps.md`
+
+### Phase 4 — ops polish (sprints 37–42)
+
+| Sprint | Gap | Status |
+|--------|-----|--------|
+| 37 | Reports date range + CSV export | ✅ |
+| 38 | Customer tabs + tags | ✅ |
+| 39 | Bookings inbox pagination/filters/bulk | ✅ |
+| 40 | Manual booking fields + payment + review | ✅ |
+| 41 | Calendar month view + conflict hints | ✅ |
+| 42 | Portal reschedule + Book Again polish | ✅ |
+
+Detail: `docs/audits/product-gaps-roadmap.md`
+
+### Phase 5 — dashboard parity (sprints 43–44)
+
+| Sprint | Gap |
+|--------|-----|
+| 43 | CL ops KPI queues, deep links, today enrichment, crew activity |
+| 44 | 30d snapshot, time-aware greeting, post-checklist business row |
+
+Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 
 ### Already ahead (say it in sales)
 
@@ -143,4 +184,4 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 
 ## Next step
 
-Execute **`tasks/competitor-parity-audit-plan.md`** part by part. Update this file after each part completes.
+Execute **Phase 5** starting with **`tasks/sprint-43-dashboard-ops-parity.md`** (detailed plan inside). Production gate (owner): Resend domain — `tasks/launch-checklist.md`.

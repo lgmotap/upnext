@@ -34,7 +34,8 @@ export async function completeOnboardingAction(formData: FormData): Promise<void
     displayName: formData.get("displayName"),
     timezone: formData.get("timezone"),
     currency: formData.get("currency"),
-    serviceArea: formData.get("serviceArea") ?? "",
+    serviceAreaScope: formData.get("serviceAreaScope"),
+    serviceAreaCustom: formData.get("serviceAreaCustom") ?? "",
     phone: formData.get("phone") ?? "",
     description: formData.get("description") ?? "",
   });

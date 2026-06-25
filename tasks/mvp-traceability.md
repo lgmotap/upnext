@@ -1,8 +1,10 @@
 # MVP traceability audit
 
-**Updated:** 2026-06-25 (post-beta sprints 09–12 complete)  
+**Updated:** 2026-06-25 (Phase 4: 37–40 done; 41–42 + Phase 5 dashboard 43–44 planned)  
 **Purpose:** Line-by-line check — competitor research → `docs/02-mvp-scope.md` → sprint tasks → **actual codebase**  
 **Competitor synthesis:** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (local, gitignored)  
+**Profile gaps:** `docs/audits/business-profile-gaps.md`  
+**Full roadmap:** `docs/audits/product-gaps-roadmap.md` (Phases 3–5, sprints 35–44)  
 **Current status:** `tasks/competitor-parity-status.md`  
 **Extensive audit plan:** `tasks/competitor-parity-audit-plan.md` (Parts 0–14)
 
@@ -45,9 +47,9 @@ These were **missed** in the first audit because sprint files assumed "built" wh
 | Route | Research reference | Code today | Sprint fix |
 |-------|-------------------|------------|------------|
 | `/app/bookings/[id]` | Owner booking detail row (weak CL capture) | **✅ Wired sprint 06** | — |
-| `/app/settings/business` | CL `/company`, Getting Started | **Mock form** — Save does nothing | **07** — wire BusinessProfile |
+| `/app/settings/business` | CL `/company`, Getting Started | **Sectioned form** — logo/Places/cards in **35–36** | **35** |
 | `/app/settings/notifications` | CL Settings → Notifications (3 audiences) | **Static toggles** — not persisted | **07** — persist + connect to sprint 06 senders |
-| `/app/dashboard` | CL Dashboard widgets | **Mock** | **07** |
+| `/app/dashboard` | CL Dashboard widgets | **Real data** — ops polish **43–44** | **43** |
 | `/app/payments` | CL Invoices / awaiting payment | **✅ Real data** | Done sprint 06 |
 
 **Real data confirmed:** `/app/bookings` (list), `/app/jobs`, `/app/jobs/[id]`, `/app/customers`, `/app/calendar`, `/app/team`, `/app/services`, `/app/settings/availability`, `/book/[slug]`, `/crew/*`
@@ -83,7 +85,7 @@ These were **missed** in the first audit because sprint files assumed "built" wh
 
 | Flow report | CL | UpNext | Gap |
 |-------------|-----|--------|-----|
-| `onboarding-wizard.md` | Industry/location/AI name/SaaS card | 2-step business wizard | P1 templates; P0 minimal OK |
+| `onboarding-wizard.md` | Industry/location/Places/SaaS card (CL: AI name) | 4-step wizard + catalog preview | **36** Places + cards; **35** service area; **no AI naming** |
 | `public-booking-standalone.md` | 10 sections incl. frequency + payment | Multi-step, no frequency, no payment | Payment sprint 06; frequency P1 |
 | `provider-job-workflow.md` | Check-in timer, On The Way, Late | Start/complete only | Timer P0 sprint 06; OTW/Late P1 |
 | `customer-portal.md` | Login, Book Again, History, Cards | Not built | P1 post-MVP |
@@ -158,8 +160,15 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 | Owner manual booking | `app-bookings-new` 10-tab wizard | **07** |
 | Crew check-in timer | `provider-job-workflow.md` | **06** |
 | Copy booking link in settings | Getting Started checklist | **07** |
+| Wire business settings | `/company` | **07** + **35–36** profile parity |
 | Team invite | Provider magic link pattern | **06** |
-| Wire business settings | `/company` capture | **07** |
+| P1 — search / notifications | ⌘K + bell | **Done** (sprint 12 + app shell) |
+| Reports depth | `/booking/reports` | **Sprint 37** |
+| CRM tabs / tags | 7-tab customer | **Sprint 38** |
+| Bookings inbox scale | List filters | **Sprint 39** |
+| Manual booking parity | 10-tab wizard | **Sprint 40** |
+| Calendar month view | Week + scheduler | **Sprint 41** |
+| Portal reschedule | Customer portal | **Sprint 42** |
 
 ---
 
@@ -173,7 +182,9 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 | On The Way / Running Late | ✅ | `provider-job-workflow.md` |
 | Public API + webhooks | gap-analysis | `api-reference.md` |
 | Website / marketing / quotes / invoices | Out of scope | `app-coverage.md` |
-| Getting Started % checklist | — | `onboarding-wizard.md` |
+| Getting Started % checklist | ✅ dashboard | `onboarding-wizard.md` |
+| Company profile polish | `/company` | **Sprints 35–36** |
+| Phase 4 ops polish | reports, CRM, inbox, etc. | **Sprints 37–42** |
 | Help center full crawl | — | 4/?? articles |
 
 ---

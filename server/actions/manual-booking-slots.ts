@@ -46,16 +46,16 @@ export async function fetchManualSlotsForDayAction(
   if (!session) return { slots: [] as { date: string; time: string; label: string }[] };
 
   const addons = parseAddonIds(addonServiceIds);
-  const slots = await getOrgSlotsForDay(
+  const slotResult = await getOrgSlotsForDay(
     session.organizationId,
     serviceId,
     dateYmd,
     addons,
     membershipId || undefined,
   );
-  if (!slots) return { slots: [] as { date: string; time: string; label: string }[] };
+  if (!slotResult) return { slots: [] as { date: string; time: string; label: string }[] };
   return {
-    slots: slots.map((s) => ({ date: s.date, time: s.time, label: formatTime12h(s.time) })),
+    slots: slotResult.slots.map((s) => ({ date: s.date, time: s.time, label: formatTime12h(s.time) })),
   };
 }
 

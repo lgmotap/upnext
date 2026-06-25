@@ -13,9 +13,14 @@ import {
   type PublicBookingPrefillFields,
 } from "@/lib/booking/public-prefill";
 import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
+import { loadPublicPayAtBookingContext } from "@/server/services/pay-at-booking";
 import { listPricingParametersForServices } from "@/server/repositories/pricing-parameters";
+import { listFrequencyDiscountsForServices, toFrequencyDiscountConfigs } from "@/server/repositories/frequency-discounts";
+import { listActiveBookingFormFields } from "@/server/repositories/booking-form-fields";
 import { ensureIndustryCatalogForOrg } from "@/server/services/industry-catalog";
 import type { PricingParameterConfig } from "@/lib/pricing/parameters";
+import type { BookingFormField } from "@/generated/prisma/client";
+import type { FrequencyDiscountConfig } from "@/lib/pricing/frequency-discount";
 
 function formatTime12h(hm: string): string {
   const [h, m] = hm.split(":").map(Number);
@@ -36,6 +41,7 @@ function mapService(
     iconKey: string | null;
   },
   pricingParameters: PricingParameterConfig[],
+  frequencyDiscounts: FrequencyDiscountConfig[],
 ) {
   return {
     id: s.id,
@@ -47,6 +53,7 @@ function mapService(
     isAddon: s.isAddon,
     iconKey: s.iconKey,
     pricingParameters,
+    frequencyDiscounts,
   };
 }
 
@@ -63,6 +70,8 @@ export type PublicBookingPageResult =
         description: string | null;
         phone: string | null;
         email: string | null;
+        websiteUrl: string | null;
+        logoUrl: string | null;
         customerPortalEnabled: boolean;
       };
       primaryServices: ReturnType<typeof mapService>[];
@@ -75,6 +84,11 @@ export type PublicBookingPageResult =
       prefill?: PublicBookingPrefillFields;
       error?: string;
       embedded: boolean;
+      payAtBooking: {
+        showPaymentStep: boolean;
+        requirePaymentAtBooking: boolean;
+      };
+      customFormFields: BookingFormField[];
     };
 
 async function resolvePrefill(
@@ -116,6 +130,7 @@ function parseError(searchParams: Record<string, string | string[] | undefined>)
   if (!value) return undefined;
   if (value === "rate_limit") return "Too many booking attempts. Please try again in an hour.";
   if (value === "invalid") return "Please check your details and try again.";
+  if (value === "payment_cancelled") return "Payment was cancelled. Your booking was not completed.";
   return decodeURIComponent(value);
 }
 
@@ -140,7 +155,9 @@ export async function loadPublicBookingPage(
 
   const allIds = [...primaryServicesFinal, ...addonServicesFinal].map((s) => s.id);
   const paramRows = await listPricingParametersForServices(allIds);
+  const discountRows = await listFrequencyDiscountsForServices(allIds);
   const paramsByService = new Map<string, PricingParameterConfig[]>();
+  const discountsByService = new Map<string, FrequencyDiscountConfig[]>();
   for (const row of paramRows) {
     const list = paramsByService.get(row.serviceId) ?? [];
     list.push({
@@ -150,6 +167,15 @@ export async function loadPublicBookingPage(
       maxUnits: row.maxUnits,
     });
     paramsByService.set(row.serviceId, list);
+  }
+  for (const row of discountRows) {
+    const list = discountsByService.get(row.serviceId) ?? [];
+    list.push({
+      frequency: row.frequency,
+      percentOff: row.percentOff,
+      amountOffCents: row.amountOffCents,
+    });
+    discountsByService.set(row.serviceId, list);
   }
 
   if (primaryServicesFinal.length === 0) {
@@ -172,6 +198,8 @@ export async function loadPublicBookingPage(
 
   const prefill = await resolvePrefill(profile.organizationId, searchParams);
   const embedded = options.embedded ?? searchParams.embed === "1";
+  const payAtBooking = await loadPublicPayAtBookingContext(businessSlug);
+  const customFormFields = await listActiveBookingFormFields(profile.organizationId);
 
   return {
     kind: "ready",
@@ -183,10 +211,16 @@ export async function loadPublicBookingPage(
       description: profile.description,
       phone: profile.phone,
       email: profile.email,
+      websiteUrl: profile.websiteUrl,
+      logoUrl: profile.logoUrl,
       customerPortalEnabled: isCustomerPortalEnabled(profile),
     },
-    primaryServices: primaryServicesFinal.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
-    addonServices: addonServicesFinal.map((s) => mapService(s, paramsByService.get(s.id) ?? [])),
+    primaryServices: primaryServicesFinal.map((s) =>
+      mapService(s, paramsByService.get(s.id) ?? [], discountsByService.get(s.id) ?? []),
+    ),
+    addonServices: addonServicesFinal.map((s) =>
+      mapService(s, paramsByService.get(s.id) ?? [], discountsByService.get(s.id) ?? []),
+    ),
     initialDays: days,
     initialSlots: rawSlots.map((s) => ({
       date: s.date,
@@ -199,5 +233,10 @@ export async function loadPublicBookingPage(
     prefill,
     error: parseError(searchParams),
     embedded,
+    payAtBooking: {
+      showPaymentStep: payAtBooking.showPaymentStep,
+      requirePaymentAtBooking: payAtBooking.requirePaymentAtBooking,
+    },
+    customFormFields,
   };
 }

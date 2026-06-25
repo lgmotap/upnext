@@ -17,6 +17,7 @@ const { getPublicAvailableDays, getPublicSlotsForDay, createPublicBooking } = aw
 );
 const { createJobFromBookingRequest } = await import("../server/services/jobs");
 const { RESIDENTIAL_CLEANING_PRICING_PARAMS } = await import("../lib/onboarding/industry-catalog");
+const { calculatePricingParameterTotal } = await import("../lib/pricing/parameters");
 
 const TEST_SLUG = "smoke-pricing-params";
 const TEST_USER_ID = "smoke-pricing-params-user";
@@ -72,7 +73,7 @@ async function main() {
 
   await replaceServicePricingParameters(service.id, RESIDENTIAL_CLEANING_PRICING_PARAMS);
   await saveWeeklyAvailability(org.id, { rules: defaultWeeklyRules() });
-  console.log("✓ Service has bed/bath pricing params");
+  console.log("✓ Service has home-size pricing params");
 
   const daysResult = await getPublicAvailableDays(TEST_SLUG, service.id);
   const days = daysResult?.days ?? [];
@@ -84,8 +85,14 @@ async function main() {
 
   const bedrooms = 4;
   const bathrooms = 2;
-  const expectedSurcharge =
-    (bedrooms - 2) * 1500 + (bathrooms - 1) * 2000;
+  const half_bathrooms = 1;
+  const square_feet = 2000;
+  const expectedSurcharge = calculatePricingParameterTotal(RESIDENTIAL_CLEANING_PRICING_PARAMS, {
+    bedrooms,
+    bathrooms,
+    half_bathrooms,
+    square_feet,
+  });
   const expectedPrice = service.basePriceCents + expectedSurcharge;
 
   const result = await createPublicBooking({
@@ -104,6 +111,8 @@ async function main() {
     frequency: "one_time",
     bedrooms,
     bathrooms,
+    half_bathrooms,
+    square_feet,
   });
 
   if (!result.ok) throw new Error(result.error);
@@ -118,7 +127,9 @@ async function main() {
     throw new Error(`Expected price ${expectedPrice}, got ${job.priceCents}`);
   }
 
-  console.log(`✓ Job price ${job.priceCents} (${bedrooms} bed, ${bathrooms} bath)`);
+  console.log(
+    `✓ Job price ${job.priceCents} (${bedrooms} bed, ${bathrooms} bath, ${half_bathrooms} half-bath, ${square_feet} sq ft)`,
+  );
   console.log("\n✅ Pricing parameters smoke passed");
 }
 

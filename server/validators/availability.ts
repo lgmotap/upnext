@@ -29,6 +29,11 @@ export const bookingWindowSchema = z.object({
   slotIntervalMinutes: z.coerce.number().int().min(15).max(120),
 });
 
+export const schedulingPolicySchema = z.object({
+  bufferMinutesBetweenJobs: z.coerce.number().int().min(0).max(240),
+  providerCarryOverMinutes: z.coerce.number().int().min(0).max(240),
+});
+
 export const blackoutDateSchema = z.object({
   startsAt: z.coerce.date(),
   endsAt: z.coerce.date(),
@@ -37,6 +42,7 @@ export const blackoutDateSchema = z.object({
 
 export type WeeklyAvailabilityInput = z.infer<typeof weeklyAvailabilitySchema>;
 export type BookingWindowInput = z.infer<typeof bookingWindowSchema>;
+export type SchedulingPolicyInput = z.infer<typeof schedulingPolicySchema>;
 
 /** Default Mon–Fri 08:00–18:00, Sat 09:00–14:00, Sun closed. */
 export function defaultWeeklyRules() {

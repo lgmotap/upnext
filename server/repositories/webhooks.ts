@@ -4,6 +4,7 @@ import type { WebhookEventType } from "@/generated/prisma/client";
 export const WEBHOOK_EVENT_LABELS: Record<WebhookEventType, string> = {
   booking_created: "Booking created",
   booking_accepted: "Booking accepted",
+  booking_canceled: "Booking canceled",
   job_completed: "Job completed",
   customer_created: "Customer created",
   payment_paid: "Payment paid",

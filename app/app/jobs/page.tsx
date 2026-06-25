@@ -1,16 +1,28 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Card, PageHeader, Avatar, AppButton } from "@/components/app/ui";
+import { ListPagination } from "@/components/app/ListPagination";
+import { DEFAULT_LIST_PAGE_SIZE, parseListPage, totalPages as calcTotalPages } from "@/lib/pagination";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatMoney } from "@/lib/money/format";
-import { formatJobSchedule, formatAddressLine } from "@/lib/datetime/calendar";
+import { formatJobSchedule, formatAddressLine, getDayBoundsUtc } from "@/lib/datetime/calendar";
+import { formatYmdInTimezone } from "@/lib/datetime/timezone";
 import { getAppSession } from "@/server/permissions/session";
-import { listJobsForOrg } from "@/server/repositories/jobs";
+import { listJobsForOrg, countJobsForOrg } from "@/server/repositories/jobs";
 import { prisma } from "@/lib/db/prisma";
 
-export default async function JobsPage() {
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; date?: string; unassigned?: string }>;
+}) {
   const session = await getAppSession();
   if (!session) redirect("/sign-in?next=/app/jobs");
+
+  const params = await searchParams;
+  const page = parseListPage(params.page);
+  const filterToday = params.date === "today";
+  const filterUnassigned = params.unassigned === "1";
 
   const org = await prisma.organization.findUnique({
     where: { id: session.organizationId },
@@ -18,19 +30,57 @@ export default async function JobsPage() {
   });
   const timeZone = org?.timezone ?? "America/New_York";
 
-  const jobs = await listJobsForOrg(session.organizationId);
+  const listOptions: Parameters<typeof countJobsForOrg>[1] = {};
+  if (filterToday) {
+    const todayYmd = formatYmdInTimezone(new Date(), timeZone);
+    const { start, end } = getDayBoundsUtc(todayYmd, timeZone);
+    listOptions.scheduledFrom = start;
+    listOptions.scheduledTo = end;
+  }
+  if (filterUnassigned) {
+    listOptions.unassignedOnly = true;
+  }
+
+  const totalCount = await countJobsForOrg(session.organizationId, listOptions);
+  const pages = calcTotalPages(totalCount, DEFAULT_LIST_PAGE_SIZE);
+  const safePage = Math.min(page, pages);
+  const jobs = await listJobsForOrg(session.organizationId, {
+    ...listOptions,
+    page: safePage,
+    pageSize: DEFAULT_LIST_PAGE_SIZE,
+  });
+
+  const filterParts: string[] = [];
+  if (filterToday) filterParts.push("today");
+  if (filterUnassigned) filterParts.push("unassigned");
+  const filterLabel = filterParts.length > 0 ? ` (${filterParts.join(", ")})` : "";
+
+  const query = new URLSearchParams();
+  if (filterToday) query.set("date", "today");
+  if (filterUnassigned) query.set("unassigned", "1");
 
   return (
     <>
       <PageHeader
-        title="Jobs"
-        subtitle="Every confirmed job, its schedule, status, and price."
+        title={`Jobs${filterLabel}`}
+        subtitle={
+          totalCount > 0
+            ? `${totalCount} job${totalCount === 1 ? "" : "s"}${filterLabel ? " matching filters" : " total"}`
+            : filterLabel
+              ? "No jobs match the current filters."
+              : "Every confirmed job, its schedule, status, and price."
+        }
         action={
           <div className="flex flex-wrap gap-2">
             <AppButton href="/app/bookings/new">New booking</AppButton>
             <AppButton variant="outline" href="/app/bookings">
               From bookings
             </AppButton>
+            {(filterToday || filterUnassigned) && (
+              <AppButton variant="outline" href="/app/jobs">
+                Clear filters
+              </AppButton>
+            )}
           </div>
         }
       />
@@ -86,6 +136,18 @@ export default async function JobsPage() {
               );
             })}
           </ul>
+          <ListPagination
+            page={safePage}
+            totalPages={pages}
+            totalCount={totalCount}
+            pageSize={DEFAULT_LIST_PAGE_SIZE}
+            basePath="/app/jobs"
+            searchParams={{
+              ...(filterToday ? { date: "today" } : {}),
+              ...(filterUnassigned ? { unassigned: "1" } : {}),
+              ...(safePage > 1 ? { page: String(safePage) } : {}),
+            }}
+          />
         </Card>
       )}
     </>

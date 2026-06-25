@@ -17,3 +17,23 @@ export function portalCancelBlockedMessage(minNoticeHours: number): string {
   }
   return `Bookings must be cancelled at least ${minNoticeHours} hour${minNoticeHours === 1 ? "" : "s"} before the appointment. Contact the business for help.`;
 }
+
+export function canCustomerRescheduleBooking(
+  booking: { status: string; requestedStartAt: Date; job?: { status: string } | null },
+  minNoticeHours: number,
+  now = new Date(),
+): boolean {
+  if (!canCustomerCancelBooking(booking, minNoticeHours, now)) return false;
+  if (booking.status === "pending") return true;
+  if (booking.status === "accepted" && booking.job) {
+    return !["completed", "cancelled"].includes(booking.job.status);
+  }
+  return false;
+}
+
+export function portalRescheduleBlockedMessage(minNoticeHours: number): string {
+  if (minNoticeHours <= 0) {
+    return "This booking can no longer be rescheduled online. Contact the business.";
+  }
+  return `Bookings must be rescheduled at least ${minNoticeHours} hour${minNoticeHours === 1 ? "" : "s"} before the appointment. Contact the business for help.`;
+}

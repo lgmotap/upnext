@@ -9,7 +9,7 @@ export default async function CustomerPortalLandingPage({
   searchParams,
 }: {
   params: Promise<{ businessSlug: string }>;
-  searchParams: Promise<{ error?: string; sent?: string }>;
+  searchParams: Promise<{ error?: string; sent?: string; message?: string }>;
 }) {
   const { businessSlug } = await params;
   const query = await searchParams;
@@ -37,7 +37,9 @@ export default async function CustomerPortalLandingPage({
       <PortalLoginForm
         businessSlug={businessSlug}
         businessName={profile.displayName}
+        passwordLoginEnabled={profile.portalPasswordLoginEnabled}
         error={query.error ? decodeURIComponent(query.error) : undefined}
+        message={query.message ? decodeURIComponent(query.message) : undefined}
         sent={query.sent === "1"}
       />
       <Link

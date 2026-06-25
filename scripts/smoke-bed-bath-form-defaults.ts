@@ -1,5 +1,5 @@
 /**
- * Verifies bed/bath booking works when bedrooms/bathrooms are omitted (form bug regression).
+ * Verifies pricing-parameter booking works when counts are omitted (defaults applied).
  */
 import { config } from "dotenv";
 import { randomUUID } from "crypto";
@@ -48,6 +48,6 @@ const result = await createPublicBooking({
 });
 
 if (!result.ok) throw new Error(`Expected booking to succeed with defaults: ${result.error}`);
-console.log(`✅ Bed/bath defaults smoke passed (${result.bookingRequestId})`);
+console.log(`✅ Pricing parameter defaults smoke passed (${result.bookingRequestId})`);
 
 await prisma.$disconnect();

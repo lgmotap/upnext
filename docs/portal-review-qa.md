@@ -37,14 +37,27 @@ A: Works via Resend/Supabase; submit now shows loading state.
 
 ### Onboarding (vs ConvertLabs 4-step wizard)
 
-| ConvertLabs | UpNext (before) | UpNext (now) |
-|-------------|-----------------|--------------|
-| Industry cards | — | Step 1: service type + team size |
-| Google Places location | — | Step 2: street, city, state, ZIP |
-| Business name + AI suggestions | Partial (name only) | Step 3: name, TZ, currency, phone |
-| SaaS billing card (skippable) | — | Skipped (not our model) |
-| Getting Started checklist | — | **Fixed** — dashboard checklist with progress bar |
-| Seed service catalog | Auto from industry | **Fixed** — full catalog (services + add-ons) per industry on onboarding |
+| ConvertLabs | UpNext (before) | UpNext (now) | Planned |
+|-------------|-----------------|--------------|---------|
+| Industry cards | — | Step 1: service type + team size dropdowns | **Sprint 36** — card grid |
+| Google Places location | — | Step 2: street, city, state, ZIP | **Sprint 36** — Places autocomplete |
+| Business name | CL: AI suggestions | Step 3: name, TZ, currency, phone (prefill from sign-up) | ➖ **Not planned** — manual name only |
+| Service area from location | — | Step 3: coverage selector (matches settings) | ✅ sprint 35 |
+| SaaS billing card (skippable) | — | Skipped (not our model) | — |
+| Getting Started checklist | — | Dashboard checklist with progress bar | ✅ |
+| Seed service catalog | Auto from industry | Full catalog per industry on onboarding | ✅ **Wedge** |
+
+### Settings → Business (vs CL `/company`)
+
+| ConvertLabs | UpNext (now) | Planned |
+|-------------|--------------|---------|
+| Company identity fields | Sectioned form (industry, address, service area, public profile) | ✅ |
+| Logo upload | — | **Sprint 35** — Settings + `/book` header |
+| Website URL | — | **Sprint 35** — Settings + booking page link |
+| Google Places address | — | **Sprint 36** |
+| Branding colors | Separate settings | **Backlog** (P2) |
+
+Full gap matrix: `docs/audits/business-profile-gaps.md`
 
 **Q: Why was onboarding only 2 steps?**  
 A: MVP sprint 01 minimized TTFB. Competitor research showed industry + address are expected before first booking.
@@ -63,8 +76,11 @@ A: Mock slug `sparkle-shine` ≠ your real `publicSlug`. Fixed.
 **Q: What does **New** do?**  
 A: Was a dead `<button>`. Now opens menu: New booking, Add service, View jobs, Team.
 
-**Q: Why doesn't search work?**  
-A: Not built (ConvertLabs has ⌘K). Input disabled until implemented.
+**Q: What does search work?**  
+A: **⌘K CommandPalette** — search customers, jobs, bookings (`components/app/CommandPalette.tsx`, sprint 12).
+
+**Q: What do notifications do?**  
+A: **NotificationBell** in topbar — pending bookings badge + recent activity dropdown (`components/layout/NotificationBell.tsx`). Full notification center deferred to backlog P2.
 
 ### Operations
 
@@ -123,18 +139,28 @@ Reference: `competitor-research/targets/convertlabs/reports/gap-analysis.md`, `u
 | Booking detail polish | Owner row actions | Verify status timeline on `/app/bookings/[id]` |
 | Job status richness | On The Way, Running Late | Only scheduled → in_progress → completed |
 
-#### P1 — post-first-customer
+#### P1 — post-first-customer (remaining)
 
-| Gap | CL evidence |
-|-----|-------------|
-| Getting Started checklist (% complete) | `/get-started` | **Fixed** — `GettingStartedChecklist` on dashboard |
-| Recurring / frequency bookings | "How Often?" step |
-| Pricing parameters (beds, sq ft) | Service Studio |
-| Customer portal (Book Again, history) | `customer-portal.md` |
-| On The Way / Running Late notifications | Provider drawer |
-| Worker-specific availability | Provider Availability tab |
-| Global search ⌘K | Owner header |
-| Public API + webhooks | api.convertlabs.io |
+| Gap | CL evidence | UpNext / sprint |
+|-----|-------------|-----------------|
+| Company logo + website on profile | `/company` | ✅ Sprint 35 |
+| Service area UX consistency | Places / structured | ✅ Sprint 35 |
+| Google Places on business address | Onboarding step 2 | ✅ Sprint 36 (`AddressAutocompleteFields`) |
+| Industry card selection | Onboarding step 1 | ✅ Sprint 36 (`IndustryTypeCards`) |
+| Sign-up vs onboarding business-name dedup | — | ✅ Sprint 36 — **Option A** (see `business-profile-gaps.md`) |
+
+#### Phase 4 — ops polish (scheduled)
+
+| Gap | CL evidence | Sprint |
+|-----|-------------|--------|
+| Reports date range + CSV | `/booking/reports` | **37** |
+| Customer detail tabs + tags | 7-tab CRM | **38** |
+| Bookings inbox pagination/filters | Bookings module | **39** |
+| Manual booking fields + payment step | 10-tab wizard | **40** |
+| Calendar month + conflict hints | Calendar | **41** |
+| Portal reschedule | Customer portal | **42** |
+
+See `docs/audits/product-gaps-roadmap.md`.
 
 #### P2 — intentional omissions
 
@@ -145,17 +171,16 @@ Website builder, marketing campaigns, quotes, invoices, gift cards, multi-locati
 1. **Focused nav** — 9 items, all functional vs CL 15+ modules  
 2. **Crew web** — checklist + photos (CL web lacks these)  
 3. **Faster onboarding** — 4 steps + seeded service vs CL wizard + checklist + WP  
-4. **No faux modules** — search/notifications disabled honestly vs empty shells  
+4. **Honest shell** — ⌘K search + notification bell (not a full CL notification center)  
 
 ---
 
 ## Recommended next sprint items
 
-1. Set `NEXT_PUBLIC_APP_URL` on Vercel + Supabase auth URLs  
-2. ~~Getting Started checklist on dashboard empty state (4–5 tasks)~~ — done  
-3. ~~Booking reschedule UX (ConvertLabs frequency / reschedule modals)~~ — done (job + pending request)  
-4. ~~Crew "On the way" email button~~ — done (On the way + Running late)  
-5. Playwright E2E: sign-up → onboarding → book → accept → crew complete  
+1. **Phase 3:** `tasks/sprint-35-company-profile-parity.md` → sprint 36  
+2. **Phase 4:** sprints 37–42 per `docs/audits/product-gaps-roadmap.md`  
+3. **Owner:** Resend production domain — `tasks/launch-checklist.md`  
+4. Playwright E2E: sign-up → onboarding → book → accept → crew complete (env-gated Stripe)  
 
 ---
 

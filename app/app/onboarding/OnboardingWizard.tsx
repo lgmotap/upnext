@@ -3,10 +3,18 @@
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Check, ArrowRight, ArrowLeft, Copy, Globe, Loader2, MapPin, Briefcase } from "lucide-react";
+import { ServiceAreaFields } from "@/components/app/ServiceAreaFields";
+import { IndustryTypeCards } from "@/components/app/IndustryTypeCards";
+import { AddressAutocompleteFields } from "@/components/maps/AddressAutocompleteFields";
 import { ServiceIcon } from "@/components/booking/ServiceIcon";
 import { serviceTypes, teamSizes } from "@/lib/config";
+import {
+  inferServiceAreaCustom,
+  inferServiceAreaScope,
+  type ServiceAreaScope,
+} from "@/lib/business/service-area";
 import { catalogStats, getIndustryCatalog } from "@/lib/onboarding/industry-catalog";
-import { CURRENCIES, TIMEZONES, US_REGIONS } from "@/server/validators/onboarding";
+import { CURRENCIES, TIMEZONES } from "@/server/validators/onboarding";
 import { completeOnboardingAction } from "@/server/actions/onboarding";
 
 const input =
@@ -57,15 +65,25 @@ export function OnboardingWizard({
   defaults,
   bookingUrl,
   error,
+  fromSignUp,
 }: {
   defaults: Defaults;
   bookingUrl: string;
   error?: string;
+  /** True when display name was pre-filled from sign-up (Option A dedup). */
+  fromSignUp?: boolean;
 }) {
   const [step, setStep] = useState(1);
   const [copied, setCopied] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [businessType, setBusinessType] = useState(defaults.businessType);
+  const [city, setCity] = useState(defaults.city);
+  const [region, setRegion] = useState(defaults.region);
+  const initialScope = inferServiceAreaScope(defaults.serviceArea, defaults.city, defaults.region);
+  const [serviceAreaScope, setServiceAreaScope] = useState<ServiceAreaScope>(initialScope);
+  const [serviceAreaCustom, setServiceAreaCustom] = useState(
+    inferServiceAreaCustom(defaults.serviceArea, defaults.city, defaults.region, initialScope),
+  );
 
   const catalog = useMemo(() => getIndustryCatalog(businessType || serviceTypes[0]), [businessType]);
   const stats = useMemo(() => catalogStats(businessType || serviceTypes[0]), [businessType]);
@@ -102,6 +120,10 @@ export function OnboardingWizard({
         setLocalError("Business name is required.");
         return false;
       }
+      if (serviceAreaScope === "custom" && !serviceAreaCustom.trim()) {
+        setLocalError("Enter a custom service area label.");
+        return false;
+      }
     }
     return true;
   };
@@ -111,6 +133,11 @@ export function OnboardingWizard({
     if (step === 1) {
       const bt = String(new FormData(form).get("businessType") ?? businessType);
       setBusinessType(bt);
+    }
+    if (step === 2) {
+      const fd = new FormData(form);
+      setCity(String(fd.get("city") ?? ""));
+      setRegion(String(fd.get("region") ?? ""));
     }
     setStep((s) => Math.min(STEPS, s + 1));
   };
@@ -145,20 +172,8 @@ export function OnboardingWizard({
 
           <div className="mt-5 space-y-4">
             <div>
-              <label className={label} htmlFor="businessType">Primary service type</label>
-              <select
-                id="businessType"
-                name="businessType"
-                value={businessType}
-                onChange={(e) => setBusinessType(e.target.value)}
-                className={input}
-                required
-              >
-                <option value="">Select…</option>
-                {serviceTypes.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+              <p className={label}>Primary service type</p>
+              <IndustryTypeCards value={businessType} onChange={setBusinessType} />
             </div>
             <div>
               <label className={label} htmlFor="teamSize">Team size</label>
@@ -196,35 +211,20 @@ export function OnboardingWizard({
           </h1>
           <p className="mt-1 text-sm text-ink-500">Your business address helps customers know your service area.</p>
 
-          <div className="mt-5 space-y-4">
-            <div>
-              <label className={label} htmlFor="addressLine1">Street address</label>
-              <input id="addressLine1" name="addressLine1" defaultValue={defaults.addressLine1} placeholder="123 Main St" className={input} required />
-            </div>
-            <div>
-              <label className={label} htmlFor="addressLine2">Suite / unit (optional)</label>
-              <input id="addressLine2" name="addressLine2" defaultValue={defaults.addressLine2} placeholder="Suite 4B" className={input} />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={label} htmlFor="city">City</label>
-                <input id="city" name="city" defaultValue={defaults.city} className={input} required />
-              </div>
-              <div>
-                <label className={label} htmlFor="region">State</label>
-                <select id="region" name="region" defaultValue={defaults.region || ""} className={input} required>
-                  <option value="">Select…</option>
-                  {US_REGIONS.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className={label} htmlFor="postalCode">ZIP code</label>
-              <input id="postalCode" name="postalCode" defaultValue={defaults.postalCode} className={input} required />
-            </div>
-            <input type="hidden" name="country" value={defaults.country || "US"} />
+          <div className="mt-5">
+            <AddressAutocompleteFields
+              defaults={{
+                line1: defaults.addressLine1,
+                line2: defaults.addressLine2,
+                city: defaults.city,
+                region: defaults.region,
+                postalCode: defaults.postalCode,
+              }}
+              countryValue={defaults.country || "US"}
+              onCityChange={setCity}
+              onRegionChange={setRegion}
+              idPrefix="onb-addr"
+            />
           </div>
 
           <div className="mt-6 flex items-center justify-between">
@@ -246,6 +246,11 @@ export function OnboardingWizard({
           <div className="mt-5 space-y-4">
             <div>
               <label className={label} htmlFor="displayName">Business name</label>
+              {fromSignUp && defaults.displayName.trim() ? (
+                <p className="mb-2 text-xs text-ink-500">
+                  From your account setup — edit if this isn&apos;t how customers should see you.
+                </p>
+              ) : null}
               <input id="displayName" name="displayName" defaultValue={defaults.displayName} className={input} required />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -267,8 +272,17 @@ export function OnboardingWizard({
               </div>
             </div>
             <div>
-              <label className={label} htmlFor="serviceArea">Service area (optional)</label>
-              <input id="serviceArea" name="serviceArea" defaultValue={defaults.serviceArea} placeholder="e.g. Greater Austin, TX" className={input} />
+              <p className={label}>Service area</p>
+              <p className="mb-3 text-sm text-ink-500">Based on your address — choose how to describe where you work.</p>
+              <ServiceAreaFields
+                city={city}
+                region={region}
+                scope={serviceAreaScope}
+                customLabel={serviceAreaCustom}
+                onScopeChange={setServiceAreaScope}
+                onCustomLabelChange={setServiceAreaCustom}
+                idPrefix="onb-"
+              />
             </div>
             <div>
               <label className={label} htmlFor="phone">Contact phone</label>

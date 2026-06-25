@@ -8,6 +8,7 @@ import {
   Wrench,
   CreditCard,
   BarChart3,
+  MessageSquare,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -23,6 +24,7 @@ export const appNav: NavItem[] = [
   { label: "Team", href: "/app/team", icon: UserCog },
   { label: "Services", href: "/app/services", icon: Wrench },
   { label: "Payments", href: "/app/payments", icon: CreditCard },
+  { label: "Communications", href: "/app/communications", icon: MessageSquare },
   { label: "Reports", href: "/app/reports", icon: BarChart3 },
   { label: "Settings", href: "/app/settings/business", icon: Settings },
 ];

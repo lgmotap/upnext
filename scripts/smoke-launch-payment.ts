@@ -18,8 +18,11 @@ async function main() {
 
   const org = await prisma.organization.findFirst({
     where: { businessProfile: { publicSlug: TEST_SLUG } },
+    include: { businessProfile: { select: { displayName: true } } },
   });
   if (!org) throw new Error("Run smoke:e2e first");
+
+  const displayName = org.businessProfile?.displayName ?? org.name ?? "Smoke Test Co";
 
   const job = await prisma.job.findFirst({
     where: { organizationId: org.id },
@@ -44,16 +47,22 @@ async function main() {
   if (refreshed?.status !== "paid") throw new Error("Payment status not paid");
   console.log("✓ Job payment status is paid");
 
-  const dashboard = await getDashboardData(org.id, org.timezone, org.currency, "Smoke Owner");
-  const revenueStat = dashboard.stats.find((s) => s.label === "Revenue this week");
-  if (!revenueStat) throw new Error("Revenue stat missing from dashboard");
+  const dashboard = await getDashboardData(
+    org.id,
+    org.timezone,
+    org.currency,
+    "Smoke Owner",
+    displayName,
+    0,
+  );
+  const weekRevenue = dashboard.weekRevenueTotalLabel;
 
   const expectedMin = formatMoney(0, org.currency);
-  if (revenueStat.value === expectedMin && job.priceCents > 0) {
+  if (weekRevenue === expectedMin && job.priceCents > 0) {
     // paidAt might fall outside week window in edge TZ cases — still pass if payment row is paid
-    console.log(`⚠ Dashboard week revenue shows ${revenueStat.value} (paidAt may be outside week window)`);
+    console.log(`⚠ Dashboard week revenue shows ${weekRevenue} (paidAt may be outside week window)`);
   } else {
-    console.log(`✓ Dashboard revenue this week: ${revenueStat.value}`);
+    console.log(`✓ Dashboard revenue this week: ${weekRevenue}`);
   }
 
   const paidCount = await prisma.paymentRecord.count({

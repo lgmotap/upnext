@@ -11,6 +11,7 @@ config({ path: ".env", override: false });
 const { prisma } = await import("../lib/db/prisma");
 const { createWorkspaceForNewUser } = await import("../server/services/onboarding");
 const { updateBusinessSetup } = await import("../server/services/business");
+const { businessSetupSchema } = await import("../server/validators/onboarding");
 const { ensureIndustryCatalogForOrg } = await import("../server/services/industry-catalog");
 const { catalogStats } = await import("../lib/onboarding/industry-catalog");
 const { saveWeeklyAvailability } = await import("../server/services/availability");
@@ -46,22 +47,26 @@ async function main() {
   }
   console.log(`✓ Default catalog at signup: ${primaryAfterSignup} services`);
 
-  await updateBusinessSetup(organization.id, {
-    businessType: "Residential Cleaning",
-    teamSize: "Just me",
-    addressLine1: "100 Launch Lane",
-    addressLine2: "",
-    city: "Launchville",
-    region: "NY",
-    postalCode: "10001",
-    country: "US",
-    displayName: businessName,
-    timezone: "America/New_York",
-    currency: "USD",
-    serviceArea: "Launch City",
-    phone: "555-0100",
-    description: "Launch smoke test business",
-  });
+  await updateBusinessSetup(
+    organization.id,
+    businessSetupSchema.parse({
+      businessType: "Residential Cleaning",
+      teamSize: "Just me",
+      addressLine1: "100 Launch Lane",
+      addressLine2: "",
+      city: "Launchville",
+      region: "NY",
+      postalCode: "10001",
+      country: "US",
+      displayName: businessName,
+      timezone: "America/New_York",
+      currency: "USD",
+      serviceAreaScope: "custom",
+      serviceAreaCustom: "Launch City",
+      phone: "555-0100",
+      description: "Launch smoke test business",
+    }),
+  );
   console.log("✓ Onboarding business setup saved");
 
   const seeded = await ensureIndustryCatalogForOrg(organization.id);

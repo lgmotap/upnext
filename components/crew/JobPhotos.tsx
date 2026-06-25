@@ -69,7 +69,7 @@ export function JobPhotoUpload({ jobId, photoCount, maxPhotos, disabled }: JobPh
       {atLimit ? (
         <p className="text-sm text-ink-500">Maximum photos reached for this job.</p>
       ) : (
-        <form action={uploadJobPhotoAction} className="space-y-3" encType="multipart/form-data">
+        <form action={uploadJobPhotoAction} className="space-y-3">
           <input type="hidden" name="jobId" value={jobId} />
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">

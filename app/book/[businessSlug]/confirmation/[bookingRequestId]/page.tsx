@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, Mail, Clock, Repeat, CalendarPlus, Phone, ExternalLink } from "lucide-react";
+import { Check, Mail, Clock, Repeat, Phone, ExternalLink } from "lucide-react";
+import { AddToCalendarButton } from "@/components/booking/AddToCalendarButton";
 import { frequencyLabel } from "@/lib/booking/frequency";
 import { formatDisplayDateTime } from "@/lib/datetime/timezone";
-import { buildBookingIcsEvent, icsDataUrl } from "@/lib/datetime/ics";
+import { buildCalendarLinks } from "@/lib/datetime/calendar-links";
 import { formatMoney } from "@/lib/money/format";
 import { getCustomerPortalUrl } from "@/lib/url/app";
 import { isCustomerPortalEnabled } from "@/lib/portal/enabled";
@@ -11,10 +12,14 @@ import { getPublicBookingRequest } from "@/server/repositories/bookings";
 
 export default async function BookingConfirmationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ businessSlug: string; bookingRequestId: string }>;
+  searchParams: Promise<{ payment?: string }>;
 }) {
   const { businessSlug, bookingRequestId } = await params;
+  const query = await searchParams;
+  const paidAtBooking = query.payment === "success";
   const booking = await getPublicBookingRequest(businessSlug, bookingRequestId);
 
   if (!booking) notFound();
@@ -34,7 +39,7 @@ export default async function BookingConfirmationPage({
     ? `${address.line1}, ${address.city}, ${address.region} ${address.postalCode}`
     : "";
 
-  const ics = buildBookingIcsEvent({
+  const calendarLinks = buildCalendarLinks({
     uid: booking.id,
     title: `${serviceLabel} — ${businessName}`,
     description: `Booking request with ${businessName}. Reference: ${booking.id}`,
@@ -42,7 +47,6 @@ export default async function BookingConfirmationPage({
     startAt: booking.requestedStartAt,
     endAt: booking.requestedEndAt,
   });
-  const calendarHref = icsDataUrl(ics);
 
   const portalUrl =
     profile && isCustomerPortalEnabled(profile) && profile.publicSlug
@@ -55,9 +59,13 @@ export default async function BookingConfirmationPage({
         <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-brand-400 text-brand-950">
           <Check className="size-8" strokeWidth={3} />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink-950">Request sent!</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink-950">
+          {paidAtBooking ? "Payment received!" : "Request sent!"}
+        </h1>
         <p className="mt-2 text-ink-600">
-          {businessName} will confirm your booking shortly. A confirmation email is on its way.
+          {paidAtBooking
+            ? `${businessName} has your payment and will confirm your booking shortly.`
+            : `${businessName} will confirm your booking shortly. A confirmation email is on its way.`}
         </p>
 
         <div className="mt-6 space-y-2.5 rounded-3xl bg-white p-5 text-left ring-1 ring-ink-100 shadow-soft">
@@ -77,13 +85,7 @@ export default async function BookingConfirmationPage({
         </div>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <a
-            href={calendarHref}
-            download="booking.ics"
-            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-ink-100 px-4 py-2.5 text-sm font-semibold text-ink-800 hover:bg-ink-200"
-          >
-            <CalendarPlus className="size-4" /> Add to calendar
-          </a>
+          <AddToCalendarButton whenLabel={when} links={calendarLinks} />
           {portalUrl && (
             <Link
               href={portalUrl}

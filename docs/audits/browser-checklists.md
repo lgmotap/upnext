@@ -135,7 +135,7 @@ Evidence: `server/permissions/can.ts` + manual spot checks.
 
 | # | Route | Check |
 |---|--------|--------|
-| 1 | `/app/settings/business` | Name, timezone, booking link |
+| 1 | `/app/settings/business` | Sectioned profile; logo/website in sprint 35 |
 | 2 | `/app/settings/availability` | Weekly rules + blackouts |
 | 3 | `/app/settings/billing` | Stripe Connect |
 | 4 | `/app/settings/portals` | Customer portal toggle |

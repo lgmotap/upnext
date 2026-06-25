@@ -8,6 +8,7 @@ const tabs = [
   { label: "Portals", href: "/app/settings/portals" },
   { label: "Availability", href: "/app/settings/availability" },
   { label: "Notifications", href: "/app/settings/notifications" },
+  { label: "Booking form", href: "/app/settings/booking-form" },
   { label: "Billing", href: "/app/settings/billing" },
   { label: "API", href: "/app/settings/api" },
 ];

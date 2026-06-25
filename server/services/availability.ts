@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import type { BookingWindowInput, WeeklyAvailabilityInput } from "@/server/validators/availability";
+import type { BookingWindowInput, SchedulingPolicyInput, WeeklyAvailabilityInput } from "@/server/validators/availability";
 
 export async function saveWeeklyAvailability(organizationId: string, input: WeeklyAvailabilityInput) {
   return prisma.$transaction(
@@ -35,6 +35,16 @@ export async function saveBookingWindow(organizationId: string, input: BookingWi
       minNoticeHours: input.minNoticeHours,
       maxBookingDaysAhead: input.maxBookingDaysAhead,
       slotIntervalMinutes: input.slotIntervalMinutes,
+    },
+  });
+}
+
+export async function saveSchedulingPolicy(organizationId: string, input: SchedulingPolicyInput) {
+  return prisma.businessProfile.update({
+    where: { organizationId },
+    data: {
+      bufferMinutesBetweenJobs: input.bufferMinutesBetweenJobs,
+      providerCarryOverMinutes: input.providerCarryOverMinutes,
     },
   });
 }

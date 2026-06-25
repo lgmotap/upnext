@@ -1,6 +1,6 @@
 # UpNext vs ConvertLabs — positioning
 
-**Updated:** 2026-06-24 (post sprint 18)
+**Updated:** 2026-06-25 (Phase 3 sprints 35–36 planned)
 
 ## Who we serve
 
@@ -19,12 +19,14 @@ Home-service businesses (solo → ~50 staff): cleaning, lawn, handyman, etc. Sam
 
 | Area | Notes | UpNext stance |
 |------|--------|---------------|
-| Drag-drop scheduler | Dispatch board | P2 — week calendar sufficient for MVP |
-| Pay at booking | Stripe on public form | By design — payment link post-job |
+| Drag-drop scheduler | Dispatch board | Shipped sprint 31; week calendar still available |
+| Dashboard ops + analytics | CL home widgets | **Done (sprints 43–44)** — queue KPIs, today enrichment, 30d snapshot |
+| Company profile / onboarding polish | `/company` + Places + logo | Shipped **35–36** |
+| Pay at booking | Stripe on public form | **Optional toggle** (off by default) — sprint 24 |
 | Quotes / invoices | Full AR module | Out of MVP scope |
 | Website builder | WordPress hub | Out of scope |
-| Public API | Partner integrations | Phase 3 |
-| Custom booking domain | DNS + WP | P1 backlog — slug on UpNext domain today |
+| Public API | Partner integrations | Shipped sprint 20 + 27 expansion |
+| Custom booking domain | DNS + WP | **Optional** — verified host routing (sprint 25) |
 
 ## Parity achieved (core loop)
 
@@ -39,5 +41,6 @@ Public book → inbox → job → assign → crew complete → payment → repor
 ## Evidence
 
 - Scorecard: `tasks/competitor-parity-status.md`
+- Profile gaps: `docs/audits/business-profile-gaps.md`
 - Browser checks: `docs/audits/browser-checklists.md`
 - Research baseline: `competitor-research/targets/convertlabs/reports/gap-analysis.md` (2026-06-24, partial stale)

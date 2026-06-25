@@ -73,9 +73,16 @@ async function main() {
   }
   if (!probeDate) throw new Error("No Wednesday in next 14 days");
 
-  const orgSlots = (await getOrgSlotsForDay(organization.id, service.id, probeDate)) ?? [];
-  const workerSlots =
-    (await getOrgSlotsForDay(organization.id, service.id, probeDate, [], worker.id)) ?? [];
+  const orgSlotResult = await getOrgSlotsForDay(organization.id, service.id, probeDate);
+  const orgSlots = orgSlotResult?.slots ?? [];
+  const workerSlotResult = await getOrgSlotsForDay(
+    organization.id,
+    service.id,
+    probeDate,
+    [],
+    worker.id,
+  );
+  const workerSlots = workerSlotResult?.slots ?? [];
 
   if (orgSlots.length === 0) throw new Error("Expected org slots on Wednesday");
   if (workerSlots.length === 0) throw new Error("Expected worker-filtered slots");

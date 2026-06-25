@@ -1,15 +1,14 @@
 import { redirect } from "next/navigation";
-import { Card, CardHeader } from "@/components/app/ui";
-import { BookingLinkCard } from "@/components/app/BookingLinkCard";
-import { getAppSession } from "@/server/permissions/session";
-import { canManageBusiness } from "@/server/permissions/can";
-import { getBusinessSetup } from "@/server/services/business";
+import { BusinessLogoUpload } from "@/components/app/BusinessLogoUpload";
+import { BusinessProfileForm } from "@/components/app/BusinessProfileForm";
+import {
+  inferServiceAreaCustom,
+  inferServiceAreaScope,
+} from "@/lib/business/service-area";
 import { updateBusinessSettingsAction } from "@/server/actions/settings";
-import { CURRENCIES, TIMEZONES } from "@/server/validators/onboarding";
-import { getBookingPageUrl, isBookingUrlMisconfigured } from "@/lib/url/app";
-
-const input =
-  "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink-900 ring-1 ring-ink-200 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-400";
+import { canManageBusiness } from "@/server/permissions/can";
+import { getAppSession } from "@/server/permissions/session";
+import { getBusinessSetup } from "@/server/services/business";
 
 export default async function BusinessSettingsPage({
   searchParams,
@@ -25,8 +24,10 @@ export default async function BusinessSettingsPage({
   if (!setup || !profile) redirect("/app/onboarding");
 
   const canEdit = canManageBusiness(session);
-  const bookingUrl = getBookingPageUrl(profile.publicSlug);
-  const misconfigured = isBookingUrlMisconfigured();
+
+  const city = profile.city ?? "";
+  const region = profile.region ?? "";
+  const serviceAreaScope = inferServiceAreaScope(profile.serviceArea, city, region);
 
   return (
     <>
@@ -40,117 +41,54 @@ export default async function BusinessSettingsPage({
           Business settings saved.
         </p>
       )}
-
-      <Card className="mb-4 p-5">
-        <h2 className="text-sm font-bold text-ink-950">Public booking link</h2>
-        <p className="mt-1 text-sm text-ink-500">Share this link so customers can request appointments.</p>
-        <div className="mt-3">
-          <BookingLinkCard
-            url={bookingUrl}
-            publicSlug={profile.publicSlug}
-            showMisconfigWarning={misconfigured}
-          />
-        </div>
-        <p className="mt-3 text-xs text-ink-400">
-          More options (embed, customer portal) in{" "}
-          <a href="/app/settings/portals" className="font-semibold text-brand-700 hover:underline">
-            Settings → Portals
-          </a>
-          .
+      {params.saved === "logo" && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Logo uploaded.
         </p>
-      </Card>
+      )}
+      {params.saved === "logo_removed" && (
+        <p className="mb-4 rounded-xl bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900 ring-1 ring-brand-100">
+          Logo removed.
+        </p>
+      )}
 
-      <Card>
-        <CardHeader title="Business profile" />
-        <form action={updateBusinessSettingsAction} className="grid gap-4 p-5 sm:grid-cols-2">
-          <Field label="Business name" name="displayName" defaultValue={profile.displayName} disabled={!canEdit} />
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
-              Public booking slug
-            </label>
-            <div className="flex items-center rounded-xl bg-ink-50 px-3.5 py-2.5 text-sm text-ink-600 ring-1 ring-ink-200">
-              /book/{profile.publicSlug}
-            </div>
-          </div>
-          <Field label="Contact email" name="email" type="email" defaultValue={profile.email ?? ""} disabled={!canEdit} />
-          <Field label="Phone" name="phone" defaultValue={profile.phone ?? ""} disabled={!canEdit} />
-          <Field label="Service area" name="serviceArea" defaultValue={profile.serviceArea ?? ""} disabled={!canEdit} />
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">Timezone</label>
-            <select
-              name="timezone"
-              defaultValue={setup.timezone}
-              disabled={!canEdit}
-              className={input}
-            >
-              {TIMEZONES.map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">Currency</label>
-            <select name="currency" defaultValue={setup.currency} disabled={!canEdit} className={input}>
-              {CURRENCIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">
-              Description
-            </label>
-            <textarea
-              name="description"
-              rows={3}
-              defaultValue={profile.description ?? ""}
-              disabled={!canEdit}
-              className={input}
-            />
-          </div>
-          {canEdit && (
-            <div className="sm:col-span-2">
-              <button
-                type="submit"
-                className="rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
-              >
-                Save changes
-              </button>
-            </div>
-          )}
-        </form>
-      </Card>
-    </>
-  );
-}
+      <div className="mb-4">
+        <BusinessLogoUpload
+          logoUrl={profile.logoUrl}
+          displayName={profile.displayName}
+          canEdit={canEdit}
+        />
+      </div>
 
-function Field({
-  label,
-  name,
-  defaultValue,
-  type = "text",
-  disabled,
-}: {
-  label: string;
-  name: string;
-  defaultValue: string;
-  type?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-400">{label}</label>
-      <input
-        type={type}
-        name={name}
-        defaultValue={defaultValue}
-        disabled={disabled}
-        className={input}
+      <BusinessProfileForm
+        canEdit={canEdit}
+        publicSlug={profile.publicSlug}
+        action={updateBusinessSettingsAction}
+        defaults={{
+          businessType: profile.businessType ?? "",
+          teamSize: profile.teamSize ?? "",
+          addressLine1: profile.addressLine1 ?? "",
+          addressLine2: profile.addressLine2 ?? "",
+          city,
+          region,
+          postalCode: profile.postalCode ?? "",
+          country: profile.country ?? "US",
+          displayName: profile.displayName,
+          email: profile.email ?? "",
+          phone: profile.phone ?? "",
+          timezone: setup.timezone,
+          currency: setup.currency,
+          description: profile.description ?? "",
+          websiteUrl: profile.websiteUrl ?? "",
+          serviceAreaScope,
+          serviceAreaCustom: inferServiceAreaCustom(
+            profile.serviceArea,
+            city,
+            region,
+            serviceAreaScope,
+          ),
+        }}
       />
-    </div>
+    </>
   );
 }

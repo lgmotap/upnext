@@ -126,6 +126,49 @@ To re-enable auto-continue, restore the `stop` hook in `.cursor/hooks.json` (see
 
 Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/gap-analysis.md`
 
+## Phase 2 P1 parity — sprints 22–31 (planned 2026-06-24)
+
+**Sprint 22 complete** — buffers, carry-over, frequency discounts. `npm run smoke:scheduling-depth`
+
+**Sprint 23 complete** — half-bath + square-feet pricing params (catalog, services editor, public/manual booking). `npm run smoke:pricing-params`
+
+**Sprint 24 complete** — optional pay at booking (Stripe Checkout on public form + manual collect). `npm run smoke:pay-at-booking`
+
+**Sprint 25 complete** — custom booking domain host routing + Settings → Portals UI. `npm run smoke:custom-domain`
+
+**Sprint 26 complete** — optional portal password login + Book again FAQ sidebar. `npm run smoke:portal-password` · `smoke:portal-faq`
+
+**Sprint 37 complete** — reports date range + CSV export. `npm run smoke:reports`
+
+**Sprint 38 complete** — customer detail tabs, tags, per-customer comms filter. `npm run smoke:crm-lists`
+
+**Sprint 39 complete** — bookings inbox pagination, filters, bulk decline. `npm run smoke:crm-lists`
+
+**Sprint 40 complete** — manual booking custom fields, payment step, review panel, address picker. `npm run smoke:manual-booking` · `smoke:custom-booking-fields`
+
+**Sprint 41 complete** — calendar month view, conflict hints, pending chips. `npm run smoke:scheduler`
+
+**Sprint 42 complete** — portal reschedule + cleaning plan sidebar. `npm run smoke:portal-reschedule`
+
+**Sprint 43 complete** — dashboard queue KPIs (deep links), today row enrichment, crew activity, jobs/payments filters. `npm run smoke:dashboard`
+
+**Sprint 44 complete** — time-aware greeting, `BusinessSnapshot` (30-day teaser when onboarding done), shared `period-stats`. `npm run smoke:dashboard` · `npm run smoke:reports`
+
+**Resume:** Phase 4–5 parity sprints complete through 44. Next: `tasks/launch-checklist.md` (Resend prod domain) or backlog P2 items in `tasks/backlog.md`.
+
+| Sprint | Focus |
+|--------|--------|
+| 22 | Buffers, carry-over, frequency discounts |
+| 23 | Half-bath, sq ft pricing params |
+| 24 | Pay at booking (optional) |
+| 25 | Custom booking domain routing |
+| 26 | Portal password + FAQ |
+| 27 | API v1 expansion |
+| 28 | Crew map + late ETA |
+| 29 | SMS notifications |
+| 30 | Custom booking fields |
+| 31 | Drag-drop dispatch scheduler |
+
 ## Portal product review — batch 2 (2026-06-24, pushed)
 
 **Commits:** `068e485` (shared modals) · `3074212` (action panels + server) · `72a07e1` (page wiring)
@@ -173,20 +216,39 @@ Competitor synthesis (local): `competitor-research/targets/convertlabs/reports/g
 - `tests/e2e/full-product-flow.spec.ts` + `npm run test:e2e:full` (auth tests env-gated).
 - All smokes 14–18 + `smoke:launch` green.
 
-**Resume:** Sprint **21** → `tasks/sprint-21-production-launch.md`
+**Resume:** Sprint **36 complete**. **Next:** **`tasks/sprint-37-reports-v2.md`**. Master gap map: `docs/audits/product-gaps-roadmap.md`.
 
-## Sprint 20 — Read API + webhooks (done)
+## Sprint 32–34 — CRM lists, comms log, jobs pagination (done)
 
-- `ApiKey` + `WebhookEndpoint` / `WebhookDelivery` models.
-- Owner settings at `/app/settings/api` — create/revoke keys, manage webhooks.
-- `GET /api/v1/bookings|customers|services` — Bearer auth, `since` cursor, rate limited.
-- Outbound webhooks with HMAC `UpNext-Signature`, delivery log, cron retries at `/api/cron/webhook-retries`.
-- `npm run smoke:api`
+- **Sprint 32**: Customers table + pagination + last job; bookings hybrid inbox. `npm run smoke:crm-lists`.
+- **Sprint 33**: `/app/communications` delivery log. Linked from Settings → Notifications.
+- **Sprint 34**: Jobs list pagination (50/page). Shared `ListPagination`.
 
-## Full product v1 (sprints 14–21)
+## Phase 3 — Company profile & onboarding (done)
 
-All product sprints complete. **Remaining production gate (owner):** Resend domain verify + remove `RESEND_SANDBOX_TO` on Production — see `tasks/launch-checklist.md` line 17.
+- **Sprint 35 (done):** Service area unify, logo upload, website URL — `npm run smoke:business-profile`
+- **Sprint 36 (done):** Google Places autocomplete, industry cards, sign-up name dedup (Option A) — `npm run smoke:address-autocomplete`
 
-**Deferred:** Custom domain host routing (doc at `docs/custom-booking-domain.md`).
+## Phase 4 — Ops polish (planned)
 
-**Deferred (Phase 3):** Stripe Checkout Playwright E2E, read API v1.
+- **Sprint 37 (next):** Reports date range + CSV — `tasks/sprint-37-reports-v2.md`
+- **Sprint 38**: CRM tabs + tags — `tasks/sprint-38-crm-customer-depth.md`
+- **Sprint 39**: Bookings inbox scale — `tasks/sprint-39-bookings-inbox-scale.md`
+- **Sprint 40**: Manual booking parity — `tasks/sprint-40-manual-booking-parity.md`
+- **Sprint 41**: Calendar month + conflicts — `tasks/sprint-41-calendar-month-conflicts.md`
+- **Sprint 42**: Portal reschedule — `tasks/sprint-42-portal-reschedule-ux.md`
+- Master map: `docs/audits/product-gaps-roadmap.md`
+
+## Sprint 29–31 — SMS, custom fields, scheduler (done)
+
+- **Sprint 29**: Twilio SMS (`lib/sms/twilio.ts`), settings UI, OTW/late/24h SMS mirrors. `npm run smoke:sms`.
+- **Sprint 30**: `BookingFormField`, `/app/settings/booking-form`, public custom fields, `GET /api/v1/custom-fields`. `npm run smoke:custom-booking-fields`.
+- **Sprint 31**: `/app/calendar/scheduler` drag-drop dispatch board. `npm run smoke:scheduler`.
+
+## Full product v1 (sprints 14–31)
+
+All Phase 2 parity sprints complete. **Remaining production gate (owner):** Resend domain verify + remove `RESEND_SANDBOX_TO` on Production — see `tasks/launch-checklist.md` line 17.
+
+**Custom booking domain:** Sprint 25 — `docs/custom-booking-domain.md`.
+
+**Deferred (Phase 3 / backlog):** Stripe Checkout Playwright E2E, P2 items in `tasks/backlog.md`.

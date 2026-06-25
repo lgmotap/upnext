@@ -4,6 +4,33 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Booking confirmation calendar picker**: “Add to calendar” opens a modal with Google Calendar, Outlook, and Apple Calendar (.ics download); shared `buildCalendarLinks` helper. `npm run smoke:calendar-links`.
+- **Sprint 36 onboarding & address UX**: `AddressAutocompleteFields` (Google Places when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` set, manual fallback otherwise) on onboarding, settings, and public booking; `IndustryTypeCards` on onboarding step 1; sign-up business name dedup via Option A helper on step 3. `docs/architecture/google-maps.md`. `npm run smoke:address-autocomplete`.
+- **Sprint 35 company profile parity**: shared `ServiceAreaFields` (onboarding + settings), logo upload to Supabase Storage (`business-logos` bucket), `websiteUrl` on profile, public booking logo + website link. `npm run smoke:business-profile`.
+- **App shell parity**: header notification bell (pending bookings + recent activity), profile dropdown (settings, billing/API for owners, sign out), Communications in sidebar nav.
+- **Sprint 37 reports v2**: date range picker on `/app/reports`, range stats + CSV export (owner/admin). `npm run smoke:reports`.
+- **Sprint 38 CRM customer depth**: customer detail tabs (Overview, Jobs, Addresses, Notes, Payments), tag edit + list filter, per-customer comms link/filter. `npm run smoke:crm-lists`.
+- **Sprint 39 bookings inbox scale**: history pagination (50/page), status/search/date filters, pending cap + show-all, bulk decline on pending cards. `npm run smoke:crm-lists`.
+- **Sprint 40 manual booking parity**: custom booking fields, payment section (bill later vs Stripe), review panel, multi-address picker. `npm run smoke:manual-booking`, `smoke:custom-booking-fields`.
+- **Sprint 41 calendar month + conflicts**: Week/Month toggle on `/app/calendar`, month density grid, worker overlap warnings, pending request chips. `npm run smoke:scheduler`.
+- **Sprint 43 dashboard ops parity**: four queue KPIs with deep links (booked/scheduled today, awaiting payment, unassigned), header CTAs, enriched today rows, crew activity in feed; jobs/payments list filters. `npm run smoke:dashboard`.
+- **Sprint 44 dashboard analytics snapshot**: time-aware greeting, `BusinessSnapshot` (30-day metrics) when Getting Started complete; shared `lib/reporting/period-stats.ts`.
+- **Settings → Business rework (partial)**: sectioned profile form (industry, address, service area coverage + preview, public fields); fixed `businessSettingsSchema` so save no longer requires onboarding-only fields.
+### Fixed
+- **App shell crash**: `Avatar is not defined` on dashboard — dedicated `UserAvatar` client component; initials from name/email; optional photo from `User.avatarUrl` or Supabase metadata.
+- **Settings → API**: removed duplicate page header and tab bar (layout already provides them).
+- **Sprint 34 jobs pagination**: jobs list 50/page + `ListPagination`.
+- **Sprint 32 CRM list UX**: customers table with search, sort, pagination (50/page), last job column; bookings hybrid inbox (pending cards + history table); shared `ListPagination`. `npm run smoke:crm-lists`. `/app/calendar/scheduler` day board with HTML5 drag-drop, worker columns, unassigned sidebar; `rescheduleJobFromSchedulerAction`. `npm run smoke:scheduler`.
+- **Sprint 30 custom booking fields**: `BookingFormField` model, `/app/settings/booking-form`, public form dynamic fields, booking/job detail display, `GET /api/v1/custom-fields`. `npm run smoke:custom-booking-fields`.
+- **Sprint 29 SMS notifications**: Twilio integration (mock without env), SMS toggles on notifications settings, mirrored OTW/late/24h triggers, `NotificationLog.channel`. `docs/architecture/notifications.md`. `npm run smoke:sms`.
+- **Sprint 28 crew & field polish**: Google Maps embed on crew job detail, same-day ETA selector for running late, dash-separated service line on job views.
+- **Sprint 27 API v1 expansion**: `availability`, `extras`, `categories`, `frequencies`, `company`, `settings` endpoints; `booking_canceled` webhook. `docs/api-v1-read.md`.
+- **Sprint 26 portal auth & FAQ**: optional `portalPasswordLoginEnabled` with Supabase portal users (`Customer.portalUserId`); forgot/reset password flow; `portalFaqJson` editor + Book again accordion; cleaning FAQ defaults. `npm run smoke:portal-password`, `npm run smoke:portal-faq`.
+- **Sprint 25 custom booking domain**: `customBookingHost` + verified routing via `proxy.ts`; Settings → Portals DNS UI; profile-aware booking URLs. `npm run smoke:custom-domain`.
+- **Sprint 24 pay at booking (optional)**: `payAtBookingEnabled` + `requirePaymentAtBooking` on `BusinessProfile`; Stripe Checkout step on public booking; manual “Collect payment now”; webhook auto-accepts booking → job. Off by default. `npm run smoke:pay-at-booking`.
+- **Sprint 23 pricing params expansion**: `half_bathrooms` + `square_feet` on `PricingParameterType`; residential cleaning catalog defaults; services editor for all four params; public + manual booking + job price. `npm run smoke:pricing-params`, `npm run smoke:bed-bath-form-defaults`.
+- **Sprint 22 scheduling depth**: buffer between jobs, provider carry-over on slot engine, per-service frequency discounts (public + manual booking + job price), settings UI. `npm run smoke:scheduling-depth`.
+- **Phase 2 P1 sprint plans** (sprints 22–31): scheduling depth, pricing expansion, pay-at-booking, custom domain, portal auth, API expansion, crew polish, SMS, custom fields, dispatch scheduler. See `tasks/full-product-roadmap.md`.
 - **Sprint 17 CRM import**: `/app/customers/import` CSV upload, dedupe by email. `npm run smoke:customer-import`.
 - **Sprint 18 per-worker availability**: `MembershipAvailabilityRule`, org/worker hour intersection, team hours UI, crew read-only hours, manual booking slot filter. `npm run smoke:worker-availability`.
 - **Sprint 19 parity hardening**: `docs/audits/browser-checklists.md`, `docs/audits/competitor-positioning.md`, lint fixes, `tests/e2e/full-product-flow.spec.ts`, `npm run test:e2e:full`.

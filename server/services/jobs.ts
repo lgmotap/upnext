@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/db/prisma";
 import { getBookingRequestForOrg } from "@/server/repositories/bookings";
 import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
+import {
+  listFrequencyDiscountsForService,
+  toFrequencyDiscountConfigs,
+} from "@/server/repositories/frequency-discounts";
+import { applyFrequencyDiscount } from "@/lib/pricing/frequency-discount";
 import { bookingPriceCents } from "@/lib/pricing/parameters";
 import type { PricingParameterType } from "@/generated/prisma/client";
 import { notifyBookingAccepted, notifyJobCompleted } from "@/server/services/notifications";
@@ -23,11 +28,17 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
   const paramValues = Object.fromEntries(
     (booking.parameters ?? []).map((p) => [p.parameterType, p.units]),
   ) as Partial<Record<PricingParameterType, number>>;
-  const priceCents = bookingPriceCents(
+  const discountRows = await listFrequencyDiscountsForService(booking.serviceId);
+  const subtotal = bookingPriceCents(
     booking.service.basePriceCents,
     addonTotal,
     paramConfigs,
     paramValues,
+  );
+  const priceCents = applyFrequencyDiscount(
+    subtotal,
+    booking.frequency,
+    toFrequencyDiscountConfigs(discountRows),
   );
   const title =
     booking.addons && booking.addons.length > 0
@@ -57,17 +68,28 @@ export async function createJobFromBookingRequest(organizationId: string, bookin
       data: { status: "accepted" },
     });
 
-    await tx.paymentRecord.create({
-      data: {
-        organizationId,
-        jobId: created.id,
-        customerId: booking.customerId,
-        amountCents: priceCents,
-        currency: booking.service.currency,
-        status: "not_requested",
-        provider: "manual",
-      },
+    const existingPayment = await tx.paymentRecord.findFirst({
+      where: { bookingRequestId, organizationId },
     });
+
+    if (existingPayment) {
+      await tx.paymentRecord.update({
+        where: { id: existingPayment.id },
+        data: { jobId: created.id },
+      });
+    } else {
+      await tx.paymentRecord.create({
+        data: {
+          organizationId,
+          jobId: created.id,
+          customerId: booking.customerId,
+          amountCents: priceCents,
+          currency: booking.service.currency,
+          status: "not_requested",
+          provider: "manual",
+        },
+      });
+    }
 
     await seedJobChecklistItems(tx, organizationId, created.id, booking.serviceId);
 

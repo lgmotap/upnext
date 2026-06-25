@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Modal } from "@/components/app/Modal";
 import { FormSubmitButton } from "@/components/app/FormSubmitButton";
 
@@ -13,6 +14,7 @@ export function ConfirmDialog({
   tone = "danger",
   formAction,
   hiddenFields,
+  children,
 }: {
   open: boolean;
   onClose: () => void;
@@ -23,6 +25,7 @@ export function ConfirmDialog({
   tone?: "danger" | "primary";
   formAction: (formData: FormData) => void | Promise<void>;
   hiddenFields?: Record<string, string>;
+  children?: ReactNode;
 }) {
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
@@ -32,6 +35,7 @@ export function ConfirmDialog({
           Object.entries(hiddenFields).map(([name, value]) => (
             <input key={name} type="hidden" name={name} value={value} />
           ))}
+        {children}
         <button
           type="button"
           onClick={onClose}

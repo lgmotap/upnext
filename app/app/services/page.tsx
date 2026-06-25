@@ -11,6 +11,7 @@ import { canManageServices } from "@/server/permissions/can";
 import { listServicesForOrg } from "@/server/repositories/services";
 import { listChecklistTemplateForService } from "@/server/repositories/checklists";
 import { listPricingParametersForService } from "@/server/repositories/pricing-parameters";
+import { listFrequencyDiscountsForService, toFrequencyDiscountConfigs } from "@/server/repositories/frequency-discounts";
 import { toggleServiceAction, seedSuggestedCatalogAction } from "@/server/actions/services";
 import { prisma } from "@/lib/db/prisma";
 import { ServiceForm } from "./ServiceForm";
@@ -102,6 +103,9 @@ export default async function ServicesPage({
   const editingPricingParams = editing
     ? await listPricingParametersForService(editing.id)
     : [];
+  const editingFrequencyDiscounts = editing
+    ? toFrequencyDiscountConfigs(await listFrequencyDiscountsForService(editing.id))
+    : [];
 
   const businessType = profile?.businessType ?? "";
   const catalog = businessType ? catalogStats(businessType) : null;
@@ -170,6 +174,7 @@ export default async function ServicesPage({
               includedUnits: p.includedUnits,
               maxUnits: p.maxUnits,
             }))}
+            frequencyDiscounts={editingFrequencyDiscounts}
           />
         </Card>
       )}

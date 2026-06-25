@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
-import type { NotificationSettingsInput } from "@/server/validators/notification-settings";
+import type {
+  NotificationSettingsInput,
+  SmsNotificationSettingsInput,
+} from "@/server/validators/notification-settings";
 
 const SELECT = {
   notifyOwnerNewBooking: true,
@@ -8,6 +11,12 @@ const SELECT = {
   notifyCustomerReminder2h: true,
   notifyCustomerJobCompleted: true,
   notifyCustomerPaymentRequest: true,
+  smsEnabled: true,
+  smsFromNumber: true,
+  notifyCustomerSmsReminder24h: true,
+  notifyCustomerSmsOnTheWay: true,
+  notifyCustomerSmsRunningLate: true,
+  notifyWorkerSmsJobAssigned: true,
 } as const;
 
 export type NotificationPreferences = {
@@ -17,6 +26,12 @@ export type NotificationPreferences = {
   notifyCustomerReminder2h: boolean;
   notifyCustomerJobCompleted: boolean;
   notifyCustomerPaymentRequest: boolean;
+  smsEnabled: boolean;
+  smsFromNumber: string | null;
+  notifyCustomerSmsReminder24h: boolean;
+  notifyCustomerSmsOnTheWay: boolean;
+  notifyCustomerSmsRunningLate: boolean;
+  notifyWorkerSmsJobAssigned: boolean;
 };
 
 export async function getNotificationPreferences(
@@ -32,5 +47,22 @@ export function updateNotificationPreferences(organizationId: string, data: Noti
   return prisma.businessProfile.update({
     where: { organizationId },
     data,
+  });
+}
+
+export function updateSmsNotificationPreferences(
+  organizationId: string,
+  data: SmsNotificationSettingsInput,
+) {
+  return prisma.businessProfile.update({
+    where: { organizationId },
+    data: {
+      smsEnabled: data.smsEnabled,
+      smsFromNumber: data.smsFromNumber || null,
+      notifyCustomerSmsReminder24h: data.notifyCustomerSmsReminder24h,
+      notifyCustomerSmsOnTheWay: data.notifyCustomerSmsOnTheWay,
+      notifyCustomerSmsRunningLate: data.notifyCustomerSmsRunningLate,
+      notifyWorkerSmsJobAssigned: data.notifyWorkerSmsJobAssigned,
+    },
   });
 }

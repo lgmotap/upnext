@@ -356,6 +356,9 @@ npm run smoke:reports
 - [ ] Sign-up → org + profile provisioned
 - [ ] Onboarding saves business profile
 - [ ] Catalog seeded per industry
+- [ ] Service area consistent between onboarding step 3 and settings (**sprint 35**)
+- [ ] Google Places on address when key set (**sprint 36**)
+- [ ] Industry cards on step 1 (**sprint 36**)
 - [ ] Checklist % completes when: profile, service, availability, booking link shared
 - [ ] Time to copy booking link < 15 min (manual timing)
 
@@ -374,9 +377,12 @@ npm run smoke:reports
 - `pricing-and-limits.md` — plan limits
 
 ### UpNext settings tabs
-- Business, Portals, Availability, Notifications, Billing
+- Business, Portals, Availability, Notifications, Booking form, Billing, API
 
 ### Checklist
+- [ ] Business tab saves all profile fields (industry, address, service area, contact)
+- [ ] Logo upload persists and shows on booking page (**sprint 35**)
+- [ ] Website URL on profile (**sprint 35**)
 - [ ] Each tab saves and reloads correctly
 - [ ] BookingLinkCard on business + portals
 - [ ] Legal `/privacy`, `/terms`
@@ -428,7 +434,7 @@ Sales-ready "why not ConvertLabs" matrix.
 ### Outputs
 1. **Updated** `competitor-research/targets/convertlabs/reports/gap-analysis.md` (local only)
 2. **Updated** `tasks/competitor-parity-status.md` — final scorecard
-3. **Sprint 14+ plan** — prioritized from gaps marked P1
+3. **Sprint plan** — Phases 3–4 in `tasks/full-product-roadmap.md` (sprints 35–42)
 4. **CHANGELOG** + `HANDOFF.md` audit complete note
 
 ### Proposed P1 backlog (draft — confirm after audit)

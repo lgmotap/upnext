@@ -17,7 +17,7 @@ for var in SUPABASE_SERVICE_ROLE_KEY DATABASE_URL DIRECT_URL; do
   fi
 done
 
-VERCEL="npx vercel@latest"
+VERCEL="$(dirname "$0")/vercel-cli.sh"
 
 add_var() {
   local name="$1" value="$2"

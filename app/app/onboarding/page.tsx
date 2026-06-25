@@ -26,12 +26,15 @@ export default async function OnboardingPage({
 
   const slug = profile?.publicSlug ?? setup?.slug ?? "";
   const { error } = await searchParams;
+  const displayName = profile?.displayName ?? setup?.name ?? "";
+  const fromSignUp = Boolean(setup?.name && displayName === setup.name);
 
   return (
     <div className="py-6">
       <OnboardingWizard
         error={error}
         bookingUrl={getBookingPageUrl(slug)}
+        fromSignUp={fromSignUp}
         defaults={{
           businessType: profile?.businessType ?? "",
           teamSize: profile?.teamSize ?? "",
@@ -41,7 +44,7 @@ export default async function OnboardingPage({
           region: profile?.region ?? "",
           postalCode: profile?.postalCode ?? "",
           country: profile?.country ?? "US",
-          displayName: profile?.displayName ?? setup?.name ?? "",
+          displayName,
           timezone: setup?.timezone ?? "America/New_York",
           currency: setup?.currency ?? "USD",
           serviceArea: profile?.serviceArea ?? "",
