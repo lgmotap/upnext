@@ -4,6 +4,7 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Brand icons & SEO**: BookedFox favicon (`app/favicon.ico`), app icons, OG image, `robots.ts`, `sitemap.ts`, `manifest.ts`, expanded metadata + JSON-LD (Organization, WebSite). Regenerate with `npm run generate:icons`.
 - **Waitlist form**: landing page sign-ups stored in Postgres (`WaitlistLead`) with branded BookedFox thank-you email via Resend. `npm run smoke:waitlist`.
 - **Sprint 46 multi-location v1**: `Location` model; Settings → Locations CRUD; public location picker (2+ branches); manual booking location; `locationId` on bookings/jobs. ADR `docs/adr/0008-multi-location-v1.md`. `npm run smoke:locations`.
 - **Sprint 45 service-area enforcement**: optional ZIP allowlist or radius-from-HQ on `BusinessProfile`; blocks public booking outside coverage; manual booking override checkbox. Settings → Business. `npm run smoke:service-area-enforcement`.

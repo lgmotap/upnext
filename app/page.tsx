@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { site } from "@/lib/config";
 import { AnnouncementBar } from "@/components/sections/AnnouncementBar";
 import { Header } from "@/components/sections/Header";
 import { Hero } from "@/components/sections/Hero";
@@ -16,6 +18,19 @@ import { Waitlist } from "@/components/sections/Waitlist";
 import { FAQ } from "@/components/sections/FAQ";
 import { FinalCTA } from "@/components/sections/FinalCTA";
 import { Footer } from "@/components/sections/Footer";
+
+export const metadata: Metadata = {
+  title: "Online Booking Software for Home Service Businesses",
+  description: site.description,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: `${site.name} — Online Booking Software for Home Service Businesses`,
+    description: site.shortDescription,
+    url: site.url,
+  },
+};
 
 export default function Home() {
   return (

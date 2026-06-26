@@ -2,18 +2,38 @@ import { site, faqs } from "@/lib/config";
 
 /**
  * Structured data for SEO rich results and GEO (generative-engine answer
- * extraction). Emits a SoftwareApplication describing what BookedFox is, and a
- * FAQPage mirroring the on-page FAQ. Rendered once in the root layout.
+ * extraction). Emits Organization, WebSite, SoftwareApplication, and FAQPage.
+ * Rendered once in the root layout.
  */
 export function JsonLd() {
   const graph = [
     {
+      "@type": "Organization",
+      "@id": `${site.url}/#organization`,
+      name: site.name,
+      url: site.url,
+      email: site.contactEmail,
+      logo: `${site.url}/icon-512.png`,
+      description: site.shortDescription,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${site.url}/#website`,
+      name: site.name,
+      url: site.url,
+      description: site.shortDescription,
+      publisher: { "@id": `${site.url}/#organization` },
+      inLanguage: "en-US",
+    },
+    {
       "@type": "SoftwareApplication",
+      "@id": `${site.url}/#software`,
       name: site.name,
       applicationCategory: "BusinessApplication",
-      operatingSystem: "Web, iOS, Android",
+      operatingSystem: "Web",
       description: site.description,
       url: site.url,
+      publisher: { "@id": `${site.url}/#organization` },
       audience: {
         "@type": "Audience",
         audienceType:
@@ -24,10 +44,12 @@ export function JsonLd() {
         price: "0",
         priceCurrency: "USD",
         description: "Early-access waitlist",
+        availability: "https://schema.org/PreOrder",
       },
     },
     {
       "@type": "FAQPage",
+      "@id": `${site.url}/#faq`,
       mainEntity: faqs.map((f) => ({
         "@type": "Question",
         name: f.q,

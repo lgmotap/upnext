@@ -13,7 +13,64 @@ export const site = {
   // and JSON-LD. This is the GEO anchor ("X is a Y that helps Z").
   description:
     "BookedFox is online booking and business software for home-service providers — solo or team — that helps you get booked online and manage jobs, customers, your team, and payments in one place. Built for cleaning, lawn care, handyman, painting, pressure washing, pet care, car wash, and roofing businesses.",
+  shortDescription:
+    "Online booking and business software for home-service providers — scheduling, customers, team, and payments in one place.",
   url: "https://bookedfox.com",
+  locale: "en_US",
+  themeColor: "#117a44",
+  /** Public contact for legal/SEO structured data. */
+  contactEmail: "hello@bookedfox.com",
+} as const;
+
+/** SEO keywords — mirrored in root layout metadata. */
+export const seoKeywords = [
+  "online booking software",
+  "service business software",
+  "home service scheduling software",
+  "cleaning business software",
+  "lawn care booking software",
+  "handyman scheduling software",
+  "field service management software",
+  "booking page for service business",
+  "appointment scheduling for contractors",
+  "small business CRM for home services",
+] as const;
+
+/** Indexable marketing routes for sitemap generation. */
+export const marketingRoutes = [
+  { path: "/", changeFrequency: "weekly" as const, priority: 1 },
+  { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.3 },
+  { path: "/terms", changeFrequency: "yearly" as const, priority: 0.3 },
+] as const;
+
+/** SEO metadata shared across layout, sitemap, manifest, and JSON-LD. */
+export const seo = {
+  title:
+    "Booking Software for Cleaning, Lawn Care, Handyman & Home Service Businesses",
+  keywords: [
+    "online booking software",
+    "service business software",
+    "cleaning business software",
+    "lawn care software",
+    "handyman software",
+    "booking software for home services",
+    "scheduling software for service businesses",
+    "field service scheduling",
+    "home service CRM",
+    "service business scheduling app",
+    "customer booking page",
+    "crew scheduling software",
+  ],
+  locale: "en_US",
+  themeColor: "#117a44",
+  category: "Business",
+  applicationName: site.name,
+  /** Public marketing routes included in sitemap.xml */
+  pages: [
+    { path: "/", changeFrequency: "weekly" as const, priority: 1 },
+    { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.3 },
+    { path: "/terms", changeFrequency: "yearly" as const, priority: 0.3 },
+  ],
 } as const;
 
 export type LaunchPhase = "waitlist" | "launch";
