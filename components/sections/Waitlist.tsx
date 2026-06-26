@@ -95,10 +95,12 @@ export function Waitlist() {
               </div>
               <div>
                 <label htmlFor="wl-type" className={`${labelCls} text-ink-100`}>
-                  Service type
+                  Service type <span className="text-brand-500">*</span>
                 </label>
-                <select id="wl-type" name="businessType" defaultValue="" className={inputCls}>
-                  <option value="" disabled>Select your service…</option>
+                <select id="wl-type" name="businessType" required defaultValue="" className={inputCls}>
+                  <option value="" disabled>
+                    Select your service…
+                  </option>
                   {serviceTypes.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -106,10 +108,12 @@ export function Waitlist() {
               </div>
               <div>
                 <label htmlFor="wl-size" className={`${labelCls} text-ink-100`}>
-                  Team size
+                  Team size <span className="text-brand-500">*</span>
                 </label>
-                <select id="wl-size" name="businessSize" defaultValue="" className={inputCls}>
-                  <option value="" disabled>Select team size…</option>
+                <select id="wl-size" name="businessSize" required defaultValue="" className={inputCls}>
+                  <option value="" disabled>
+                    Select team size…
+                  </option>
                   {teamSizes.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -118,10 +122,12 @@ export function Waitlist() {
               <div className="sm:col-span-2">
                 <label htmlFor="wl-tool" className={`${labelCls} text-ink-100`}>
                   What do you currently use to manage your business?{" "}
-                  <span className="font-normal text-ink-400">(optional)</span>
+                  <span className="text-brand-500">*</span>
                 </label>
-                <select id="wl-tool" name="currentTool" defaultValue="" className={inputCls}>
-                  <option value="">Select…</option>
+                <select id="wl-tool" name="currentTool" required defaultValue="" className={inputCls}>
+                  <option value="" disabled>
+                    Select…
+                  </option>
                   {currentTools.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}

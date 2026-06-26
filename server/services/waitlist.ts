@@ -11,6 +11,7 @@ import {
 } from "@/lib/email/waitlist-thank-you";
 import { emailBrand } from "@/lib/email/bookedfox-layout";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { Prisma } from "@/generated/prisma/client";
 import {
   createWaitlistLead,
   findWaitlistLeadByEmail,
@@ -80,8 +81,20 @@ export async function submitWaitlistLead(
   let stored = false;
 
   if (!lead) {
-    lead = await createWaitlistLead({ ...input, email });
-    stored = true;
+    try {
+      lead = await createWaitlistLead({ ...input, email });
+      stored = true;
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        lead = await findWaitlistLeadByEmail(email);
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  if (!lead) {
+    throw new Error("Waitlist lead could not be saved.");
   }
 
   let emailSent = Boolean(lead.thankYouSentAt);
@@ -92,8 +105,12 @@ export async function submitWaitlistLead(
       businessName: lead.businessName,
     });
     if (sent) {
-      await markWaitlistThankYouSent(lead.id);
-      emailSent = true;
+      try {
+        await markWaitlistThankYouSent(lead.id);
+        emailSent = true;
+      } catch (err) {
+        console.error("[waitlist] thank-you timestamp update failed:", err);
+      }
     }
   }
 

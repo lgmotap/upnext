@@ -21,9 +21,9 @@ VERCEL="$(dirname "$0")/vercel-cli.sh"
 
 add_var() {
   local name="$1" value="$2"
-  for env in development preview production; do
-    printf '%s' "$value" | $VERCEL env add "$name" "$env" --force --sensitive 2>/dev/null || \
-      printf '%s' "$value" | $VERCEL env add "$name" "$env" --sensitive
+  printf '%s' "$value" | $VERCEL env add "$name" development --force
+  for env in preview production; do
+    printf '%s' "$value" | $VERCEL env add "$name" "$env" --force --sensitive
   done
   echo "✓ $name → development, preview, production"
 }
