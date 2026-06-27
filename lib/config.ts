@@ -22,6 +22,19 @@ export const site = {
   contactEmail: "hello@bookedfox.com",
 } as const;
 
+/** Legal entity operating BookedFox (Estonian e-Business Register). */
+export const legalEntity = {
+  name: "Secret Sauce OÜ",
+  registryCode: "17395646",
+  address: "F. R. Kreutzwaldi tn 4-16, Kesklinna linnaosa, Tallinn, Harju maakond, 10120, Estonia",
+} as const;
+
+/** Privacy rights requests and data-protection enquiries. */
+export const privacyEmail = "privacy@bookedfox.com";
+
+/** Last updated date shown on /privacy and /terms. */
+export const legalUpdated = "June 27, 2026";
+
 /** SEO keywords — mirrored in root layout metadata. */
 export const seoKeywords = [
   "online booking software",

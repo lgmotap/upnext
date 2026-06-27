@@ -4,6 +4,7 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Legal pages (production)**: Full `/privacy` and `/terms` for Secret Sauce OÜ (BookedFox operator) with subprocessors, controller/processor roles, GDPR/CCPA rights, and `privacy@bookedfox.com` contact; shared `components/legal/LegalShell.tsx`.
 - **Google Tag Manager (marketing only)**: `NEXT_PUBLIC_GTM_ID` loads GTM on indexable routes (`/`, `/privacy`, `/terms`) via `lib/seo/marketing-paths.ts` + `proxy.ts` header gate; never on `/app`, `/book`, auth, or crew. `smoke:seo` validates placement.
 - **Waitlist owner alerts**: set `WAITLIST_NOTIFY_EMAIL` to receive a Resend email on each new waitlist lead (duplicates do not re-notify).
 ### Changed
