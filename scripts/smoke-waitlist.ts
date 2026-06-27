@@ -35,6 +35,28 @@ async function main() {
   }
   console.log("✓ Branded email template renders");
 
+  const {
+    waitlistNotifyOwnerSubject,
+    waitlistNotifyOwnerText,
+  } = await import("../lib/email/waitlist-notify-owner");
+  const notifySubject = waitlistNotifyOwnerSubject({
+    firstName: "Alex",
+    email: TEST_EMAIL,
+    businessName: "Sparkle Co",
+    businessType: "Cleaning",
+    businessSize: "Just me",
+    currentTool: "Spreadsheet",
+    source: "/smoke",
+    createdAt: new Date(),
+  });
+  if (!notifySubject.includes("Sparkle Co")) {
+    throw new Error("Owner notify subject missing business name");
+  }
+  if (!waitlistNotifyOwnerText({ firstName: "Alex", email: TEST_EMAIL, businessName: "Sparkle Co", businessType: null, businessSize: null, currentTool: null, source: null, createdAt: new Date() }).includes(TEST_EMAIL)) {
+    throw new Error("Owner notify text missing email");
+  }
+  console.log("✓ Owner notify email template renders");
+
   const result = await submitWaitlistLead(
     {
       firstName: "Alex",

@@ -3,6 +3,8 @@
 All notable changes to UpNext are documented here. Format loosely follows Keep a Changelog.
 
 ## [Unreleased]
+### Added
+- **Waitlist owner alerts**: set `WAITLIST_NOTIFY_EMAIL` to receive a Resend email on each new waitlist lead (duplicates do not re-notify).
 ### Changed
 - **BookedFox brand refresh**: navy (`#051A3D`) + orange (`#FD5F03`) design tokens, Inter typography, horizontal/icon logo lockups, regenerated favicon/OG/PWA icons, email template colors aligned to brand sheet.
 - **Branded HTML emails**: shared layout uses hosted horizontal logo; transactional notifications (booking, crew, payments, invites) now send HTML alongside plain text.

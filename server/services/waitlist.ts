@@ -3,13 +3,19 @@ import {
   emailFromAddress,
   isResendConfigured,
   resolveOutboundEmail,
+  waitlistNotifyInbox,
 } from "@/lib/resend/config";
+import {
+  waitlistNotifyOwnerHtml,
+  waitlistNotifyOwnerSubject,
+  waitlistNotifyOwnerText,
+} from "@/lib/email/waitlist-notify-owner";
 import {
   waitlistThankYouHtml,
   waitlistThankYouSubject,
   waitlistThankYouText,
 } from "@/lib/email/waitlist-thank-you";
-import { withSandboxHtmlBanner } from "@/lib/email/bookedfox-layout";
+import { bookedfoxEmailLayout, withSandboxHtmlBanner } from "@/lib/email/bookedfox-layout";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { Prisma } from "@/generated/prisma/client";
 import {
@@ -18,6 +24,7 @@ import {
   markWaitlistThankYouSent,
 } from "@/server/repositories/waitlist";
 import type { WaitlistLeadInput } from "@/server/validators/waitlist";
+import type { WaitlistLead } from "@/generated/prisma/client";
 
 export class WaitlistRateLimitError extends Error {
   constructor() {
@@ -68,6 +75,58 @@ async function sendWaitlistThankYouEmail(params: {
   return true;
 }
 
+async function sendWaitlistOwnerNotification(lead: WaitlistLead): Promise<boolean> {
+  const notifyTo = waitlistNotifyInbox();
+  if (!notifyTo) {
+    console.warn("[waitlist] WAITLIST_NOTIFY_EMAIL not set — owner alert skipped");
+    return false;
+  }
+
+  const resend = getResend();
+  if (!isResendConfigured() || !resend) {
+    console.warn("[waitlist] RESEND_API_KEY not set — owner alert skipped");
+    return false;
+  }
+
+  const params = {
+    firstName: lead.firstName,
+    email: lead.email,
+    businessName: lead.businessName,
+    businessType: lead.businessType,
+    businessSize: lead.businessSize,
+    currentTool: lead.currentTool,
+    source: lead.source,
+    createdAt: lead.createdAt,
+  };
+
+  const subject = waitlistNotifyOwnerSubject(params);
+  const text = waitlistNotifyOwnerText(params);
+  const outbound = resolveOutboundEmail({ to: notifyTo, subject, text });
+  const html = withSandboxHtmlBanner(
+    bookedfoxEmailLayout({
+      preheader: `${lead.businessName} joined the waitlist`,
+      bodyHtml: waitlistNotifyOwnerHtml(params),
+    }),
+    notifyTo,
+    outbound.to,
+  );
+
+  const result = await resend.emails.send({
+    from: emailFromAddress(),
+    to: outbound.to,
+    subject: outbound.subject,
+    text: outbound.text,
+    html,
+  });
+
+  if (result.error) {
+    console.error("[waitlist] owner notification failed:", result.error.message);
+    return false;
+  }
+
+  return true;
+}
+
 /** Persist lead and send thank-you email (idempotent on duplicate email). */
 export async function submitWaitlistLead(
   input: WaitlistLeadInput,
@@ -96,6 +155,12 @@ export async function submitWaitlistLead(
 
   if (!lead) {
     throw new Error("Waitlist lead could not be saved.");
+  }
+
+  if (stored) {
+    void sendWaitlistOwnerNotification(lead).catch((err) => {
+      console.error("[waitlist] owner notification error:", err);
+    });
   }
 
   let emailSent = Boolean(lead.thankYouSentAt);

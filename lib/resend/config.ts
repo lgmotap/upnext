@@ -32,6 +32,13 @@ export function resendSandboxInbox(): string | null {
   return inbox;
 }
 
+/** Owner inbox for new waitlist lead alerts (e.g. WAITLIST_NOTIFY_EMAIL). */
+export function waitlistNotifyInbox(): string | null {
+  const inbox = process.env.WAITLIST_NOTIFY_EMAIL?.trim();
+  if (!inbox || PLACEHOLDER.test(inbox)) return null;
+  return inbox;
+}
+
 export type ResolvedRecipient = {
   to: string;
   subject: string;
