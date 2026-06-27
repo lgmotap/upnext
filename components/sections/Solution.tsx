@@ -58,26 +58,30 @@ const features = [
 
 export function Solution() {
   return (
-    <Section id="features" className="relative">
+    <Section id="features" className="relative" labelledBy="features-title">
       <div className="absolute inset-x-0 top-0 -z-10 h-96 bg-gradient-to-b from-brand-50/60 to-transparent" />
       <SectionHeading
+        headingId="features-title"
         eyebrow="The solution"
         title={<>Everything you need to get <Em className="text-brand-700">booked</Em> and run the work</>}
         subtitle="Online booking plus the tools to manage every job behind it — for service businesses that want less admin and more control."
       />
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="grid list-none gap-5 p-0 sm:grid-cols-2 lg:grid-cols-4">
         {features.map(({ icon: Icon, title, text }, i) => (
-          <Reveal key={title} delay={(i % 4) * 0.06}>
-            <SpotlightCard className="group h-full rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100 hover:shadow-lift hover:ring-brand-200">
-              <span className="mb-4 inline-flex size-11 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 transition-all duration-300 group-hover:bg-brand-400 group-hover:text-brand-950 group-hover:-rotate-6 group-hover:scale-110">
-                <Icon className="size-5" aria-hidden />
-              </span>
-              <h3 className="mb-1.5 font-bold text-ink-950">{title}</h3>
-              <p className="text-sm leading-relaxed text-ink-600">{text}</p>
-            </SpotlightCard>
-          </Reveal>
+          <li key={title}>
+            <Reveal delay={(i % 4) * 0.06}>
+              <SpotlightCard className="group h-full rounded-3xl bg-white p-6 shadow-soft ring-1 ring-ink-100 hover:shadow-lift hover:ring-brand-200">
+                <span className="mb-4 inline-flex size-11 items-center justify-center rounded-2xl bg-brand-100 text-brand-700 transition-all duration-300 group-hover:bg-brand-400 group-hover:text-brand-950 group-hover:-rotate-6 group-hover:scale-110">
+                  <Icon className="size-5" aria-hidden />
+                </span>
+                <p className="text-sm leading-relaxed text-ink-600">
+                  <strong className="font-bold text-ink-950">{title}:</strong> {text}
+                </p>
+              </SpotlightCard>
+            </Reveal>
+          </li>
         ))}
-      </div>
+      </ul>
     </Section>
   );
 }

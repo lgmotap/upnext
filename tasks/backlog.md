@@ -65,6 +65,14 @@ Audit: `canvases/dashboard-vs-convertlabs.canvas.tsx`
 | Providers Activity kanban board | [48](sprint-48-providers-activity-kanban.md) | 📋 Planning |
 | Promo codes / gift cards on portal rebook | [49](sprint-49-promo-codes-portal-rebook.md) | 📋 Planning |
 
+## Sprint fixes — polish & parity gaps
+
+User-reported and audit gaps that are not full Phase 6 features. Index: [`tasks/fixes/README.md`](fixes/README.md).
+
+| Item | Sprint | Status |
+|------|--------|--------|
+| Team CRUD + crew portal link + settings UI | [FIX-01](fixes/sprint-fix-01-team-crew-settings.md) | 📋 Planning |
+
 ## P2 — not yet planned
 
 - Branding colors on booking page

@@ -43,34 +43,26 @@ export const marketingRoutes = [
   { path: "/terms", changeFrequency: "yearly" as const, priority: 0.3 },
 ] as const;
 
-/** SEO metadata shared across layout, sitemap, manifest, and JSON-LD. */
-export const seo = {
-  title:
-    "Booking Software for Cleaning, Lawn Care, Handyman & Home Service Businesses",
-  keywords: [
-    "online booking software",
-    "service business software",
-    "cleaning business software",
-    "lawn care software",
-    "handyman software",
-    "booking software for home services",
-    "scheduling software for service businesses",
-    "field service scheduling",
-    "home service CRM",
-    "service business scheduling app",
-    "customer booking page",
-    "crew scheduling software",
-  ],
-  locale: "en_US",
-  themeColor: "#117a44",
-  category: "Business",
-  applicationName: site.name,
-  /** Public marketing routes included in sitemap.xml */
-  pages: [
-    { path: "/", changeFrequency: "weekly" as const, priority: 1 },
-    { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.3 },
-    { path: "/terms", changeFrequency: "yearly" as const, priority: 0.3 },
-  ],
+/** Public social profile URLs for Organization schema `sameAs` (add when live). */
+export const socialProfiles = [] as const;
+
+/**
+ * Phase-aware SERP + OG strings. Title ≤60 chars; description ≤155 chars.
+ * @see docs/marketing/seo-geo-playbook.md
+ */
+export const seoMeta = {
+  waitlist: {
+    title: "BookedFox | Home Service Booking Software",
+    description:
+      "Online booking for cleaners, lawn care & handyman pros. Join the free waitlist for early access before public launch.",
+    ogTitle: "BookedFox — Booking Software for Home Service Pros",
+  },
+  launch: {
+    title: "BookedFox | Home Service Booking Software",
+    description:
+      "Get booked online and run jobs, customers, team & payments in one place. Start free — built for home service teams.",
+    ogTitle: "BookedFox — Run Your Service Business in One Place",
+  },
 } as const;
 
 export type LaunchPhase = "waitlist" | "launch";

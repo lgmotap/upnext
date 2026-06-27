@@ -1,10 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Loader2, PartyPopper, Lock } from "lucide-react";
 import { Section } from "@/components/ui/Section";
 import { waitlistForm, serviceTypes, teamSizes, currentTools } from "@/lib/config";
-import { SprayBottle, Calendar3D, Sparkle } from "@/components/three-d/Objects";
+
+const SprayBottle = dynamic(
+  () => import("@/components/three-d/Objects").then((m) => m.SprayBottle),
+  { ssr: false },
+);
+const Calendar3D = dynamic(
+  () => import("@/components/three-d/Objects").then((m) => m.Calendar3D),
+  { ssr: false },
+);
+const Sparkle = dynamic(
+  () => import("@/components/three-d/Objects").then((m) => m.Sparkle),
+  { ssr: false },
+);
 
 type Status = "idle" | "submitting" | "success" | "error";
 

@@ -1,0 +1,26 @@
+# BookedFox
+> Online booking and business software for home-service providers.
+
+## Product
+- Website: https://bookedfox.com
+- Category: BusinessApplication / field service scheduling
+- Audience: cleaning, lawn care, handyman, plumbing, HVAC, painting, pressure washing, pet care, car wash, roofing
+
+## Summary
+Online booking and business software for home-service providers — scheduling, customers, team, and payments in one place.
+
+## FAQ
+https://bookedfox.com/#faq
+
+## Contact
+hello@bookedfox.com
+
+## Do not crawl
+/app/
+/crew/
+/api/
+/book/
+/my/
+/sign-in
+/sign-up
+/auth/

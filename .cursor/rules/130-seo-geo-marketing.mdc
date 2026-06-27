@@ -1,0 +1,57 @@
+---
+description: SEO, GEO, and indexation rules for BookedFox marketing site (bookedfox.com). Enforces waitlist vs launch phase metadata and blocks indexing of /app, /crew, booking, and portals.
+globs: app/page.tsx,app/layout.tsx,app/robots.ts,app/sitemap.ts,components/seo/**,components/sections/**,lib/config.ts,lib/seo/**,public/llms.txt,scripts/smoke-seo.ts
+alwaysApply: false
+---
+
+# SEO / GEO — BookedFox marketing (`bookedfox.com`)
+
+Read `docs/marketing/seo-geo-playbook.md` and `tasks/seogeo/README.md` before editing marketing SEO.
+
+## Indexation (non-negotiable)
+
+**Index only:** `/`, `/privacy`, `/terms` on `https://bookedfox.com`.
+
+**Never index:** `/app/*`, `/crew/*`, `/api/*`, `/sign-in`, `/sign-up`, `/auth/*`, `/book/*`, `/my/*`.
+
+- `robots.txt` must `Disallow` those prefixes.
+- Non-marketing layouts must export `robots: { index: false, follow: false }`.
+- Do not add app or auth URLs to `sitemap.xml`.
+
+## Phase-aware copy (`lib/config.ts`)
+
+```ts
+export const phase: LaunchPhase = "waitlist" | "launch";
+```
+
+- **All** title, meta description, OG text, CTAs, and schema `offers` read from config helpers — never hardcode waitlist copy in components.
+- **Waitlist:** meta description ≤155 chars with waitlist CTA; schema `offers.availability` = `https://schema.org/PreOrder`.
+- **Launch:** remove waitlist CTA; primary CTA → `/sign-up`; schema `offers.availability` = `https://schema.org/InStock`.
+- Flipping `phase` must trigger SEO-05 checklist (`tasks/seogeo/sprint-seo-05-launch-phase-transition.md`).
+
+## Title & meta rules
+
+- `<title>`: brand **first** (`BookedFox | …`), ≤60 characters.
+- `<meta name="description">`: ≤155 characters — use `seoMeta[phase].description`, not long `site.description`.
+- `og:image` required (1200×630); `metadataBase` = `https://bookedfox.com`.
+
+## JSON-LD
+
+- Single `@graph` in **`<head>`**: Organization, WebSite, SoftwareApplication (`BusinessApplication`), FAQPage.
+- `faqs` in `lib/config.ts` is single source for FAQ HTML + JSON-LD.
+- Logo as `ImageObject`; `sameAs` only when real profile URLs exist.
+
+## GEO HTML
+
+- FAQ answers must be in SSR HTML (prefer `<details>` over client-only accordion).
+- Feature lists: `<ul>/<li>` with `<strong>Title:</strong> description`.
+- Use `<header>`, `<main>`, `<footer>`, `<section>`, `<article>`.
+
+## After marketing SEO changes
+
+```bash
+npm run smoke:seo   # when implemented
+npm run build
+```
+
+Update `CHANGELOG.md` if phase or indexation policy changes.

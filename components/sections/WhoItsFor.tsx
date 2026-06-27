@@ -105,6 +105,8 @@ export function WhoItsFor() {
               <img
                 src={photo}
                 alt={alt}
+                width={640}
+                height={288}
                 loading="lazy"
                 className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-105"
               />

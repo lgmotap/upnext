@@ -19,6 +19,22 @@ Cross-check with `tasks/mvp-traceability.md` before beta.
 - [x] PostHog analytics wired (set `NEXT_PUBLIC_POSTHOG_KEY` on Vercel for live)
 - [x] smoke:e2e + smoke:manual-booking cover booking → job paths (crew complete + Stripe payment E2E still manual)
 
+## Marketing SEO / GEO (`bookedfox.com`)
+
+Sprint track: `tasks/seogeo/README.md` · Playbook: `docs/marketing/seo-geo-playbook.md`
+
+**Index only:** `/`, `/privacy`, `/terms`. **Never index:** `/app/*`, `/crew/*`, `/book/*`, `/my/*`, auth, API.
+
+- [x] **SEO-01** Production `/` returns 200 (not 404); `robots.txt` + `sitemap.xml` live — *verify after deploy*
+- [x] **SEO-01** `robots.txt` disallows `/app/`, `/crew/`, `/book/`, `/my/`, auth paths
+- [x] **SEO-01** `/app/*`, `/book/*`, `/my/*` layouts have `robots: noindex`
+- [x] **SEO-02** Title ≤60 chars, brand-first; meta description ≤155 with waitlist CTA
+- [x] **SEO-02** Complete OG tags + `og:image` on production — *verify after deploy*
+- [x] **SEO-03** JSON-LD in `<head>` — Organization, WebSite, SoftwareApplication, FAQPage
+- [x] **SEO-04** All FAQ answers in SSR HTML; feature list Bold-Colon `<ul>/<li>`
+- [x] **SEO-06** `npm run smoke:seo` green; GSC sitemap submitted — *GSC owner action*
+- [ ] **SEO-05** *(at launch only)* `phase = "launch"` — metadata + schema swap, `/app/*` still noindex
+
 ## Legal / ops
 - [x] Legal pages + privacy — `/privacy`, `/terms` (footer linked)
 - [x] Production env vars on Vercel (Preview + Production) — `VERCEL_ENV_TARGET=production npm run check:env:vercel` ✓ (2026-06-24)

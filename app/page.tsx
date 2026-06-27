@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getSeoMeta } from "@/lib/seo/get-seo-meta";
 import { site } from "@/lib/config";
 import { AnnouncementBar } from "@/components/sections/AnnouncementBar";
 import { Header } from "@/components/sections/Header";
@@ -19,15 +20,17 @@ import { FAQ } from "@/components/sections/FAQ";
 import { FinalCTA } from "@/components/sections/FinalCTA";
 import { Footer } from "@/components/sections/Footer";
 
+const seo = getSeoMeta();
+
 export const metadata: Metadata = {
-  title: "Online Booking Software for Home Service Businesses",
-  description: site.description,
+  title: seo.title,
+  description: seo.description,
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: `${site.name} — Online Booking Software for Home Service Businesses`,
-    description: site.shortDescription,
+    title: seo.ogTitle,
+    description: seo.description,
     url: site.url,
   },
 };
@@ -37,7 +40,7 @@ export default function Home() {
     <>
       <AnnouncementBar />
       <Header />
-      <main>
+      <main id="main">
         <Hero />
         <IndustryStrip />
         <Problem />

@@ -4,6 +4,8 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **SEO/GEO implementation (SEO-01–04)**: expanded `robots.ts`, `book`/`my` noindex layouts, phase-aware `seoMeta`, JSON-LD in `<head>` via `lib/seo/schema.ts`, SSR FAQ `<details>`, Bold-Colon feature list, `npm run smoke:seo`, `public/llms.txt`.
+- **SEO/GEO sprint track**: `tasks/seogeo/` (SEO-01–06), `docs/marketing/seo-geo-playbook.md`, agent rule `.cursor/rules/130-seo-geo-marketing.mdc` — index only `bookedfox.com` marketing routes; phase-aware waitlist vs launch metadata.
 - **Brand icons & SEO**: BookedFox favicon (`app/favicon.ico`), app icons, OG image, `robots.ts`, `sitemap.ts`, `manifest.ts`, expanded metadata + JSON-LD (Organization, WebSite). Regenerate with `npm run generate:icons`.
 - **Waitlist form**: landing page sign-ups stored in Postgres (`WaitlistLead`) with branded BookedFox thank-you email via Resend. `npm run smoke:waitlist`.
 - **Sprint 46 multi-location v1**: `Location` model; Settings → Locations CRUD; public location picker (2+ branches); manual booking location; `locationId` on bookings/jobs. ADR `docs/adr/0008-multi-location-v1.md`. `npm run smoke:locations`.

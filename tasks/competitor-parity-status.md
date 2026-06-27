@@ -83,7 +83,7 @@ Legend: ✅ parity · 🟡 partial · ❌ missing · ➖ intentional defer · **
 |------------|-----|--------|--------|
 | Customer list + detail | 7 tabs | List + detail + notes/address | 🟡 **38** |
 | Multiple addresses | Yes | Schema + UI modals | ✅ |
-| Team / providers | CRUD + magic link | `/app/team` + invite flow | ✅ |
+| Team / providers | CRUD + portal login link | `/app/team` invite-only; no crew URL in settings | 🟡 **FIX-01** |
 | RBAC tiers | Admin/staff/viewer | owner/admin/dispatcher/worker/viewer | ✅ |
 | Settings — business | `/company` | Sectioned form + logo + website + service area | ✅ sprint 35 |
 | Settings — notifications | 3 audiences | 6 toggles persisted | ✅ |

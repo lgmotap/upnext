@@ -11,8 +11,14 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink-100 bg-white/80 backdrop-blur-lg">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-ink-950 focus:shadow-soft focus:ring-2 focus:ring-brand-400"
+      >
+        Skip to content
+      </a>
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
-        <Link href="#" className="group flex items-center" aria-label={`${site.name} home`}>
+        <Link href="/" className="group flex items-center" aria-label={`${site.name} home`}>
           <span className="text-xl font-bold tracking-tight text-ink-950">{site.name}</span>
           <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-500 transition-transform group-hover:scale-125" />
         </Link>

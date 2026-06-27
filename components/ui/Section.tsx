@@ -1,16 +1,19 @@
 export function Section({
   id,
   className = "",
+  labelledBy,
   children,
 }: {
   id?: string;
   className?: string;
+  /** ID of the section's primary heading (`SectionHeading` `headingId`). */
+  labelledBy?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className={`scroll-mt-24 py-20 sm:py-28 ${className}`}>
+    <article id={id} aria-labelledby={labelledBy} className={`scroll-mt-24 py-20 sm:py-28 ${className}`}>
       <div className="mx-auto w-full max-w-7xl px-5 sm:px-8">{children}</div>
-    </section>
+    </article>
   );
 }
 
@@ -19,11 +22,14 @@ export function SectionHeading({
   title,
   subtitle,
   align = "center",
+  headingId,
 }: {
   eyebrow?: string;
   title: React.ReactNode;
   subtitle?: string;
   align?: "center" | "left";
+  /** Tie section landmark to its primary heading for assistive tech / GEO parsers. */
+  headingId?: string;
 }) {
   const alignCls = align === "center" ? "mx-auto text-center" : "text-left";
   return (
@@ -34,7 +40,10 @@ export function SectionHeading({
           {eyebrow}
         </p>
       )}
-      <h2 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-[2.7rem] sm:leading-[1.1] text-balance">
+      <h2
+        id={headingId}
+        className="text-3xl font-bold tracking-tight text-ink-950 sm:text-[2.7rem] sm:leading-[1.1] text-balance"
+      >
         {title}
       </h2>
       {subtitle && (

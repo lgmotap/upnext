@@ -201,6 +201,23 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 
 ---
 
+## SEO / GEO — BookedFox marketing (`bookedfox.com`)
+
+**Not MVP product scope** — parallel track for waitlist landing indexation and launch-phase metadata.
+
+| Sprint | File | Theme |
+|--------|------|-------|
+| SEO-01 | `tasks/seogeo/sprint-seo-01-indexation-baseline.md` | robots, sitemap, noindex gates |
+| SEO-02 | `tasks/seogeo/sprint-seo-02-metadata-open-graph.md` | Title, description, OG |
+| SEO-03 | `tasks/seogeo/sprint-seo-03-json-ld-entities.md` | Schema.org graph |
+| SEO-04 | `tasks/seogeo/sprint-seo-04-geo-content-structure.md` | SSR FAQ, semantic HTML |
+| SEO-05 | `tasks/seogeo/sprint-seo-05-launch-phase-transition.md` | Full landing (no waitlist) |
+| SEO-06 | `tasks/seogeo/sprint-seo-06-crawl-hardening-monitoring.md` | smoke:seo, llms.txt, GSC |
+
+Index: `tasks/seogeo/README.md` · Rule: `.cursor/rules/130-seo-geo-marketing.mdc`
+
+---
+
 ## Phase 6 — P2 post-parity (planned, not started)
 
 | Sprint | File | Theme |
@@ -210,6 +227,16 @@ Map to sprint 06 — **expand** beyond the 4 emails previously listed:
 | 47 | `tasks/sprint-47-provider-open-jobs.md` | Crew open jobs self-claim |
 | 48 | `tasks/sprint-48-providers-activity-kanban.md` | Dispatcher activity board |
 | 49 | `tasks/sprint-49-promo-codes-portal-rebook.md` | Promo codes on rebook |
+
+---
+
+## Sprint fixes — product polish (`tasks/fixes/`)
+
+Parallel track for user-reported gaps (not Phase 6 scope). Index: `tasks/fixes/README.md`.
+
+| Sprint | File | Theme |
+|--------|------|-------|
+| FIX-01 | `tasks/fixes/sprint-fix-01-team-crew-settings.md` | Team add/profile, crew portal link, settings UI |
 
 ---
 

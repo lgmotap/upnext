@@ -18,6 +18,19 @@ Snapshot of where the project stands and exactly how to keep going. Pairs with
 - **Env green**: `npm run check:env` passes; Prisma connects to Supabase.
 - **Vercel-first local dev**: `npm run dev` uses `vercel env run`.
 
+## SEO / GEO — BookedFox marketing (`bookedfox.com`)
+
+Sprint track: `tasks/seogeo/README.md` · Playbook: `docs/marketing/seo-geo-playbook.md`
+
+**Status (2026-06-26):** SEO-01–04 + SEO-06 (code) complete locally. **Production deploy pending** — live site still served stale 404/noindex build.
+
+```bash
+npm run smoke:seo                              # local (server on :3000)
+SMOKE_BASE_URL=https://bookedfox.com npm run smoke:seo   # after deploy
+```
+
+**Resume after deploy:** `tasks/seogeo/sprint-seo-01-indexation-baseline.md` § 1 (production verification).
+
 ## Run locally
 ```bash
 nvm use                 # Node 22 (.nvmrc)

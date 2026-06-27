@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Caveat, Space_Grotesk, Fraunces } from "next/font/google";
 import "./globals.css";
+import { getSeoMeta } from "@/lib/seo/get-seo-meta";
 import { seoKeywords, site } from "@/lib/config";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { AppProviders } from "@/components/providers/AppProviders";
@@ -33,14 +34,15 @@ const fraunces = Fraunces({
   weight: ["400", "500", "600"],
 });
 
+const seo = getSeoMeta();
+
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default:
-      `Booking Software for Cleaning, Lawn Care, Handyman & Home Service Businesses | ${site.name}`,
+    default: seo.title,
     template: `%s | ${site.name}`,
   },
-  description: site.description,
+  description: seo.description,
   applicationName: site.name,
   keywords: [...seoKeywords],
   authors: [{ name: site.name, url: site.url }],
@@ -68,8 +70,8 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.webmanifest",
   openGraph: {
-    title: `${site.name} — ${site.tagline}`,
-    description: site.shortDescription,
+    title: seo.ogTitle,
+    description: seo.description,
     siteName: site.name,
     type: "website",
     url: site.url,
@@ -85,8 +87,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name} — ${site.tagline}`,
-    description: site.shortDescription,
+    title: seo.ogTitle,
+    description: seo.description,
     images: ["/opengraph-image.png"],
   },
   other: {
@@ -104,8 +106,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} ${spaceGrotesk.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <head>
         <JsonLd />
+      </head>
+      <body className="min-h-full flex flex-col">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

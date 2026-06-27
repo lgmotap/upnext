@@ -39,27 +39,29 @@ const benefits = [
 
 export function Benefits() {
   return (
-    <Section className="bg-white">
+    <Section className="bg-white" labelledBy="benefits-title">
       <SectionHeading
+        headingId="benefits-title"
         eyebrow="Why it matters"
         title={<>Less admin. More <Em className="text-brand-700">control</Em>. A better customer experience.</>}
         subtitle="Built so the day-to-day of running a service business stops eating your evenings."
       />
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid list-none gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
         {benefits.map(({ icon: Icon, title, text }, i) => (
-          <Reveal key={title} delay={(i % 3) * 0.07}>
-            <SpotlightCard className="group flex h-full gap-4 rounded-3xl bg-brand-50/60 p-6 ring-1 ring-brand-100 hover:shadow-soft hover:ring-brand-200">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-brand-950 shadow-sm transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
-                <Icon className="size-5" aria-hidden />
-              </span>
-              <div>
-                <h3 className="mb-1 font-bold text-ink-950">{title}</h3>
-                <p className="text-sm leading-relaxed text-ink-600">{text}</p>
-              </div>
-            </SpotlightCard>
-          </Reveal>
+          <li key={title}>
+            <Reveal delay={(i % 3) * 0.07}>
+              <SpotlightCard className="group flex h-full gap-4 rounded-3xl bg-brand-50/60 p-6 ring-1 ring-brand-100 hover:shadow-soft hover:ring-brand-200">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-brand-950 shadow-sm transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+                  <Icon className="size-5" aria-hidden />
+                </span>
+                <p className="text-sm leading-relaxed text-ink-600">
+                  <strong className="font-bold text-ink-950">{title}:</strong> {text}
+                </p>
+              </SpotlightCard>
+            </Reveal>
+          </li>
         ))}
-      </div>
+      </ul>
     </Section>
   );
 }
