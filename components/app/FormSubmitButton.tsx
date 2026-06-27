@@ -20,7 +20,7 @@ export function FormSubmitButton({
   const base =
     "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-70";
   const variants = {
-    primary: "bg-brand-400 text-brand-950 hover:bg-brand-300",
+    primary: "bg-brand-400 text-white hover:bg-brand-600",
     outline: "font-semibold text-ink-700 ring-1 ring-ink-200 hover:bg-ink-100",
     danger: "bg-rose-600 text-white hover:bg-rose-500",
   };

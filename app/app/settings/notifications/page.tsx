@@ -87,7 +87,7 @@ export default async function NotificationSettingsPage({
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="submit"
-                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
               >
                 Save email settings
               </button>
@@ -168,7 +168,7 @@ export default async function NotificationSettingsPage({
             <div className="border-t border-ink-100 px-5 py-4">
               <button
                 type="submit"
-                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
               >
                 Save SMS settings
               </button>

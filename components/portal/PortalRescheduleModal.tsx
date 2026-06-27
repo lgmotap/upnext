@@ -111,7 +111,7 @@ export function PortalRescheduleModal({
                       onClick={() => setTime(s.time)}
                       className={`rounded-xl px-2 py-2 text-sm font-medium ring-1 ${
                         time === s.time
-                          ? "bg-brand-400 text-brand-950 ring-brand-400"
+                          ? "bg-brand-400 text-white ring-brand-400"
                           : "bg-white text-ink-700 ring-ink-200 hover:ring-brand-200"
                       }`}
                     >

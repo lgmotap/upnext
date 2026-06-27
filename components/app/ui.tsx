@@ -125,7 +125,7 @@ export function AppButton({
   const base =
     "inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition";
   const variants = {
-    primary: "bg-brand-400 text-brand-950 hover:bg-brand-300",
+    primary: "bg-brand-400 text-white hover:bg-brand-600",
     ghost: "text-ink-600 hover:bg-ink-100 hover:text-ink-950",
     outline: "ring-1 ring-ink-200 text-ink-800 hover:ring-brand-400 hover:text-brand-700",
   };

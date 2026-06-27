@@ -63,26 +63,26 @@ const weekBars = [42, 58, 50, 70, 62, 84, 95];
 export function DashboardMockup({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`overflow-hidden rounded-2xl bg-white ring-1 ring-ink-200/70 shadow-float ${className}`}
+      className={`w-full min-w-0 overflow-hidden rounded-2xl bg-white ring-1 ring-ink-200/70 shadow-float ${className}`}
       role="img"
       aria-label="BookedFox dashboard showing KPI cards, today's schedule with assigned team members and payment status, and incoming booking requests"
     >
       {/* window chrome */}
-      <div className="flex items-center gap-2 border-b border-ink-100 bg-ink-50/70 px-3 py-2">
-        <span className="size-2.5 rounded-full bg-rose-300" />
-        <span className="size-2.5 rounded-full bg-amber-300" />
-        <span className="size-2.5 rounded-full bg-emerald-300" />
-        <div className="mx-auto flex h-5 w-48 items-center justify-center gap-1 rounded-md bg-white text-[9px] text-ink-400 ring-1 ring-ink-100">
-          <span className="size-1.5 rounded-full bg-emerald-400" /> app.bookedfox.com/dashboard
+      <div className="flex items-center gap-2 border-b border-ink-100 bg-ink-50/70 px-2 py-2 sm:px-3">
+        <span className="size-2.5 shrink-0 rounded-full bg-rose-300" />
+        <span className="size-2.5 shrink-0 rounded-full bg-amber-300" />
+        <span className="size-2.5 shrink-0 rounded-full bg-emerald-300" />
+        <div className="mx-auto flex h-5 min-w-0 max-w-[12rem] flex-1 items-center justify-center gap-1 rounded-md bg-white px-2 text-[8px] text-ink-400 ring-1 ring-ink-100 sm:max-w-none sm:w-48 sm:text-[9px]">
+          <span className="size-1.5 shrink-0 rounded-full bg-emerald-400" />
+          <span className="truncate">app.bookedfox.com/dashboard</span>
         </div>
       </div>
 
-      <div className="flex text-left">
-        {/* sidebar */}
-        <div className="hidden w-32 shrink-0 flex-col border-r border-ink-100 bg-ink-50/40 p-2.5 sm:flex">
-          <div className="mb-3 px-1 text-[12px] font-bold tracking-tight text-ink-950">
-            Booked<span className="text-brand-600">Fox</span>
-            <span className="ml-0.5 inline-block size-1 rounded-full bg-brand-400 align-middle" />
+      <div className="flex min-w-0 text-left">
+        {/* sidebar — tablet+ only */}
+        <div className="hidden w-24 shrink-0 flex-col border-r border-white/10 bg-brand-950 p-2 md:flex md:w-28 md:p-2.5">
+          <div className="mb-3 px-1 text-[11px] font-extrabold tracking-tight text-white">
+            Booked<span className="text-brand-400">Fox</span>
           </div>
           {[
             { icon: LayoutDashboard, label: "Dashboard", active: true },
@@ -95,7 +95,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
             <div
               key={label}
               className={`mb-0.5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-[9.5px] font-medium ${
-                active ? "bg-brand-600 text-white shadow-sm" : "text-ink-600"
+                active ? "bg-brand-400 text-white shadow-sm" : "text-white/60"
               }`}
             >
               <Icon className="size-3" />
@@ -107,35 +107,35 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
               )}
             </div>
           ))}
-          <div className="mt-auto flex items-center gap-2 rounded-lg px-2 py-1.5 text-[9.5px] font-medium text-ink-500">
+          <div className="mt-auto flex items-center gap-2 rounded-lg px-2 py-1.5 text-[9.5px] font-medium text-white/50">
             <Settings className="size-3" /> Settings
           </div>
         </div>
 
         {/* main */}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-hidden">
           {/* topbar */}
-          <div className="flex items-center gap-2 border-b border-ink-100 px-3.5 py-2.5">
-            <div>
-              <p className="text-[12px] font-bold text-ink-950">Good morning, Alex</p>
-              <p className="text-[8px] text-ink-400">Tuesday, June 16 · 6 jobs today</p>
+          <div className="flex flex-wrap items-center gap-1.5 border-b border-ink-100 px-2 py-2 sm:gap-2 sm:px-3.5 sm:py-2.5">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-bold text-ink-950 sm:text-[12px]">Good morning, Alex</p>
+              <p className="text-[7px] text-ink-400 sm:text-[8px]">Tuesday, June 16 · 6 jobs today</p>
             </div>
-            <span className="ml-auto flex h-6 w-28 items-center gap-1.5 rounded-full bg-ink-50 px-2 text-[8px] text-ink-400 ring-1 ring-ink-100">
+            <span className="hidden h-6 w-24 items-center gap-1.5 rounded-full bg-ink-50 px-2 text-[8px] text-ink-400 ring-1 ring-ink-100 sm:flex">
               <Search className="size-2.5" /> Search…
             </span>
-            <span className="relative">
+            <span className="relative shrink-0">
               <Bell className="size-3.5 text-ink-400" />
               <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-brand-400 ring-1 ring-white" />
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-brand-400 px-2 py-1 text-[8px] font-bold text-brand-950 shadow-sm">
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-brand-400 px-2 py-1 text-[7px] font-bold text-white shadow-sm sm:text-[8px]">
               <Plus className="size-2.5" /> New
             </span>
-            <Avatar initials="AB" cls="bg-brand-200 text-brand-900 !size-6 !text-[8px]" />
+            <Avatar initials="AB" cls="bg-brand-200 text-brand-900 !size-5 !text-[7px] sm:!size-6 sm:!text-[8px]" />
           </div>
 
-          <div className="p-3">
+          <div className="p-2 sm:p-3">
             {/* KPI cards */}
-            <div className="mb-2.5 grid grid-cols-4 gap-2">
+            <div className="mb-2 grid grid-cols-2 gap-1.5 sm:mb-2.5 sm:grid-cols-4 sm:gap-2">
               {stats.map((s) => (
                 <div key={s.label} className="rounded-xl bg-white p-2 ring-1 ring-ink-100">
                   <p className="truncate text-[7px] font-medium text-ink-400">{s.label}</p>
@@ -150,9 +150,9 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
               ))}
             </div>
 
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
               {/* schedule table */}
-              <div className="col-span-3 rounded-xl ring-1 ring-ink-100">
+              <div className="md:col-span-3 rounded-xl ring-1 ring-ink-100">
                 <div className="flex items-center justify-between border-b border-ink-100 px-2.5 py-2">
                   <p className="text-[9px] font-bold text-ink-900">Today&apos;s schedule</p>
                   <span className="flex items-center gap-0.5 text-[7.5px] font-semibold text-brand-600">
@@ -166,7 +166,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
                   <span>Team</span>
                   <span className="text-right">Status</span>
                 </div>
-                {rows.map((r) => (
+                {rows.slice(0, 4).map((r) => (
                   <div
                     key={r.client}
                     className="grid grid-cols-[1.6fr_1fr_0.7fr_0.9fr] items-center gap-1 border-b border-ink-50 px-2.5 py-1.5 last:border-0"
@@ -188,7 +188,7 @@ export function DashboardMockup({ className = "" }: { className?: string }) {
               </div>
 
               {/* right column */}
-              <div className="col-span-2 space-y-2">
+              <div className="grid grid-cols-2 gap-2 md:col-span-2 md:grid-cols-1 md:space-y-2 md:gap-0">
                 {/* booking requests */}
                 <div className="rounded-xl ring-1 ring-ink-100">
                   <div className="flex items-center justify-between border-b border-ink-100 px-2.5 py-2">

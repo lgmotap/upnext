@@ -57,7 +57,7 @@ export default async function BookingConfirmationPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5 py-12 text-ink-900">
       <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-brand-400 text-brand-950">
+        <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-brand-400 text-white">
           <Check className="size-8" strokeWidth={3} />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-ink-950">

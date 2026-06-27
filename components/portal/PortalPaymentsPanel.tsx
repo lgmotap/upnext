@@ -115,7 +115,7 @@ export function PortalPaymentsPanel({
                       </select>
                       <button
                         type="submit"
-                        className="rounded-full bg-brand-400 px-3 py-1.5 text-xs font-bold text-brand-950 hover:bg-brand-300"
+                        className="rounded-full bg-brand-400 px-3 py-1.5 text-xs font-bold text-brand-950 hover:bg-brand-600"
                       >
                         Pay with saved card
                       </button>

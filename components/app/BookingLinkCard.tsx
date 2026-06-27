@@ -87,7 +87,7 @@ export function BookingLinkCard({
             <button
               type="button"
               onClick={() => copy(url)}
-              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-400 px-4 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-400 px-4 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-600"
             >
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
               {copied ? "Copied" : "Copy link"}

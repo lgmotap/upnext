@@ -15,7 +15,7 @@ export function BookingQuickActions({ bookingRequestId }: { bookingRequestId: st
         <button
           type="submit"
           aria-label="Accept"
-          className="flex size-7 items-center justify-center rounded-lg bg-brand-400 text-brand-950 hover:bg-brand-300"
+          className="flex size-7 items-center justify-center rounded-lg bg-brand-400 text-white hover:bg-brand-600"
         >
           <Check className="size-4" />
         </button>

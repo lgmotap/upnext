@@ -34,7 +34,7 @@ export function JobChecklist({ jobId, items, readOnly = false }: JobChecklistPro
                 <span
                   className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md ring-1 ${
                     item.isCompleted
-                      ? "bg-brand-400 text-brand-950 ring-brand-400"
+                      ? "bg-brand-400 text-white ring-brand-400"
                       : "bg-white text-transparent ring-ink-200"
                   }`}
                 >
@@ -58,7 +58,7 @@ export function JobChecklist({ jobId, items, readOnly = false }: JobChecklistPro
                   <span
                     className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md ring-1 ${
                       item.isCompleted
-                        ? "bg-brand-400 text-brand-950 ring-brand-400"
+                        ? "bg-brand-400 text-white ring-brand-400"
                         : "bg-white text-transparent ring-ink-200"
                     }`}
                   >

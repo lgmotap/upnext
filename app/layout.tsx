@@ -1,37 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Caveat, Space_Grotesk, Fraunces } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getSeoMeta } from "@/lib/seo/get-seo-meta";
 import { seoKeywords, site } from "@/lib/config";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { AppProviders } from "@/components/providers/AppProviders";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const caveat = Caveat({
-  variable: "--font-caveat",
-  subsets: ["latin"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  style: ["italic", "normal"],
-  weight: ["400", "500", "600"],
 });
 
 const seo = getSeoMeta();
@@ -102,10 +85,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} ${spaceGrotesk.variable} ${fraunces.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
         <JsonLd />
       </head>

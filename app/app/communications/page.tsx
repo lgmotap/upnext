@@ -157,7 +157,7 @@ export default async function CommunicationsPage({
           </select>
           <button
             type="submit"
-            className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+            className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
           >
             Filter
           </button>

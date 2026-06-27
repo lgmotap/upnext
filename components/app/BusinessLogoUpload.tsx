@@ -13,7 +13,7 @@ function UploadButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300 disabled:opacity-70"
+      className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600 disabled:opacity-70"
     >
       {pending ? (
         <span className="inline-flex items-center gap-1.5">

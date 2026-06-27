@@ -276,7 +276,7 @@ export default async function JobDetailPage({
                       <input type="hidden" name="jobId" value={job.id} />
                       <button
                         type="submit"
-                        className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                        className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
                       >
                         {payment.paymentUrl ? "Regenerate payment link" : "Send payment link"}
                       </button>
@@ -325,7 +325,7 @@ export default async function JobDetailPage({
                   <input type="hidden" name="jobId" value={job.id} />
                   <button
                     type="submit"
-                    className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                    className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
                   >
                     Send payment link
                   </button>

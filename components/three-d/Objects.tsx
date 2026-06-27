@@ -9,13 +9,13 @@ function Defs({ id }: { id: string }) {
   return (
     <defs>
       <linearGradient id={`${id}-body`} x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#6fe3a1" />
-        <stop offset="55%" stopColor="#1fb863" />
-        <stop offset="100%" stopColor="#117a44" />
+        <stop offset="0%" stopColor="#ff9a5c" />
+        <stop offset="55%" stopColor="#fd5f03" />
+        <stop offset="100%" stopColor="#e55503" />
       </linearGradient>
       <linearGradient id={`${id}-light`} x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="100%" stopColor="#d2f9e0" />
+        <stop offset="100%" stopColor="#ffe5d6" />
       </linearGradient>
       <radialGradient id={`${id}-sheen`} cx="0.3" cy="0.25" r="0.9">
         <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
@@ -23,7 +23,7 @@ function Defs({ id }: { id: string }) {
         <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
       </radialGradient>
       <filter id={`${id}-shadow`} x="-40%" y="-40%" width="180%" height="180%">
-        <feDropShadow dx="0" dy="10" stdDeviation="10" floodColor="#0c3a2c" floodOpacity="0.25" />
+        <feDropShadow dx="0" dy="10" stdDeviation="10" floodColor="#051a3d" floodOpacity="0.25" />
       </filter>
     </defs>
   );

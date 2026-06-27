@@ -476,7 +476,7 @@ export function PublicBookingClient({
                     onClick={() => setTime(t.time)}
                     className={`rounded-xl border py-2.5 text-sm font-semibold transition ${
                       time === t.time
-                        ? "border-brand-400 bg-brand-400 text-brand-950"
+                        ? "border-brand-400 bg-brand-400 text-white"
                         : "border-ink-200 bg-white text-ink-700 hover:border-brand-300"
                     }`}
                   >
@@ -576,7 +576,7 @@ export function PublicBookingClient({
                 name="payAtBooking"
                 value="on"
                 disabled={!date || !time || !selectedPrimary || pending}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3.5 text-base font-bold text-brand-950 transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3.5 text-base font-bold text-brand-950 transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:py-4"
               >
                 <CreditCard className="size-5" />
                 {payAtBooking.requirePaymentAtBooking ? "Continue to payment" : "Pay & book"}
@@ -594,7 +594,7 @@ export function PublicBookingClient({
                 className={`flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-base font-bold transition disabled:cursor-not-allowed disabled:opacity-50 sm:py-4 ${
                   payAtBooking.showPaymentStep
                     ? "bg-ink-100 text-ink-800 ring-1 ring-ink-200 hover:bg-ink-200"
-                    : "bg-brand-400 text-brand-950 hover:bg-brand-300"
+                    : "bg-brand-400 text-white hover:bg-brand-600"
                 }`}
               >
                 <Check className="size-5" /> Request booking

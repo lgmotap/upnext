@@ -16,7 +16,7 @@ function MagicSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3 text-sm font-bold text-brand-950 hover:bg-brand-300 disabled:opacity-70"
+      className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3 text-sm font-bold text-brand-950 hover:bg-brand-600 disabled:opacity-70"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
       {pending ? "Sending link…" : "Email me a sign-in link"}
@@ -30,7 +30,7 @@ function PasswordSubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3 text-sm font-bold text-brand-950 hover:bg-brand-300 disabled:opacity-70"
+      className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 py-3 text-sm font-bold text-brand-950 hover:bg-brand-600 disabled:opacity-70"
     >
       {pending ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
       {pending ? "Signing in…" : "Sign in with password"}

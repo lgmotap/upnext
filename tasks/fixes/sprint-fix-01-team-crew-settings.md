@@ -1,178 +1,262 @@
-# FIX-01 — Team / crew parity + settings polish
+# FIX-01 — Service Providers parity (team + crew + settings)
 
-> **Status:** 📋 Planning (awaiting PO approval — no code until approved)  
+> **Status:** 📋 Approved for implementation (PO confirmed CL-style flow)  
 > **Track:** `tasks/fixes/`  
-> **Triggered by:** Owner UX report — missing crew portal link, cannot add team member with full info without invite, settings UI bugs
+> **Competitor ref:** CL Service Providers module + [portal login help](https://help.convertlabs.io/en/service-provider-portal/logging-in-to-the-app)
 
 ---
 
-## ConvertLabs reference (how they do it)
+## Product decision (locked)
 
-Sources: `competitor-research/` crawls (phase-08-team), CL help center, public docs.
-
-### Owner app — Service Providers (`/booking/service-providers`)
-
-| CL capability | Detail |
-|---------------|--------|
-| **List** | Table of providers with name, contact, status |
-| **Add** | **New Service Provider** drawer/page — owner enters **first name, last name, email** (Teams docs also include **phone**, team **color**) |
-| **Create behavior** | Account/roster created on save; provider gets **welcome email/SMS** with login link (optional to send later in some flows) |
-| **Row actions (⋮)** | **Portal login link** — copy or send via email/SMS; **Edit work schedule**; **Edit wage** (P2 — out of scope for us) |
-| **Member detail** | Click name → edit profile + tabs: **Business Hours**, **Wage**, self-assign toggle |
-| **Portal URL** | Provider app at `teams.convertlabs.io` (magic link; passwordless by default) |
-
-Help article (admin): *Service Providers → ⋮ → Portal login link → copy or Send link via Email/SMS.*
-
-### Provider / crew experience
-
-| CL | UpNext equivalent |
-|----|-------------------|
-| Magic link from admin or self-request at login | Invite email → accept; worker signs in at `/sign-in` → `/crew` |
-| Today's jobs, check-in, OTW, photos | `/crew` — **ahead** on checklist/photos/timer |
-| Edit own work schedule in app | Read-only hours on `/crew`; owner edits at `/app/team/[id]/availability` |
-
-### Mapping CL → UpNext (honest gap)
-
-| CL pattern | UpNext today | FIX-01 target |
-|------------|--------------|---------------|
-| Add provider with name + email + phone | Invite **email + role** only | **Add member** form with profile fields |
-| Owner fills roster without worker self-serve | Not possible | **Add without invite** OR **save profile + send invite later** |
-| Portal login link in settings / row menu | **Missing** — Portals tab has booking + customer only | **Crew portal** card + per-member **Copy crew link** |
-| Member detail (not just hours) | `/app/team/[id]` redirects to availability | **Profile page** with Hours tab |
-| Portal login link per provider | Row ⋮ action | Row action: copy magic sign-in / crew URL |
-| Edit work schedule | Separate hours page only | Hours as tab on member profile |
-| Wage / payout | Full module | ➖ Out of scope (MVP) |
-| Team color | UI chrome | ➖ Defer |
-| Self-assign open jobs | Team checkbox | ➖ Sprint 47 |
-
-**Scorecard correction:** `tasks/competitor-parity-status.md` lists Team as ✅ “CRUD + magic link” — should be 🟡 **invite-only** until FIX-01 ships.
+| Decision | Choice |
+|----------|--------|
+| Primary add flow | **Create member on save** (CL “New Service Provider”), not invite-first |
+| Worker login | **Signed crew login URL** (CL-style auto-login), email on create + copy/resend anytime |
+| Wage / rating / color | **Defer** (wage out of MVP; color optional later) |
+| Dispatcher vs worker | Unchanged RBAC — this sprint targets **worker / crew** experience |
+| Same `/crew` UI | Magic link lands on same routes as password sign-in (`/crew`, `/crew/jobs/[id]`) |
 
 ---
 
-## Locked v1 scope (FIX-01)
+## ConvertLabs reference (from screenshots + docs)
 
-### 1. Crew / field portal discoverability (Settings)
+### New Service Provider
 
-Mirror **Customer portal** block on Settings → Portals:
+- Service Provider Title (display name)
+- First name, last name, email, phone (required)
+- Optional: allow self-assign open jobs (→ sprint 47)
+- **Create** → member exists immediately; welcome email with login link sent
 
-- [ ] **`getCrewPortalUrl()`** in `lib/url/app.ts` → `{APP_URL}/crew`
-- [ ] Card: **Crew / field portal** — URL, copy button, preview link, short instructions
-- [ ] Copy: “Share with workers after they join your team. Works in any mobile browser — no app store.”
-- [ ] Optional: duplicate compact link on **`/app/team`** header
+### List + row actions
 
-**CL parity:** Admin can find and copy provider portal entry (CL: Portal login link from Service Providers; we use shared `/crew` URL + per-member invite/link).
+- Table: provider, email, phone, wage (defer), rating (defer)
+- Edit / delete
+- **⋮ Portal login link** — signed URL modal, copy + Send via Email/SMS
+- **⋮ Edit work schedule** — day toggles + from/to
+- **⋮ Edit wage** — defer
 
-### 2. Team member — add & profile (owner CRUD lite)
+### Provider login URL (CL)
 
-**Data model (minimal):**
+```
+https://teams.convertlabs.io/signin?expires=…&team=…&team_email=…&signature=…
+```
 
-- [ ] `User.phone` optional **or** `Membership.phone` — pick one; prefer `User.phone` for SMS worker notifications (sprint 29)
-- [ ] No hire-date / wage fields in FIX-01 unless PO confirms
+Tap link → logged in. No accept-invite step.
 
-**Add member flow** (`/app/team`):
+---
 
-- [ ] Two modes (tabs or toggle):
-  - **Send invite** — current behavior (email + role)
-  - **Add member** — owner enters: **first name, last name, email, phone (optional), role**
-- [ ] **Send invite email** checkbox (default on for Add member)
-- [ ] When invite unchecked: create Supabase user + membership server-side with generated setup path (document security choice in ADR snippet or sprint notes):
-  - **Recommended:** create auth user + membership `active`; show owner **“Copy setup link”** / resend invite later; worker cannot sign in until they complete password setup
-  - **Not recommended:** placeholder membership without auth (cannot assign jobs)
+## UpNext architecture (how we will match CL)
 
-**Member profile** (`/app/team/[membershipId]` — stop redirect-only):
+### Crew login URL (proposed)
 
-- [ ] Overview: name, email, phone, role, status, job count
-- [ ] Edit form (owner/admin): update name, phone, role; deactivate member
-- [ ] **Hours** tab → existing weekly hours form (move from standalone page or embed)
-- [ ] **Crew access** section: Copy portal link, Resend invite (if pending), last sign-in if available
+```
+{NEXT_PUBLIC_APP_URL}/crew/auth/{token}
+```
 
-**Row actions on team list:**
+- Token stored in DB (`CrewLoginToken` or extend pattern from `CustomerPortalToken`)
+- Fields: `membershipId`, `organizationId`, `token`, `expiresAt`, `usedAt?`, `lastUsedAt?`
+- HMAC or `randomBytes(32)` — same security model as customer portal
+- On redeem: create Supabase session for linked `User` → redirect `/crew`
+- Default TTL: **7 days** (match team invite) or **30 days** (CL-style long-lived) — **PO pick: 7 days default, regeneratable**
 
-- [ ] Link to profile (not only “Hours”)
-- [ ] Quick: Copy crew URL, Resend invite (pending)
+### Email delivery — important
 
-### 3. Settings UI polish (same sprint — small)
+**UpNext does NOT use Supabase Auth emails for portal/crew magic links today.**
 
-- [ ] **Layout subtitle** — include Locations, Booking form, API (`app/app/settings/layout.tsx`)
-- [ ] **Portals cards** — normalize padding (remove double `p-5` + inner `px-5` on `Card className="p-5"` + `CardHeader`)
-- [ ] **Tab bar** — horizontal scroll on narrow viewports (`SettingsTabs.tsx`)
-- [ ] **Locations page** — collapse-to-edit or single open form (reduce N× Places widgets); already has autocomplete via `LocationAddressFields`
-- [ ] Update **`docs/08-routes-and-navigation.md`** settings routes list
+| Flow | Email sender | Auth mechanism |
+|------|--------------|----------------|
+| Customer portal “magic link” | **Resend** (`notifyCustomerPortalLink`) | Custom `CustomerPortalToken` |
+| Team invite today | **Resend** (`notifyTeamInvite`) | Custom `/accept-invite/{token}` |
+| App sign-in password reset | **Supabase Auth** email | Supabase |
+
+So if “magic link email didn’t arrive,” the fix is usually **Resend/env**, not Supabase Auth settings — unless we explicitly choose Supabase `admin.auth.generateLink()` for crew (adds Supabase SMTP dependency).
+
+**FIX-01 recommendation:** Reuse **CustomerPortalToken pattern** + **Resend** for crew login emails (consistent, already logged in `/app/communications`).
+
+---
+
+## Phase 0 — Diagnose email failures (do first)
+
+Before building new crew emails, verify why existing magic links fail in your environment.
+
+### Checklist
+
+- [ ] **Env:** `RESEND_API_KEY` set and not placeholder (`npm run check:env`)
+- [ ] **Sandbox:** If `EMAIL_FROM` uses `@resend.dev`, only `RESEND_SANDBOX_TO` inbox receives mail (`lib/resend/config.ts`)
+- [ ] **Production:** Verified domain + `EMAIL_FROM=…@yourdomain.com` + **unset** `RESEND_SANDBOX_TO` (`tasks/launch-checklist.md` line 17)
+- [ ] **Logs:** Settings → Communications (or `NotificationLog`) for `team_invite` / `customer_portal_link` — status `sent` | `failed` | `skipped`
+- [ ] **Skipped reason:** `RESEND_API_KEY not set` logged when key missing
+- [ ] **Supabase (only if using password reset / portal password):** Dashboard → Authentication → Email templates + SMTP; Site URL = `NEXT_PUBLIC_APP_URL`; redirect URLs include `/auth/callback`
+- [ ] **Smoke:** `npm run smoke:customer-portal` (token path); optional manual send from customer detail → confirm log row
+
+### Deliverable
+
+- [ ] Document finding in sprint notes (env vs Resend vs wrong recipient expectation)
+- [ ] If sandbox: show owner UI hint when `isResendSandboxMode()` — “Emails redirect to your sandbox inbox”
+
+**Not Supabase for crew magic link unless Phase 1 explicitly switches — document in HANDOFF.**
+
+---
+
+## Phase 1 — Data model + crew auth route
+
+### Schema
+
+- [ ] `Membership.displayTitle` optional (CL “Service Provider Title”) — or `User` + list label from name
+- [ ] `User.phone` optional (for SMS later + list column)
+- [ ] `Membership.crewLastLoginAt` DateTime?
+- [ ] `CrewLoginToken` model (mirror `CustomerPortalToken`): `membershipId`, `organizationId`, `token`, `expiresAt`, `createdAt`, `usedAt?`
+- [ ] Migration + `prisma generate`
+
+### Auth service
+
+- [ ] `server/services/crew-auth.ts`
+  - `createCrewLoginToken(membershipId)` → `{ authUrl, tokenId }`
+  - `redeemCrewLoginToken(token)` → Supabase session + update `crewLastLoginAt` + redirect `/crew`
+- [ ] Route: `app/crew/auth/[token]/route.ts` (GET — mirror `app/my/.../auth/[token]`)
+- [ ] Rate-limit redeem path
+- [ ] Revoke tokens on membership deactivate
+
+### Email
+
+- [ ] `notifyCrewLoginLink` template in `server/services/notifications.ts`
+- [ ] `NotificationTemplate.crew_login_link` enum + migration
+- [ ] Send on member create (when “Send login link” checked — default **on**)
+
+---
+
+## Phase 2 — Service Providers UI (`/app/team`)
+
+### List (CL-like table)
+
+- [ ] Columns: Provider (avatar + title + name), email, phone, last crew login, role badge
+- [ ] Row actions: Edit, Delete/deactivate, **⋮ Menu**
+  - Copy crew login link
+  - Send link via email (Resend)
+  - Edit work schedule (modal or navigate to Hours tab)
+
+### Add member (replaces invite-only)
+
+- [ ] Modal/drawer **New team member**:
+  - Display title (optional)
+  - First name, last name, email, phone
+  - Role: worker | dispatcher
+  - Checkbox: **Send login link email now** (default on)
+- [ ] Server: `createTeamMember` — upsert User + active Membership + provision Supabase user if needed + optional crew token email
+- [ ] **No** `TeamInvite` pending state for this path (keep invite as legacy or remove from primary UX)
+
+### Member profile (`/app/team/[membershipId]`)
+
+- [ ] Stop redirect-only to availability
+- [ ] Tabs/sections: **Profile** | **Hours** | **Crew access**
+- [ ] Profile: edit name, phone, role, active; show `crewLastLoginAt`
+- [ ] Crew access: copy link, resend email, regenerate link
+
+### Permissions
+
+- [ ] Still `canManageTeam` = owner + admin only (dispatchers cannot manage roster — matches CL admin vs field split)
+
+---
+
+## Phase 3 — Global route guards (worker vs office)
+
+**Problem today:** `worker` can open `/app/*` and hit permission errors; proxy only checks Supabase session, not role (`lib/supabase/proxy.ts`).
+
+### Implementation
+
+- [ ] **`app/app/layout.tsx`** (or shared guard): if `session.role === "worker"` → `redirect("/crew")`
+- [ ] **Exceptions:** none for workers on `/app/*` (including `/app/onboarding` — workers should not onboard orgs)
+- [ ] **`/crew/*`:** allow worker, dispatcher, admin, owner (office staff may preview crew view)
+- [ ] **Optional:** `/accept-invite/*` remains public until migrated off invite-first
+- [ ] Document in `docs/10-auth-and-permissions.md` + browser checklist Part 8
+
+### Why middleware not proxy
+
+- Role requires Prisma membership lookup; keep in server layout (already has `getAppSession`) rather than adding DB to edge proxy unless perf requires it later.
+
+---
+
+## Phase 4 — Settings polish
+
+- [ ] **Portals tab:** add **Crew / field portal** card (`getCrewPortalUrl()` + copy) — generic `/crew` explainer
+- [ ] Per-member signed links live on Team page (CL parity)
+- [ ] Fix Portals **double padding** (`Card` + inner `px-5`)
+- [ ] Settings layout subtitle — include Locations, Booking form, API
+- [ ] `SettingsTabs` horizontal scroll on small screens
+- [ ] Locations page: collapse edit forms (reduce N× Places widgets)
+
+---
+
+## Phase 5 — Tests, docs, tracking
+
+### Smokes
+
+- [ ] `scripts/smoke-crew-login.ts` — create member, token redeem, `/crew` session, `crewLastLoginAt` set
+- [ ] Extend `smoke-team-invite.ts` or deprecate if invite path secondary
+- [ ] `npm run smoke:launch-crew` regression
+- [ ] Phase 0 email: assert `NotificationLog` status when Resend configured
+
+### Docs
+
+- [ ] `docs/14-mobile-crew-view.md` — crew login link flow
+- [ ] `docs/13-notifications.md` — `crew_login_link` template + Resend troubleshooting
+- [ ] `docs/08-routes-and-navigation.md` — `/crew/auth/[token]`, team profile routes
+- [ ] `docs/10-auth-and-permissions.md` — worker `/app` redirect
+- [ ] `CHANGELOG.md`, `HANDOFF.md`
+- [ ] `tasks/competitor-parity-status.md` — Team row → ✅ when done
+
+### Validation
+
+- [ ] `npm run typecheck`, `npm run lint`, `npm run build`
+- [ ] `npm run db:validate`
 
 ---
 
 ## Out of scope (FIX-01)
 
-- Provider wage / payout (CL Wage tab)
-- Team color / calendar color coding
-- Open jobs self-claim (sprint 47)
-- Providers Activity kanban (sprint 48)
-- Native provider app / push notifications
-- Full HR fields (hire date, DOB, emergency contact) — confirm with PO before any schema add
-- Passwordless magic link for crew (CL default) — optional follow-up FIX-02; FIX-01 uses existing invite + `/crew` after sign-in
+- Wage / hourly / payout (CL Wage modal)
+- Avg rating column
+- Provider color hex (scheduler color — later)
+- Open jobs self-assign checkbox (sprint 47)
+- Supabase OTP “Request login” on `/sign-in` for workers (optional FIX-02)
+- SMS send for crew link (email first; mirror `notifyCustomerPortalLink` SMS later if Twilio on)
 
 ---
 
-## Open questions (PO — block implementation until answered)
+## Implementation order (suggested)
 
-1. **Add without invite:** Must new manual members be **assignable to jobs immediately**? (Recommended: yes, after admin sets temp password or copy setup link.)
-2. **Phone:** Required on add form or optional? (Recommend optional; needed for SMS worker alerts.)
-3. **Crew login:** Keep email+password only for FIX-01, or add **magic link request** on `/sign-in` for workers? (CL parity suggests magic link — could be FIX-02.)
-4. **“Team member date”** — if hire/start date is required, specify field; not found in CL Service Provider create form (only in reporting elsewhere).
-
----
-
-## Implementation notes
-
-### Suggested file touch list
-
-| Area | Files |
-|------|--------|
-| URL helper | `lib/url/app.ts` |
-| Settings UI | `app/app/settings/portals/page.tsx`, `layout.tsx`, `SettingsTabs.tsx`, `locations/page.tsx` |
-| Team UI | `app/app/team/page.tsx`, `app/app/team/[membershipId]/page.tsx`, new `TeamMemberForm.tsx` |
-| Server | `server/actions/team.ts`, `server/services/team-invites.ts`, new `server/services/team-members.ts` |
-| Schema | `prisma/schema.prisma` (+ migration if phone) |
-| Validators | `server/validators/team.ts` |
-| Docs | `docs/08-routes-and-navigation.md`, `docs/14-mobile-crew-view.md`, `tasks/competitor-parity-status.md` |
-
-### Auth strategy for manual add (draft)
-
-```txt
-Owner submits Add member (invite unchecked)
-  → upsert User (email, name, phone)
-  → create Membership (role, active)
-  → optional: createTeamInvite without email OR Supabase admin createUser + recovery link
-  → return setup URL for owner to copy
-Worker completes setup → /crew
+```
+Phase 0  Email diagnostics (your broken magic link report)
+Phase 1  Schema + /crew/auth/[token] + Resend template
+Phase 3  Worker → /crew global guard (quick win, can parallel)
+Phase 2  Team UI (add, table, profile, copy/send link)
+Phase 4  Settings polish
+Phase 5  Smokes + docs
 ```
 
-Reuse patterns from `server/services/portal-auth.ts` (admin-provisioned users) where possible.
+---
+
+## Open items (defaults if silent)
+
+| Item | Default |
+|------|---------|
+| Token TTL | 7 days, regeneratable from Team |
+| Send email on create | On |
+| Phone on add form | Optional |
+| Dispatcher uses | `/app` only (unchanged) |
+| Worker uses | `/crew` only (enforced) |
 
 ---
 
-## Tests
+## Files (expected touch list)
 
-- [ ] `scripts/smoke-team-manual-add.ts` — add member without invite, assign job, worker can access `/crew` after setup
-- [ ] Extend `scripts/smoke-team-invite.ts` — invite path still works
-- [ ] `scripts/smoke-settings-portals.ts` or extend `smoke-business-profile` — crew URL present on Portals page
-- [ ] `npm run smoke:launch-crew` — regression
-
----
-
-## Validation
-
-- [ ] `npm run typecheck`, `npm run lint`, `npm run build`
-- [ ] `npm run smoke:team-invite`, `npm run smoke:launch-crew`, new manual-add smoke
-- [ ] Browser: Settings → Portals shows 3 portal blocks (booking, customer, crew)
-- [ ] Browser: Team → add member without invite → profile editable → hours tab saves
-
----
-
-## Docs & tracking updates (on ship)
-
-- [ ] `CHANGELOG.md`
-- [ ] `HANDOFF.md` — resume pointer
-- [ ] `tasks/competitor-parity-status.md` — Team row → ✅ after FIX-01
-- [ ] `tasks/fixes/README.md` — mark FIX-01 complete
-- [ ] `docs/01-product-requirements.md` R9 — align with shipped behavior
+| Area | Paths |
+|------|--------|
+| Schema | `prisma/schema.prisma`, migration |
+| Crew auth | `server/services/crew-auth.ts`, `app/crew/auth/[token]/route.ts` |
+| Notifications | `server/services/notifications.ts`, `lib/notifications/labels.ts` |
+| Team | `app/app/team/page.tsx`, `app/app/team/[membershipId]/page.tsx`, `server/actions/team.ts`, `server/services/team-members.ts` |
+| Guards | `app/app/layout.tsx` |
+| Settings | `app/app/settings/portals/page.tsx`, `SettingsTabs.tsx`, `layout.tsx` |
+| URL | `lib/url/app.ts` |
+| Smokes | `scripts/smoke-crew-login.ts` |

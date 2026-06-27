@@ -35,7 +35,7 @@ export function GettingStartedChecklist({
             <li key={task.id} className="flex items-start gap-3 py-3">
               <span
                 className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ${
-                  task.done ? "bg-brand-400 text-brand-950" : "bg-ink-100 text-ink-400"
+                  task.done ? "bg-brand-400 text-white" : "bg-ink-100 text-ink-400"
                 }`}
               >
                 {task.done ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}

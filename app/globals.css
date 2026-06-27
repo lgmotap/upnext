@@ -1,33 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f5ef;
-  --foreground: #15191b;
+  --background: #f6f8fb;
+  --foreground: #051a3d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-space-grotesk);
-  --font-serif: var(--font-fraunces), Georgia, serif;
-  --font-hand: var(--font-caveat), cursive;
+  --font-display: var(--font-inter);
+  --font-serif: var(--font-inter);
+  --font-hand: var(--font-inter);
 
-  /* Brand: spring green -> deep forest (the whole identity) */
-  --color-brand-50: #ecfdf3;
-  --color-brand-100: #d2f9e0;
-  --color-brand-200: #a6f1c4;
-  --color-brand-300: #6fe3a1;
-  --color-brand-400: #3ad079;
-  --color-brand-500: #1fb863;
-  --color-brand-600: #149a52;
-  --color-brand-700: #117a44;
-  --color-brand-800: #155c43;
-  --color-brand-900: #114a37;
-  --color-brand-950: #0c3a2c;
+  /* Brand: navy (trust/structure) + orange (action) — BookedFox palette */
+  --color-brand-50: #fff4ed;
+  --color-brand-100: #ffe5d6;
+  --color-brand-200: #ffc9a8;
+  --color-brand-300: #ff9a5c;
+  --color-brand-400: #fd5f03;
+  --color-brand-500: #fd5f03;
+  --color-brand-600: #e55503;
+  --color-brand-700: #0a2550;
+  --color-brand-800: #081f42;
+  --color-brand-900: #061833;
+  --color-brand-950: #051a3d;
 
-  /* Accent: soft amber — used very sparingly for warm pops */
+  /* Accent: warm amber for secondary highlights (not primary CTA) */
   --color-accent-50: #fdf6e3;
   --color-accent-100: #f9e9bd;
   --color-accent-200: #f3d985;
@@ -40,22 +40,22 @@
   --color-accent-900: #5e421d;
   --color-accent-950: #362413;
 
-  /* Ink: neutral near-black */
-  --color-ink-50: #f4f5f4;
-  --color-ink-100: #e8eae8;
-  --color-ink-200: #d6dad7;
-  --color-ink-300: #b3bab6;
-  --color-ink-400: #868f8a;
-  --color-ink-500: #5e6863;
-  --color-ink-600: #47514c;
-  --color-ink-700: #39423d;
-  --color-ink-800: #262d29;
-  --color-ink-900: #1a201d;
-  --color-ink-950: #15191b;
+  /* Ink: neutral near-black with navy bias */
+  --color-ink-50: #f6f8fb;
+  --color-ink-100: #e8edf3;
+  --color-ink-200: #d1dae6;
+  --color-ink-300: #a8b5c7;
+  --color-ink-400: #7a8799;
+  --color-ink-500: #5c6878;
+  --color-ink-600: #475163;
+  --color-ink-700: #394252;
+  --color-ink-800: #2a3340;
+  --color-ink-900: #1a2330;
+  --color-ink-950: #051a3d;
 
-  --shadow-soft: 0 1px 2px rgba(21, 25, 27, 0.04), 0 8px 24px rgba(21, 25, 27, 0.07);
-  --shadow-lift: 0 2px 4px rgba(21, 25, 27, 0.05), 0 16px 40px rgba(21, 25, 27, 0.1);
-  --shadow-float: 0 4px 8px rgba(21, 25, 27, 0.06), 0 24px 64px rgba(21, 25, 27, 0.13);
+  --shadow-soft: 0 1px 2px rgba(5, 26, 61, 0.04), 0 8px 24px rgba(5, 26, 61, 0.07);
+  --shadow-lift: 0 2px 4px rgba(5, 26, 61, 0.05), 0 16px 40px rgba(5, 26, 61, 0.1);
+  --shadow-float: 0 4px 8px rgba(5, 26, 61, 0.06), 0 24px 64px rgba(5, 26, 61, 0.13);
 }
 
 html {
@@ -68,10 +68,11 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Bold geometric display for headlines */
+/* Headlines — Inter ExtraBold per brand sheet */
 h1,
 h2 {
   font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+  font-weight: 800;
   letter-spacing: -0.03em;
 }
 
@@ -82,17 +83,15 @@ h2 {
 
 /* Texture utilities ---------------------------------------------------- */
 
-/* Dotted grid background (apply to a positioned, -z layer) */
 .bg-grid {
-  background-image: radial-gradient(rgba(21, 25, 27, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(5, 26, 61, 0.06) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 .bg-grid-brand {
-  background-image: radial-gradient(rgba(31, 184, 99, 0.14) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(253, 95, 3, 0.12) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
-/* Subtle film grain overlay */
 .texture-grain {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
@@ -112,11 +111,10 @@ h2 {
 .animate-float-delayed { animation: float-slower 7.5s ease-in-out 1.2s infinite; }
 .animate-float-late { animation: float-slow 8.5s ease-in-out 2.4s infinite; }
 
-/* Pointer-tracked spotlight used by SpotlightCard */
 .spotlight-card__glow {
   background: radial-gradient(
     16rem 16rem at var(--mx, 50%) var(--my, 0%),
-    rgba(31, 184, 99, 0.15),
+    rgba(253, 95, 3, 0.12),
     transparent 70%
   );
 }
@@ -141,15 +139,11 @@ h2 {
   html { scroll-behavior: auto; }
 }
 
-/* Keyboard focus — visible ring on interactive elements */
 :focus-visible {
   outline: 2px solid var(--color-brand-400);
   outline-offset: 2px;
 }
 
-/* Google PlaceAutocompleteElement — match UpNext `ring-1 ring-ink-200` inputs.
-   Surface ring/radius/font are applied in JS after mount (Google CSS loads later).
-   ::part rules style the shadow-DOM input and suggestion list. */
 .upnext-place-autocomplete-host {
   position: relative;
   z-index: 1;
@@ -176,7 +170,7 @@ h2 {
   border-radius: 0 !important;
   background: transparent !important;
   color: var(--color-ink-900) !important;
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif !important;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif !important;
   font-size: 0.875rem !important;
   line-height: 1.25rem !important;
   outline: none !important;

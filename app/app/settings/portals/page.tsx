@@ -119,7 +119,7 @@ export default async function PortalsSettingsPage({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="submit"
-                  className="rounded-full bg-brand-400 px-4 py-2 text-sm font-semibold text-brand-950 hover:bg-brand-300"
+                  className="rounded-full bg-brand-400 px-4 py-2 text-sm font-semibold text-brand-950 hover:bg-brand-600"
                 >
                   Save host
                 </button>
@@ -218,7 +218,7 @@ export default async function PortalsSettingsPage({
           {canEdit && (
             <button
               type="submit"
-              className="rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              className="rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-600"
             >
               Save portal settings
             </button>

@@ -88,7 +88,7 @@ function RescheduleModalBody({
                 onClick={() => setTime(s.time)}
                 className={`rounded-full px-3 py-1.5 text-sm font-semibold ring-1 transition ${
                   time === s.time
-                    ? "bg-brand-400 text-brand-950 ring-brand-400"
+                    ? "bg-brand-400 text-white ring-brand-400"
                     : "bg-white text-ink-700 ring-ink-200 hover:ring-brand-300"
                 }`}
               >

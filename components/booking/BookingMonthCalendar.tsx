@@ -94,7 +94,7 @@ export function BookingMonthCalendar({
               onClick={() => isAvailable && onSelectDate(cell.date!)}
               className={`relative flex aspect-square flex-col items-center justify-center rounded-xl text-sm font-semibold transition ${
                 isSelected
-                  ? "bg-brand-400 text-brand-950 shadow-soft ring-2 ring-brand-500"
+                  ? "bg-brand-400 text-white shadow-soft ring-2 ring-brand-500"
                   : isAvailable
                     ? "bg-white text-ink-900 ring-1 ring-ink-200 hover:bg-brand-50 hover:ring-brand-300"
                     : "cursor-not-allowed text-ink-300"

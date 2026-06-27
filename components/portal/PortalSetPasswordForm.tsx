@@ -77,7 +77,7 @@ export function PortalSetPasswordForm({ businessSlug }: { businessSlug: string }
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-full bg-brand-400 py-3 text-sm font-bold text-brand-950 hover:bg-brand-300 disabled:opacity-70"
+          className="w-full rounded-full bg-brand-400 py-3 text-sm font-bold text-brand-950 hover:bg-brand-600 disabled:opacity-70"
         >
           {pending ? "Saving…" : "Save password"}
         </button>

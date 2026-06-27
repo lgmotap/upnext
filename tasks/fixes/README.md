@@ -12,7 +12,7 @@
 
 | Sprint | File | Theme | Status |
 |--------|------|-------|--------|
-| **FIX-01** | [sprint-fix-01-team-crew-settings.md](./sprint-fix-01-team-crew-settings.md) | Team CRUD + crew portal link + settings UI | 📋 Planning |
+| **FIX-01** | [sprint-fix-01-team-crew-settings.md](./sprint-fix-01-team-crew-settings.md) | Service Providers parity: create + crew login link + route guards + settings UI | 📋 Approved — implement |
 
 ---
 

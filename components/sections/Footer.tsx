@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { site } from "@/lib/config";
 
@@ -33,9 +34,14 @@ export function Footer() {
     <footer className="bg-brand-950 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
-          <Link href="/" className="flex items-center" aria-label={`${site.name} home`}>
-            <span className="text-xl font-bold tracking-tight text-white">{site.name}</span>
-            <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-400" />
+          <Link href="/" className="inline-flex" aria-label={`${site.name} home`}>
+            <Image
+              src="/brand/logo-footer.png"
+              alt="BookedFox"
+              width={1024}
+              height={188}
+              className="h-8 w-auto sm:h-9"
+            />
           </Link>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">{site.description}</p>
         </div>
@@ -45,7 +51,7 @@ export function Footer() {
             <ul className="space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.label}>
-                  <Link href={l.href} className="text-sm text-white/60 transition hover:text-brand-300">
+                  <Link href={l.href} className="text-sm text-white/60 transition hover:text-brand-400">
                     {l.label}
                   </Link>
                 </li>

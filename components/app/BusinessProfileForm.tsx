@@ -302,7 +302,7 @@ export function BusinessProfileForm({ defaults, publicSlug, canEdit, action }: P
         <div className="flex justify-end">
           <button
             type="submit"
-            className="rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
+            className="rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-600"
           >
             Save changes
           </button>

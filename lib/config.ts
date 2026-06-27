@@ -17,7 +17,7 @@ export const site = {
     "Online booking and business software for home-service providers — scheduling, customers, team, and payments in one place.",
   url: "https://bookedfox.com",
   locale: "en_US",
-  themeColor: "#117a44",
+  themeColor: "#051A3D",
   /** Public contact for legal/SEO structured data. */
   contactEmail: "hello@bookedfox.com",
 } as const;

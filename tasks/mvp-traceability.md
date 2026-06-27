@@ -236,7 +236,7 @@ Parallel track for user-reported gaps (not Phase 6 scope). Index: `tasks/fixes/R
 
 | Sprint | File | Theme |
 |--------|------|-------|
-| FIX-01 | `tasks/fixes/sprint-fix-01-team-crew-settings.md` | Team add/profile, crew portal link, settings UI |
+| FIX-01 | `tasks/fixes/sprint-fix-01-team-crew-settings.md` | CL Service Providers: create + crew login link + worker route guard |
 
 ---
 

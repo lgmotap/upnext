@@ -46,7 +46,7 @@ function FinishButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-70"
+      className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-70"
     >
       {pending ? (
         <>
@@ -196,7 +196,7 @@ export function OnboardingWizard({
             <button
               type="button"
               onClick={(e) => goNext(e.currentTarget.form!)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-600"
             >
               Continue <ArrowRight className="size-4" />
             </button>
@@ -231,7 +231,7 @@ export function OnboardingWizard({
             <button type="button" onClick={() => setStep(1)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-900">
               <ArrowLeft className="size-4" /> Back
             </button>
-            <button type="button" onClick={(e) => goNext(e.currentTarget.form!)} className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300">
+            <button type="button" onClick={(e) => goNext(e.currentTarget.form!)} className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-600">
               Continue <ArrowRight className="size-4" />
             </button>
           </div>
@@ -298,7 +298,7 @@ export function OnboardingWizard({
             <button type="button" onClick={() => setStep(2)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-500 hover:text-ink-900">
               <ArrowLeft className="size-4" /> Back
             </button>
-            <button type="button" onClick={(e) => goNext(e.currentTarget.form!)} className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-300">
+            <button type="button" onClick={(e) => goNext(e.currentTarget.form!)} className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-5 py-2.5 text-sm font-bold text-brand-950 hover:bg-brand-600">
               Continue <ArrowRight className="size-4" />
             </button>
           </div>

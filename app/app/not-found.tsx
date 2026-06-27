@@ -13,7 +13,7 @@ export default function AppNotFound() {
       </p>
       <Link
         href="/app/dashboard"
-        className="mt-5 inline-flex items-center rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+        className="mt-5 inline-flex items-center rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
       >
         Back to dashboard
       </Link>

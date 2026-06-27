@@ -135,7 +135,7 @@ export default async function ServicesPage({
               )}
               <Link
                 href={showNew ? "/app/services" : "/app/services?new=1"}
-                className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
               >
                 <Plus className="size-4" /> {showNew ? "Cancel" : "Add service"}
               </Link>

@@ -82,18 +82,8 @@ export function MobileMockup({ className = "" }: { className?: string }) {
               </div>
             </div>
 
-            {/* notes */}
-            <div className="rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-100">
-              <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold text-amber-800">
-                <StickyNote className="size-3" aria-hidden /> Customer note
-              </p>
-              <p className="text-[9.5px] leading-snug text-amber-900/80">
-                Spare key under the planter. Please skip the office — dog is friendly!
-              </p>
-            </div>
-
             {/* job-complete summary auto-sent to the client */}
-            <div className="mt-auto rounded-2xl bg-white p-3 shadow-soft ring-1 ring-brand-200">
+            <div className="rounded-2xl bg-white p-3 shadow-soft ring-1 ring-brand-200">
               <div className="mb-2 flex items-center gap-1.5">
                 <span className="flex size-4 items-center justify-center rounded-full bg-brand-500">
                   <Check className="size-2.5 text-white" strokeWidth={3} aria-hidden />
@@ -123,8 +113,19 @@ export function MobileMockup({ className = "" }: { className?: string }) {
                 </div>
               </div>
             </div>
+
+            {/* notes */}
+            <div className="rounded-2xl bg-amber-50 p-2.5 ring-1 ring-amber-100">
+              <p className="mb-0.5 flex items-center gap-1 text-[10px] font-bold text-amber-800">
+                <StickyNote className="size-3" aria-hidden /> Customer note
+              </p>
+              <p className="text-[9px] leading-snug text-amber-900/80">
+                Spare key under the planter. Dog is friendly!
+              </p>
+            </div>
+
             {/* home indicator */}
-            <div className="mx-auto mt-1 h-1 w-24 rounded-full bg-ink-300" />
+            <div className="mx-auto mt-auto h-1 w-24 rounded-full bg-ink-300" />
           </div>
         </div>
       </div>

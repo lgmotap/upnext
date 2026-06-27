@@ -157,7 +157,7 @@ export function Waitlist() {
             <button
               type="submit"
               disabled={status === "submitting"}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 px-7 py-4 text-base font-bold text-brand-950 shadow-[0_8px_24px_rgba(31,184,99,0.4)] transition hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand-400 px-7 py-4 text-base font-bold text-white shadow-[0_8px_24px_rgba(253,95,3,0.35)] transition hover:bg-brand-600 hover:shadow-[0_12px_30px_rgba(253,95,3,0.45)] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {status === "submitting" ? (
                 <>

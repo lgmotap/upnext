@@ -111,7 +111,7 @@ export function WhoItsFor() {
                 className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-105"
               />
               <span className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/30 to-transparent" />
-              <span className="absolute left-3 top-3 flex size-9 items-center justify-center rounded-full bg-brand-400 text-brand-950 shadow-md transition-transform duration-300 group-hover:scale-110">
+              <span className="absolute left-3 top-3 flex size-9 items-center justify-center rounded-full bg-brand-400 text-white shadow-md transition-transform duration-300 group-hover:scale-110">
                 <Icon className="size-4.5" aria-hidden />
               </span>
               <div className="absolute inset-x-0 bottom-0 p-4">

@@ -122,7 +122,7 @@ export default async function LocationsSettingsPage({
                     </div>
                     <button
                       type="submit"
-                      className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+                      className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
                     >
                       Save location
                     </button>
@@ -172,7 +172,7 @@ export default async function LocationsSettingsPage({
             </label>
             <button
               type="submit"
-              className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-300"
+              className="rounded-full bg-brand-400 px-4 py-2 text-sm font-bold text-brand-950 hover:bg-brand-600"
             >
               Add location
             </button>

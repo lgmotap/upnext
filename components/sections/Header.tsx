@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { nav, site } from "@/lib/config";
+import { nav } from "@/lib/config";
+import { BookedFoxLogo } from "@/components/brand/BookedFoxLogo";
 import { PrimaryCTA } from "@/components/ui/CTAButton";
 
 export function Header() {
@@ -18,10 +19,7 @@ export function Header() {
         Skip to content
       </a>
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
-        <Link href="/" className="group flex items-center" aria-label={`${site.name} home`}>
-          <span className="text-xl font-bold tracking-tight text-ink-950">{site.name}</span>
-          <span className="ml-0.5 mt-2 size-1.5 rounded-full bg-brand-500 transition-transform group-hover:scale-125" />
-        </Link>
+        <BookedFoxLogo href="/" theme="light" priority />
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
           {nav.map((item) => (

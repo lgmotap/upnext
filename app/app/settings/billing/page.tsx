@@ -122,7 +122,7 @@ export default async function BillingSettingsPage({
               <form action={startStripeConnectAction}>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-400 px-4 py-2 text-sm font-semibold text-brand-950 transition hover:bg-brand-300"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-400 px-4 py-2 text-sm font-semibold text-brand-950 transition hover:bg-brand-600"
                 >
                   {connect?.stripeConnectAccountId ? "Continue Stripe setup" : "Connect Stripe"}
                   <ExternalLink className="size-4" />
@@ -174,7 +174,7 @@ export default async function BillingSettingsPage({
               <button
                 type="submit"
                 disabled={!connect?.stripeConnectChargesEnabled}
-                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-semibold text-brand-950 hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-brand-400 px-4 py-2 text-sm font-semibold text-brand-950 hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Save pay at booking
               </button>
@@ -214,7 +214,7 @@ export default async function BillingSettingsPage({
             </ul>
             <button
               className={`mt-4 w-full rounded-full py-2 text-sm font-bold ${
-                p.current ? "bg-ink-100 text-ink-500" : "bg-brand-400 text-brand-950 hover:bg-brand-300"
+                p.current ? "bg-ink-100 text-ink-500" : "bg-brand-400 text-white hover:bg-brand-600"
               }`}
               disabled={p.current}
               type="button"

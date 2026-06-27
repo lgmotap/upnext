@@ -51,7 +51,7 @@ export function Benefits() {
           <li key={title}>
             <Reveal delay={(i % 3) * 0.07}>
               <SpotlightCard className="group flex h-full gap-4 rounded-3xl bg-brand-50/60 p-6 ring-1 ring-brand-100 hover:shadow-soft hover:ring-brand-200">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-brand-950 shadow-sm transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-400 text-white shadow-sm transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
                   <Icon className="size-5" aria-hidden />
                 </span>
                 <p className="text-sm leading-relaxed text-ink-600">

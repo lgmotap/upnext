@@ -71,7 +71,7 @@ User-reported and audit gaps that are not full Phase 6 features. Index: [`tasks/
 
 | Item | Sprint | Status |
 |------|--------|--------|
-| Team CRUD + crew portal link + settings UI | [FIX-01](fixes/sprint-fix-01-team-crew-settings.md) | 📋 Planning |
+| Team CRUD + crew portal link + settings UI | [FIX-01](fixes/sprint-fix-01-team-crew-settings.md) | 📋 Approved — implement |
 
 ## P2 — not yet planned
 

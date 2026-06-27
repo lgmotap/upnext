@@ -39,7 +39,7 @@ export function HandNote({
       style={{ transform: `rotate(${rotate})` }}
       aria-hidden
     >
-      <p className="font-hand text-[1.35rem] font-bold leading-tight text-brand-600">{children}</p>
+      <p className="font-sans text-[1.35rem] font-extrabold italic leading-tight text-brand-600">{children}</p>
       <svg
         viewBox="0 0 48 48"
         fill="none"

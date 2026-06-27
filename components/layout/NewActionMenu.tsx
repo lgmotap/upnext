@@ -31,7 +31,7 @@ export function NewActionMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-3.5 py-2 text-sm font-bold text-brand-950 transition hover:bg-brand-300"
+        className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-3.5 py-2 text-sm font-bold text-brand-950 transition hover:bg-brand-600"
       >
         <Plus className="size-4" /> New
         <ChevronDown className={`size-3.5 transition ${open ? "rotate-180" : ""}`} />

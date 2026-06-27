@@ -31,11 +31,11 @@ export function MobileSection() {
   return (
     <Section className="bg-white">
       <div className="grid items-center gap-14 lg:grid-cols-2">
-        <Reveal className="relative mx-auto order-last lg:order-first">
-          <MobileMockup className="mx-auto" />
-          <Sparkle className="animate-float absolute -left-8 top-8 w-12 [--tilt:10deg]" />
-          <Checklist3D className="animate-float-delayed absolute -right-10 bottom-10 w-20 [--tilt:8deg]" />
-          <div className="absolute -z-10 inset-8 rounded-full bg-brand-100/70 blur-3xl" />
+        <Reveal className="relative order-last mx-auto w-full max-w-[220px] sm:max-w-[240px] lg:order-first">
+          <MobileMockup className="mx-auto drop-shadow-[0_24px_48px_rgba(5,26,61,0.18)]" />
+          <Sparkle className="animate-float absolute -left-6 top-6 w-10 [--tilt:10deg] sm:-left-8 sm:top-8 sm:w-12" />
+          <Checklist3D className="animate-float-delayed absolute -right-6 bottom-6 w-16 [--tilt:8deg] sm:-right-10 sm:bottom-10 sm:w-20" />
+          <div className="absolute -z-10 inset-6 rounded-full bg-brand-100/70 blur-3xl sm:inset-8" />
         </Reveal>
         <div>
           <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-800">

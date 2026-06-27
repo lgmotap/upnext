@@ -1,6 +1,5 @@
 /**
- * Italic-serif emphasis word inside a grotesk headline — the Pluto-style
- * accent (e.g. "Start for <Em>Free</Em>"). Color is inherited unless overridden.
+ * Italic emphasis inside a headline — accent color + weight (Inter per brand sheet).
  */
 export function Em({
   children,
@@ -9,5 +8,9 @@ export function Em({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <em className={`font-serif font-normal italic tracking-normal ${className}`}>{children}</em>;
+  return (
+    <em className={`font-sans font-extrabold italic tracking-normal ${className}`}>
+      {children}
+    </em>
+  );
 }

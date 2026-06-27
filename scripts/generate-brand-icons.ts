@@ -1,6 +1,6 @@
 /**
- * Generates favicon.ico, app icons, and OG image from assets/brand/icon.svg.
- * Run: npx tsx scripts/generate-brand-icons.ts
+ * Generates favicon.ico, app icons, and OG image from assets/brand/icon.png.
+ * Run: npm run generate:icons
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -8,20 +8,22 @@ import sharp from "sharp";
 import toIco from "to-ico";
 
 const root = join(import.meta.dirname, "..");
-const svgPath = join(root, "assets/brand/icon.svg");
-const svg = readFileSync(svgPath);
+const iconPath = join(root, "assets/brand/icon.png");
+const horizontalLogoPath = join(root, "public/brand/logo-horizontal-compact.png");
+const icon = readFileSync(iconPath);
+const horizontalLogo = readFileSync(horizontalLogoPath);
 
-async function png(size: number) {
-  return sharp(svg).resize(size, size).png().toBuffer();
+async function pngFromIcon(size: number) {
+  return sharp(icon).resize(size, size).png().toBuffer();
 }
 
 async function main() {
-  const [icon16, icon32, icon180, icon512, ogBase] = await Promise.all([
-    png(16),
-    png(32),
-    png(180),
-    png(512),
-    sharp(svg).resize(240, 240).png().toBuffer(),
+  const [icon16, icon32, icon180, icon512, logoForOg] = await Promise.all([
+    pngFromIcon(16),
+    pngFromIcon(32),
+    pngFromIcon(180),
+    pngFromIcon(512),
+    sharp(horizontalLogo).resize(520, 130, { fit: "inside" }).png().toBuffer(),
   ]);
 
   const ico = await toIco([icon16, icon32], { resize: true });
@@ -36,20 +38,19 @@ async function main() {
       width: 1200,
       height: 630,
       channels: 4,
-      background: { r: 247, g: 245, b: 239, alpha: 1 },
+      background: { r: 5, g: 26, b: 61, alpha: 1 },
     },
   })
     .composite([
-      { input: ogBase, top: 120, left: 80 },
+      { input: logoForOg, top: 250, left: 340 },
       {
         input: Buffer.from(
-          `<svg width="720" height="200" xmlns="http://www.w3.org/2000/svg">
-            <text x="0" y="72" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" fill="#15191b">BookedFox</text>
-            <text x="0" y="140" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="500" fill="#47514c">Online booking &amp; business software for home services</text>
+          `<svg width="720" height="80" xmlns="http://www.w3.org/2000/svg">
+            <text x="360" y="52" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="500" fill="#F6F8FB">Online booking &amp; business software for home services</text>
           </svg>`,
         ),
-        top: 200,
-        left: 360,
+        top: 420,
+        left: 240,
       },
     ])
     .png()

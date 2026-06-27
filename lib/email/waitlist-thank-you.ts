@@ -39,7 +39,7 @@ export function waitlistThankYouHtml({ firstName, businessName }: WaitlistThankY
   const business = escapeHtml(businessName);
 
   const bodyHtml = `
-    <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:800;color:${emailBrand.greenDark};letter-spacing:-0.02em;">
+    <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:800;color:${emailBrand.navy};letter-spacing:-0.02em;">
       You're on the list 🎉
     </h1>
     <p style="margin:0 0 20px;font-size:16px;line-height:1.65;color:${emailBrand.ink};">
@@ -48,8 +48,8 @@ export function waitlistThankYouHtml({ firstName, businessName }: WaitlistThankY
     <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:${emailBrand.ink};">
       We've saved your spot for <strong>${business}</strong>. You're among the first home-service business owners who'll get access before our public launch.
     </p>
-    <div style="background-color:${emailBrand.cream};border-radius:16px;padding:20px 22px;margin:0 0 8px;">
-      <p style="margin:0 0 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:${emailBrand.greenMuted};">
+    <div style="background-color:${emailBrand.softBg};border-radius:16px;padding:20px 22px;margin:0 0 8px;">
+      <p style="margin:0 0 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:${emailBrand.navyMuted};">
         What happens next
       </p>
       <table role="presentation" cellspacing="0" cellpadding="0" width="100%">
@@ -58,11 +58,11 @@ export function waitlistThankYouHtml({ firstName, businessName }: WaitlistThankY
           <td style="padding:6px 0 6px 8px;font-size:15px;line-height:1.5;color:${emailBrand.ink};">We'll email you when early access opens</td>
         </tr>
         <tr>
-          <td style="padding:6px 0;font-size:15px;line-height:1.5;color:${emailBrand.green};vertical-align:top;">✓</td>
+          <td style="padding:6px 0;font-size:15px;line-height:1.5;color:${emailBrand.orange};vertical-align:top;">✓</td>
           <td style="padding:6px 0 6px 8px;font-size:15px;line-height:1.5;color:${emailBrand.ink};">Product updates and launch offers, before anyone else</td>
         </tr>
         <tr>
-          <td style="padding:6px 0;font-size:15px;line-height:1.5;color:${emailBrand.green};vertical-align:top;">✓</td>
+          <td style="padding:6px 0;font-size:15px;line-height:1.5;color:${emailBrand.orange};vertical-align:top;">✓</td>
           <td style="padding:6px 0 6px 8px;font-size:15px;line-height:1.5;color:${emailBrand.ink};">No spam — just launch news and your invite</td>
         </tr>
       </table>

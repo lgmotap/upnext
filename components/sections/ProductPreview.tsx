@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ClipboardList, Users, CalendarDays, Wallet, BellRing, Globe } from "lucide-react";
 import { Section, SectionHeading } from "@/components/ui/Section";
-import { HandNote } from "@/components/ui/HandNote";
 import { CleanCalendarMock } from "@/components/mockups/BeforeAfterMocks";
 import { BookingPortalDemo } from "@/components/mockups/BookingPortalDemo";
 
@@ -118,14 +117,6 @@ export function ProductPreview() {
         subtitle="Start with the online booking experience your customers get, then see how every request flows into your jobs, calendar, and payments."
       />
       <div className="relative mx-auto max-w-4xl">
-        <HandNote
-          direction="down-right"
-          rotate="-7deg"
-          className="absolute -top-4 left-2 z-10 hidden w-32 sm:block"
-          arrowClassName="ml-12 w-7"
-        >
-          start here — try it!
-        </HandNote>
         <div role="tablist" aria-label="Product areas" className="mb-5 flex flex-wrap justify-center gap-2">
           {tabs.map((t) => {
             const Icon = tabIcons[t];

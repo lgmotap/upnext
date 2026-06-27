@@ -94,7 +94,7 @@ export default async function ReportsPage({
             exportHref ? (
               <Link
                 href={exportHref}
-                className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-3.5 py-1.5 text-xs font-bold text-brand-950 hover:bg-brand-300"
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-400 px-3.5 py-1.5 text-xs font-bold text-brand-950 hover:bg-brand-600"
               >
                 <Download className="size-3.5" />
                 Export CSV
