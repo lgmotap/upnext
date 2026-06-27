@@ -25,7 +25,12 @@ async function main() {
   const html = waitlistThankYouHtml({ firstName: "Alex", businessName: "Sparkle Co" });
   const text = waitlistThankYouText({ firstName: "Alex", businessName: "Sparkle Co" });
 
-  if (!subject.includes("BookedFox") || !html.includes("You're on the list") || !text.includes("Alex")) {
+  if (
+    !subject.includes("BookedFox") ||
+    !html.includes("You're on the list") ||
+    !html.includes("/brand/logo-horizontal.png") ||
+    !text.includes("Alex")
+  ) {
     throw new Error("Waitlist email template missing expected content");
   }
   console.log("✓ Branded email template renders");

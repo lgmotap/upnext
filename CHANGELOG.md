@@ -5,6 +5,7 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 ## [Unreleased]
 ### Changed
 - **BookedFox brand refresh**: navy (`#051A3D`) + orange (`#FD5F03`) design tokens, Inter typography, horizontal/icon logo lockups, regenerated favicon/OG/PWA icons, email template colors aligned to brand sheet.
+- **Branded HTML emails**: shared layout uses hosted horizontal logo; transactional notifications (booking, crew, payments, invites) now send HTML alongside plain text.
 ### Added
 - **SEO/GEO implementation (SEO-01–04)**: expanded `robots.ts`, `book`/`my` noindex layouts, phase-aware `seoMeta`, JSON-LD in `<head>` via `lib/seo/schema.ts`, SSR FAQ `<details>`, Bold-Colon feature list, `npm run smoke:seo`, `public/llms.txt`.
 - **SEO/GEO sprint track**: `tasks/seogeo/` (SEO-01–06), `docs/marketing/seo-geo-playbook.md`, agent rule `.cursor/rules/130-seo-geo-marketing.mdc` — index only `bookedfox.com` marketing routes; phase-aware waitlist vs launch metadata.

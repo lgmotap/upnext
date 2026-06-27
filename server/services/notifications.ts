@@ -3,6 +3,7 @@ import { site } from "@/lib/config";
 import { formatDisplayDateTime } from "@/lib/datetime/timezone";
 import { formatMoney } from "@/lib/money/format";
 import { appBaseUrl } from "@/lib/stripe/client";
+import { plainTextEmailHtml, withSandboxHtmlBanner } from "@/lib/email/bookedfox-layout";
 import { getResend } from "@/lib/resend/client";
 import {
   emailFromAddress,
@@ -54,11 +55,18 @@ async function sendAndLogEmail(params: {
       text: params.text,
     });
 
+    const html = withSandboxHtmlBanner(
+      plainTextEmailHtml(outbound.text, params.subject),
+      outbound.intendedTo,
+      outbound.to,
+    );
+
     const result = await resend.emails.send({
       from: emailFromAddress(),
       to: outbound.to,
       subject: outbound.subject,
       text: outbound.text,
+      html,
     });
 
     if (result.error) {

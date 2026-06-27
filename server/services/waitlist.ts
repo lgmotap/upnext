@@ -9,7 +9,7 @@ import {
   waitlistThankYouSubject,
   waitlistThankYouText,
 } from "@/lib/email/waitlist-thank-you";
-import { emailBrand } from "@/lib/email/bookedfox-layout";
+import { withSandboxHtmlBanner } from "@/lib/email/bookedfox-layout";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { Prisma } from "@/generated/prisma/client";
 import {
@@ -46,10 +46,11 @@ async function sendWaitlistThankYouEmail(params: {
     text,
   });
 
-  let html = waitlistThankYouHtml(params);
-  if (outbound.to.toLowerCase() !== params.email.toLowerCase()) {
-    html = `<p style="margin:0 0 16px;font-size:12px;color:${emailBrand.inkMuted};">Sandbox: intended for ${params.email}</p>${html}`;
-  }
+  const html = withSandboxHtmlBanner(
+    waitlistThankYouHtml(params),
+    params.email,
+    outbound.to,
+  );
 
   const result = await resend.emails.send({
     from: emailFromAddress(),
