@@ -101,7 +101,19 @@ async function main() {
   assert(!sitemap.includes("/app/"), "Sitemap must not include /app/");
   const locCount = (sitemap.match(/<loc>/g) ?? []).length;
   assert(locCount === 3, `Sitemap should have 3 URLs, found ${locCount}`);
-  console.log("✓ sitemap.xml (3 marketing URLs)");
+  assert(!sitemap.includes('content="noindex"'), "sitemap.xml must not contain noindex");
+  console.log("✓ sitemap.xml (3 marketing URLs, no noindex)");
+
+  const gtmId = (process.env.NEXT_PUBLIC_GTM_ID ?? "").trim();
+  if (gtmId) {
+    assert(home.includes("googletagmanager.com/gtm.js"), "Homepage must load GTM when NEXT_PUBLIC_GTM_ID is set");
+    assert(home.includes(gtmId), `Homepage GTM must use container ${gtmId}`);
+    assert(!signIn.includes("googletagmanager.com"), "/sign-in must not load GTM");
+    console.log(`✓ GTM on marketing pages only (${gtmId})`);
+  } else {
+    assert(!home.includes("googletagmanager.com"), "Homepage must not load GTM without NEXT_PUBLIC_GTM_ID");
+    console.log("✓ GTM skipped (NEXT_PUBLIC_GTM_ID unset)");
+  }
 
   const expected = buildJsonLd();
   assert(JSON.stringify(expected).includes("BusinessApplication"), "Schema helper sanity check");
@@ -126,6 +138,16 @@ async function main() {
     assert(src.includes("index: false"), `${rel} must export robots index: false`);
   }
   console.log("✓ non-marketing layouts declare noindex");
+
+  const { isMarketingPath, marketingPathnames } = await import("../lib/seo/marketing-paths");
+  const { marketingRoutes } = await import("../lib/config");
+  const routePaths = marketingRoutes.map((r) => r.path);
+  assert(
+    JSON.stringify([...marketingPathnames].sort()) === JSON.stringify([...routePaths].sort()),
+    "marketingPathnames must match marketingRoutes in lib/config.ts",
+  );
+  assert(isMarketingPath("/") && isMarketingPath("/privacy") && !isMarketingPath("/sign-in"), "isMarketingPath sanity");
+  console.log("✓ marketingRoutes ↔ marketing-paths sync");
 
   console.log("\n✅ SEO smoke passed\n");
 }

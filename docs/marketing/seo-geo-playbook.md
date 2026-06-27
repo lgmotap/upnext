@@ -67,6 +67,7 @@ Flip **one constant**: `phase = "launch"`. Then verify:
 | sitemap.xml | `app/sitemap.ts` |
 | OG image | `app/opengraph-image.png` |
 | Icons | `app/favicon.ico`, `app/icon.png`, `app/apple-icon.png` |
+| GTM (marketing only) | `@next/third-parties/google`, `lib/analytics/gtm.ts`, `lib/seo/marketing-paths.ts` |
 | App noindex | `app/app/layout.tsx`, `app/(auth)/layout.tsx`, `app/crew/layout.tsx`, `app/book/layout.tsx` |
 | FAQ copy | `lib/config.ts` → `faqs` |
 | LLM crawler file | `public/llms.txt` |
@@ -135,6 +136,23 @@ Disallow: /my/
 Host: https://bookedfox.com
 Sitemap: https://bookedfox.com/sitemap.xml
 ```
+
+---
+
+## Google Tag Manager (marketing only)
+
+Load GTM **only** on indexable marketing routes (`/`, `/privacy`, `/terms`). Never on `/app/*`, `/book/*`, auth, crew, or portals — those are product surfaces with tenant/customer data.
+
+| Step | Action |
+|------|--------|
+| Env | `NEXT_PUBLIC_GTM_ID=GTM-…` in Vercel + `.env.local` |
+| New marketing page | Add to `marketingRoutes` in `lib/config.ts` (auto-syncs sitemap + GTM via `lib/seo/marketing-paths.ts`) |
+| Page metadata | Export `robots: { index: true, follow: true }` + canonical |
+| Verify | `NEXT_PUBLIC_GTM_ID=GTM-… npm run smoke:seo` — GTM on `/`, absent on `/sign-in` |
+
+Implementation: `proxy.ts` sets `x-marketing-page: 1`; root `app/layout.tsx` injects head + body GTM snippets when that header is present.
+
+**Do not** add GTM to non-marketing layouts or load it globally without the marketing-path gate.
 
 ---
 

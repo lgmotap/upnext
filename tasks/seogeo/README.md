@@ -40,7 +40,7 @@ Run **SEO-01 → SEO-04** before public marketing push. **SEO-05** runs once whe
 | **SEO-03** | [sprint-seo-03-json-ld-entities.md](./sprint-seo-03-json-ld-entities.md) | Schema.org graph | ✅ Done — [ ] Rich Results on prod |
 | **SEO-04** | [sprint-seo-04-geo-content-structure.md](./sprint-seo-04-geo-content-structure.md) | SSR FAQ, semantic lists | ✅ Done |
 | **SEO-05** | [sprint-seo-05-launch-phase-transition.md](./sprint-seo-05-launch-phase-transition.md) | Full landing (no waitlist) | ⏳ At product launch |
-| **SEO-06** | [sprint-seo-06-crawl-hardening-monitoring.md](./sprint-seo-06-crawl-hardening-monitoring.md) | smoke:seo, llms.txt, GSC | 🟡 Automated checks done; GSC owner |
+| **SEO-06** | [sprint-seo-06-crawl-hardening-monitoring.md](./sprint-seo-06-crawl-hardening-monitoring.md) | smoke:seo, llms.txt, GSC, GTM | 🟡 Automated checks + GTM done; GSC owner |
 
 ---
 

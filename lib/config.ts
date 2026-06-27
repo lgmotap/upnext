@@ -36,7 +36,10 @@ export const seoKeywords = [
   "small business CRM for home services",
 ] as const;
 
-/** Indexable marketing routes for sitemap generation. */
+/**
+ * Indexable marketing routes — drives sitemap.xml, GTM (via marketing-paths.ts),
+ * and index: true policy. Add new marketing pages here when launching SEO content.
+ */
 export const marketingRoutes = [
   { path: "/", changeFrequency: "weekly" as const, priority: 1 },
   { path: "/privacy", changeFrequency: "yearly" as const, priority: 0.3 },

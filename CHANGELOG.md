@@ -4,6 +4,7 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Google Tag Manager (marketing only)**: `NEXT_PUBLIC_GTM_ID` loads GTM on indexable routes (`/`, `/privacy`, `/terms`) via `lib/seo/marketing-paths.ts` + `proxy.ts` header gate; never on `/app`, `/book`, auth, or crew. `smoke:seo` validates placement.
 - **Waitlist owner alerts**: set `WAITLIST_NOTIFY_EMAIL` to receive a Resend email on each new waitlist lead (duplicates do not re-notify).
 ### Changed
 - **BookedFox brand refresh**: navy (`#051A3D`) + orange (`#FD5F03`) design tokens, Inter typography, horizontal/icon logo lockups, regenerated favicon/OG/PWA icons, email template colors aligned to brand sheet.

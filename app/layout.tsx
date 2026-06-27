@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { getSeoMeta } from "@/lib/seo/get-seo-meta";
-import { seoKeywords, site } from "@/lib/config";
-import { JsonLd } from "@/components/seo/JsonLd";
 import { AppProviders } from "@/components/providers/AppProviders";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { getGtmConfig } from "@/lib/analytics/gtm";
+import { shouldLoadMarketingGtm } from "@/lib/analytics/should-load-marketing-gtm";
+import { seoKeywords, site } from "@/lib/config";
+import { getSeoMeta } from "@/lib/seo/get-seo-meta";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -79,13 +82,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const loadGtm = await shouldLoadMarketingGtm();
+  const gtm = getGtmConfig();
+
   return (
     <html lang="en" className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
+      {loadGtm && gtm.enabled ? <GoogleTagManager gtmId={gtm.id} /> : null}
       <head>
         <JsonLd />
       </head>

@@ -1,6 +1,6 @@
 ---
 description: SEO, GEO, and indexation rules for BookedFox marketing site (bookedfox.com). Enforces waitlist vs launch phase metadata and blocks indexing of /app, /crew, booking, and portals.
-globs: app/page.tsx,app/layout.tsx,app/robots.ts,app/sitemap.ts,components/seo/**,components/sections/**,lib/config.ts,lib/seo/**,public/llms.txt,scripts/smoke-seo.ts
+globs: app/page.tsx,app/layout.tsx,app/robots.ts,app/sitemap.ts,components/seo/**,lib/analytics/**,lib/seo/**,components/sections/**,lib/config.ts,public/llms.txt,scripts/smoke-seo.ts,proxy.ts
 alwaysApply: false
 ---
 
@@ -55,3 +55,10 @@ npm run build
 ```
 
 Update `CHANGELOG.md` if phase or indexation policy changes.
+
+## Google Tag Manager (marketing only)
+
+- Set `NEXT_PUBLIC_GTM_ID` (public container ID). Never commit real secrets — GTM ID is safe in env.
+- GTM loads **only** on `marketingRoutes` paths (`lib/seo/marketing-paths.ts`), gated by `x-marketing-page` from `proxy.ts`.
+- **Never** load GTM on `/app/*`, `/book/*`, `/crew/*`, auth, or portals.
+- Adding a new indexable marketing page: update `marketingRoutes` in `lib/config.ts` + page metadata (`index: true`, canonical) — sitemap and GTM follow automatically.
