@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TrendingUp, TrendingDown, type LucideIcon } from "lucide-react";
+import { DashboardSparkline } from "@/components/app/dashboard/DashboardSparkline";
 
 /** Surface card used across product screens. */
 export function Card({
@@ -54,6 +55,12 @@ export function PageHeader({
   );
 }
 
+const STAT_HIGHLIGHT_STYLES = {
+  rose: "border-l-4 border-l-rose-500 bg-rose-50/60 ring-1 ring-rose-200",
+  amber: "border-l-4 border-l-amber-500 bg-amber-50/60 ring-1 ring-amber-200",
+  emerald: "border-l-4 border-l-emerald-500 bg-emerald-50/60 ring-1 ring-emerald-200",
+} as const;
+
 export function StatCard({
   label,
   value,
@@ -63,6 +70,10 @@ export function StatCard({
   href,
   iconClassName = "bg-brand-100 text-brand-700",
   showTrend = true,
+  highlight,
+  highlightTone,
+  sparkline,
+  sparklineColor = "#52688F",
 }: {
   label: string;
   value: string;
@@ -72,9 +83,18 @@ export function StatCard({
   href?: string;
   iconClassName?: string;
   showTrend?: boolean;
+  highlight?: boolean;
+  highlightTone?: keyof typeof STAT_HIGHLIGHT_STYLES;
+  sparkline?: number[];
+  sparklineColor?: string;
 }) {
+  const highlightClass =
+    highlight && highlightTone ? STAT_HIGHLIGHT_STYLES[highlightTone] : highlight ? "ring-2 ring-brand-400" : "";
+
   const inner = (
-    <Card className={`p-5 ${href ? "h-full transition hover:ring-2 hover:ring-brand-200" : ""}`}>
+    <Card
+      className={`p-5 ${href ? "h-full transition hover:ring-2 hover:ring-brand-200" : ""} ${highlightClass}`}
+    >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-ink-500">{label}</p>
         {Icon && (
@@ -96,7 +116,18 @@ export function StatCard({
           {delta}
         </p>
       )}
-      {delta && !showTrend && <p className="mt-1 text-xs font-medium text-ink-500">{delta}</p>}
+      {delta && !showTrend && (
+        <p
+          className={`mt-1 text-xs font-medium ${highlight ? "font-semibold text-ink-700" : "text-ink-500"}`}
+        >
+          {delta}
+        </p>
+      )}
+      {sparkline && sparkline.length > 0 ? (
+        <div className="mt-3 h-[52px]">
+          <DashboardSparkline data={sparkline} color={sparklineColor} />
+        </div>
+      ) : null}
     </Card>
   );
 

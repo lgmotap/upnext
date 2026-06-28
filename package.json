@@ -40,6 +40,7 @@
     "smoke:global-search": "tsx scripts/smoke-global-search.ts",
     "smoke:reports": "tsx scripts/smoke-reports.ts",
     "smoke:dashboard": "tsx scripts/smoke-dashboard.ts",
+    "smoke:activity": "tsx scripts/smoke-activity.ts",
     "smoke:waitlist": "tsx scripts/smoke-waitlist.ts",
     "smoke:seo": "tsx scripts/smoke-seo.ts",
     "smoke:recurring": "tsx scripts/smoke-recurring.ts",
@@ -104,6 +105,7 @@
     "posthog-node": "^5.38.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "recharts": "^3.9.0",
     "resend": "^6.14.0",
     "stripe": "^18.5.0",
     "zod": "^4.4.3"

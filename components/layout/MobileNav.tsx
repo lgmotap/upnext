@@ -44,7 +44,7 @@ export function MobileNav({ workspace }: { workspace: WorkspaceShellData | null 
             <aside className="absolute left-0 top-0 flex h-full w-72 max-w-[82vw] flex-col bg-brand-950 px-3 py-4 text-white shadow-float">
               <div className="mb-5 flex items-center justify-between px-2">
                 <Link href="/app/dashboard" onClick={() => setOpen(false)} className="inline-flex">
-                  <BookedFoxLogo theme="dark" asLink={false} />
+                  <BookedFoxLogo theme="footer" compact asLink={false} />
                 </Link>
                 <button
                   onClick={() => setOpen(false)}
@@ -85,8 +85,8 @@ export function MobileNav({ workspace }: { workspace: WorkspaceShellData | null 
                       onClick={() => setOpen(false)}
                       className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                         active
-                          ? "border-l-2 border-brand-400 bg-white/10 pl-[10px] text-white"
-                          : "border-l-2 border-transparent text-white/60 hover:bg-white/5 hover:text-white"
+                          ? "bg-white/10 text-white"
+                          : "text-white/60 hover:bg-white/5 hover:text-white"
                       }`}
                     >
                       <Icon className="size-4" />

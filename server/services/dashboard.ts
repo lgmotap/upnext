@@ -1,27 +1,24 @@
 import { prisma } from "@/lib/db/prisma";
-import type { NotificationTemplate } from "@/generated/prisma/client";
 import { formatMoney } from "@/lib/money/format";
-import { getWeekRange, getDayBoundsUtc, formatAddressLine } from "@/lib/datetime/calendar";
-import { formatRelativeTime } from "@/lib/datetime/relative";
-import { formatGreetingSubtitle, formatGreetingTitle, getGreetingPeriod } from "@/lib/datetime/greeting";
-import { templateLabel } from "@/lib/notifications/labels";
+import { getDayBoundsUtc, formatAddressLine } from "@/lib/datetime/calendar";
 import { frequencyLabel } from "@/lib/booking/frequency";
-import { getThirtyDaySnapshot, type ThirtyDaySnapshot } from "@/lib/reporting/period-stats";
 import {
   addDaysYmd,
-  formatDisplayDateTime,
   formatTimeHmInTimezone,
   formatYmdInTimezone,
-  localDateTimeToUtc,
 } from "@/lib/datetime/timezone";
+import { getOrgActivityFeed, type ActivityFeedItem } from "@/server/services/activity-feed";
+
+export type { ActivityFeedItem };
 
 export type DashboardQueueStat = {
-  id: "booked_today" | "scheduled_today" | "awaiting_payment" | "unassigned_today";
+  id: "jobs_today" | "new_bookings" | "unassigned_today" | "awaiting_payment";
   label: string;
   value: string;
-  delta?: string;
+  subtext: string;
   href: string;
-  iconClassName: string;
+  sparkline7d: number[];
+  sparklineColor: string;
 };
 
 export type DashboardJobRow = {
@@ -45,34 +42,18 @@ export type DashboardBookingRow = {
   requestedLabel: string;
 };
 
-export type DashboardActivityRow = {
-  who: string;
-  what: string;
-  when: string;
-  at: Date;
-};
+export type DashboardActivityRow = ActivityFeedItem;
 
 export type DashboardData = {
+  pageTitle: string;
+  pageSubtitle: string;
   greetingName: string;
-  greetingTitle: string;
-  greetingSubtitle: string;
   dateLabel: string;
-  showBusinessSnapshot: boolean;
-  snapshot: ThirtyDaySnapshot | null;
+  showPerformance: boolean;
   queueStats: DashboardQueueStat[];
-  todayJobs: DashboardJobRow[];
-  pendingBookings: DashboardBookingRow[];
-  pendingCount: number;
-  weekRevenueBars: number[];
-  weekRevenueTotalLabel: string;
-  activity: DashboardActivityRow[];
+  upcomingJobs: DashboardJobRow[];
+  activity: ActivityFeedItem[];
 };
-
-const CREW_TEMPLATES: NotificationTemplate[] = [
-  "job_on_the_way",
-  "job_running_late",
-  "job_completed",
-];
 
 function initials(name: string): string {
   return name
@@ -84,32 +65,61 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
+type DayBucket = { start: Date; end: Date };
+
+function last7DayBuckets(timeZone: string, now: Date): DayBucket[] {
+  const todayYmd = formatYmdInTimezone(now, timeZone);
+  const buckets: DayBucket[] = [];
+  for (let offset = -6; offset <= 0; offset++) {
+    const ymd = addDaysYmd(todayYmd, offset);
+    buckets.push(getDayBoundsUtc(ymd, timeZone));
+  }
+  return buckets;
+}
+
+function countInBuckets<T>(items: T[], getDate: (item: T) => Date, buckets: DayBucket[]): number[] {
+  return buckets.map(({ start, end }) =>
+    items.filter((item) => {
+      const d = getDate(item);
+      return d >= start && d < end;
+    }).length,
+  );
+}
+
+function pendingPaymentsOnDay(
+  payments: { createdAt: Date; paidAt: Date | null }[],
+  dayEnd: Date,
+): number {
+  return payments.filter((p) => p.createdAt < dayEnd && (p.paidAt === null || p.paidAt >= dayEnd)).length;
+}
+
 export async function getDashboardData(
   organizationId: string,
   timeZone: string,
   currency: string,
   userName: string | null,
-  displayName: string,
+  _displayName: string,
   gettingStartedPercent: number,
 ): Promise<DashboardData> {
   const now = new Date();
   const todayYmd = formatYmdInTimezone(now, timeZone);
   const { start: todayStart, end: todayEnd } = getDayBoundsUtc(todayYmd, timeZone);
-  const { rangeStart, rangeEnd, days: weekDays } = getWeekRange(timeZone, now);
-  const crewSince = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const sparkFromYmd = addDaysYmd(todayYmd, -6);
+  const { start: sparkStart } = getDayBoundsUtc(sparkFromYmd, timeZone);
+  const dayBuckets = last7DayBuckets(timeZone, now);
 
   const [
     todayJobsRaw,
-    pendingBookingsRaw,
-    paidThisWeek,
+    upcomingJobsRaw,
     paymentAgg,
-    recentBookings,
-    recentJobs,
-    recentPayments,
-    bookedTodayCount,
-    unassignedTodayCount,
-    crewLogs,
-    snapshot,
+    completedTodayCount,
+    newBookingsTodayCount,
+    needsAssignmentCount,
+    sparkJobsRaw,
+    sparkBookingsRaw,
+    sparkPaymentsRaw,
+    sparkUnassignedJobsRaw,
+    activityFeed,
   ] = await Promise.all([
     prisma.job.findMany({
       where: {
@@ -127,19 +137,22 @@ export async function getDashboardData(
         assignments: { include: { membership: { include: { user: true } } }, take: 1 },
       },
     }),
-    prisma.bookingRequest.findMany({
-      where: { organizationId, status: "pending" },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: { customer: true, service: true },
-    }),
-    prisma.paymentRecord.findMany({
+    prisma.job.findMany({
       where: {
         organizationId,
-        status: "paid",
-        paidAt: { gte: rangeStart, lt: rangeEnd },
+        scheduledStartAt: { gte: todayStart },
+        status: { notIn: ["cancelled"] },
       },
-      select: { amountCents: true, paidAt: true },
+      orderBy: { scheduledStartAt: "asc" },
+      take: 10,
+      include: {
+        customer: true,
+        service: true,
+        customerAddress: true,
+        bookingRequest: { select: { frequency: true } },
+        jobSeries: { select: { frequency: true } },
+        assignments: { include: { membership: { include: { user: true } } }, take: 1 },
+      },
     }),
     prisma.paymentRecord.groupBy({
       by: ["status"],
@@ -147,105 +160,89 @@ export async function getDashboardData(
       _sum: { amountCents: true },
       _count: true,
     }),
-    prisma.bookingRequest.findMany({
-      where: { organizationId },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-      include: { customer: true, service: true },
-    }),
-    prisma.job.findMany({
-      where: { organizationId },
-      orderBy: { updatedAt: "desc" },
-      take: 8,
-      include: { customer: true, service: true },
-    }),
-    prisma.paymentRecord.findMany({
-      where: { organizationId, status: "paid", paidAt: { not: null } },
-      orderBy: { paidAt: "desc" },
-      take: 8,
-      include: { customer: true, job: { select: { title: true } } },
+    prisma.job.count({
+      where: {
+        organizationId,
+        scheduledStartAt: { gte: todayStart, lt: todayEnd },
+        status: "completed",
+      },
     }),
     prisma.bookingRequest.count({
       where: {
         organizationId,
-        status: "accepted",
-        updatedAt: { gte: todayStart, lt: todayEnd },
+        createdAt: { gte: todayStart, lt: todayEnd },
       },
     }),
     prisma.job.count({
       where: {
         organizationId,
-        scheduledStartAt: { gte: todayStart, lt: todayEnd },
-        status: { notIn: ["cancelled"] },
+        scheduledStartAt: { gte: todayStart },
+        status: { notIn: ["cancelled", "completed"] },
         assignments: { none: {} },
       },
     }),
-    prisma.notificationLog.findMany({
+    prisma.job.findMany({
       where: {
         organizationId,
-        template: { in: CREW_TEMPLATES },
-        sentAt: { gte: crewSince },
+        scheduledStartAt: { gte: sparkStart, lt: todayEnd },
+        status: { notIn: ["cancelled"] },
       },
-      orderBy: { sentAt: "desc" },
-      take: 15,
+      select: {
+        scheduledStartAt: true,
+        assignments: { select: { id: true }, take: 1 },
+      },
     }),
-    gettingStartedPercent >= 100 ? getThirtyDaySnapshot(organizationId, timeZone, now) : null,
+    prisma.bookingRequest.findMany({
+      where: {
+        organizationId,
+        createdAt: { gte: sparkStart, lt: todayEnd },
+      },
+      select: { createdAt: true },
+    }),
+    prisma.paymentRecord.findMany({
+      where: {
+        organizationId,
+        createdAt: { lt: todayEnd },
+        OR: [
+          { status: { in: ["pending", "overdue"] } },
+          { paidAt: { gte: sparkStart, not: null } },
+        ],
+      },
+      select: { createdAt: true, paidAt: true },
+    }),
+    prisma.job.findMany({
+      where: {
+        organizationId,
+        scheduledStartAt: { gte: sparkStart, lt: todayEnd },
+        status: { notIn: ["cancelled", "completed"] },
+      },
+      select: {
+        scheduledStartAt: true,
+        assignments: { select: { id: true }, take: 1 },
+      },
+    }),
+    getOrgActivityFeed(organizationId, timeZone, currency, { limit: 5 }),
   ]);
 
-  const pendingCount = await prisma.bookingRequest.count({
-    where: { organizationId, status: "pending" },
-  });
-
-  const weekRevenueCents = paidThisWeek.reduce((sum, p) => sum + p.amountCents, 0);
-
-  let outstandingCents = 0;
   let outstandingCount = 0;
   for (const row of paymentAgg) {
-    outstandingCents += row._sum.amountCents ?? 0;
     outstandingCount += row._count;
   }
 
-  const queueStats: DashboardQueueStat[] = [
-    {
-      id: "booked_today",
-      label: "Booked today",
-      value: String(bookedTodayCount),
-      delta: bookedTodayCount === 1 ? "1 accepted today" : `${bookedTodayCount} accepted today`,
-      href: "/app/bookings?status=accepted&range=today",
-      iconClassName: "bg-emerald-100 text-emerald-700",
-    },
-    {
-      id: "scheduled_today",
-      label: "Scheduled today",
-      value: String(todayJobsRaw.length),
-      delta: todayJobsRaw.length === 1 ? "1 job" : `${todayJobsRaw.length} jobs`,
-      href: "/app/jobs?date=today",
-      iconClassName: "bg-sky-100 text-sky-700",
-    },
-    {
-      id: "awaiting_payment",
-      label: "Awaiting payment",
-      value: String(outstandingCount),
-      delta: formatMoney(outstandingCents, currency) + " pending",
-      href: "/app/payments?status=pending",
-      iconClassName: "bg-amber-100 text-amber-800",
-    },
-    {
-      id: "unassigned_today",
-      label: "Needs assignment",
-      value: String(unassignedTodayCount),
-      delta: unassignedTodayCount > 0 ? "Unassigned today" : "All assigned",
-      href: "/app/jobs?date=today&unassigned=1",
-      iconClassName: "bg-rose-100 text-rose-700",
-    },
-  ];
+  const jobsSparkline = countInBuckets(sparkJobsRaw, (j) => j.scheduledStartAt, dayBuckets);
+  const bookingsSparkline = countInBuckets(sparkBookingsRaw, (b) => b.createdAt, dayBuckets);
+  const unassignedSparkline = dayBuckets.map(({ start, end }) =>
+    sparkUnassignedJobsRaw.filter(
+      (j) => j.scheduledStartAt >= start && j.scheduledStartAt < end && j.assignments.length === 0,
+    ).length,
+  );
+  const paymentsSparkline = dayBuckets.map(({ end }) => pendingPaymentsOnDay(sparkPaymentsRaw, end));
 
-  const todayJobs: DashboardJobRow[] = todayJobsRaw.map((job) => {
+  const mapJobRow = (job: (typeof todayJobsRaw)[number]): DashboardJobRow => {
     const customerName = `${job.customer.firstName} ${job.customer.lastName}`.trim();
     const assignee = job.assignments[0]?.membership.user;
     const assigneeName = assignee?.name ?? assignee?.email ?? null;
-    const freq =
-      job.jobSeries?.frequency ?? job.bookingRequest?.frequency ?? null;
+    const freq = job.jobSeries?.frequency ?? job.bookingRequest?.frequency ?? null;
     return {
       id: job.id,
       customerName,
@@ -259,125 +256,63 @@ export async function getDashboardData(
       priceLabel: formatMoney(job.priceCents, job.currency ?? currency),
       frequencyLabel: freq ? frequencyLabel(freq) : null,
     };
-  });
+  };
 
-  const pendingBookings: DashboardBookingRow[] = pendingBookingsRaw.map((b) => ({
-    id: b.id,
-    customerName: `${b.customer.firstName} ${b.customer.lastName}`.trim(),
-    serviceName: b.service.name,
-    requestedLabel: formatDisplayDateTime(b.requestedStartAt, timeZone),
-  }));
+  const queueStats: DashboardQueueStat[] = [
+    {
+      id: "jobs_today",
+      label: "Booked today",
+      value: String(todayJobsRaw.length),
+      subtext:
+        completedTodayCount === 1 ? "1 completed" : `${completedTodayCount} completed`,
+      href: "/app/jobs?date=today",
+      sparkline7d: jobsSparkline,
+      sparklineColor: "#52688F",
+    },
+    {
+      id: "new_bookings",
+      label: "Scheduled for today",
+      value: String(newBookingsTodayCount),
+      subtext: "Today",
+      href: "/app/bookings",
+      sparkline7d: bookingsSparkline,
+      sparklineColor: "#FF5A1F",
+    },
+    {
+      id: "unassigned_today",
+      label: "Needs assignment",
+      value: String(needsAssignmentCount),
+      subtext:
+        needsAssignmentCount === 1 ? "1 unassigned" : `${needsAssignmentCount} unassigned`,
+      href: "/app/jobs?unassigned=1",
+      sparkline7d: unassignedSparkline,
+      sparklineColor: "#52688F",
+    },
+    {
+      id: "awaiting_payment",
+      label: "Payments pending",
+      value: String(outstandingCount),
+      subtext: "Awaiting payment",
+      href: "/app/payments?status=pending",
+      sparkline7d: paymentsSparkline,
+      sparklineColor: "#FF5A1F",
+    },
+  ];
 
-  const revenueByDay = weekDays.map((day) => {
-    const dayEnd = localDateTimeToUtc(addDaysYmd(day.date, 1), "00:00", timeZone);
-    const cents = paidThisWeek
-      .filter((p) => p.paidAt && p.paidAt >= day.startAt && p.paidAt < dayEnd)
-      .reduce((sum, p) => sum + p.amountCents, 0);
-    return cents;
-  });
-  const maxRevenue = Math.max(...revenueByDay, 1);
-  const weekRevenueBars = revenueByDay.map((cents) => Math.round((cents / maxRevenue) * 100));
+  const upcomingJobs = upcomingJobsRaw.map(mapJobRow);
 
-  const activityEvents: DashboardActivityRow[] = [];
-
-  for (const b of recentBookings) {
-    const name = `${b.customer.firstName} ${b.customer.lastName}`.trim();
-    activityEvents.push({
-      who: "System",
-      what:
-        b.status === "pending"
-          ? `received a booking request from ${name}`
-          : `${b.status} booking request from ${name}`,
-      when: formatRelativeTime(b.createdAt, now),
-      at: b.createdAt,
-    });
-  }
-
-  for (const job of recentJobs) {
-    const name = `${job.customer.firstName} ${job.customer.lastName}`.trim();
-    const when = job.completedAt ?? job.updatedAt;
-    const verb =
-      job.status === "completed"
-        ? `completed ${name} — ${job.service.name}`
-        : job.status === "in_progress"
-          ? `started ${name} — ${job.service.name}`
-          : `updated ${name} — ${job.service.name}`;
-    activityEvents.push({
-      who: "Team",
-      what: verb,
-      when: formatRelativeTime(when, now),
-      at: when,
-    });
-  }
-
-  for (const payment of recentPayments) {
-    if (!payment.paidAt) continue;
-    const name = `${payment.customer.firstName} ${payment.customer.lastName}`.trim();
-    activityEvents.push({
-      who: name,
-      what: `paid ${formatMoney(payment.amountCents, currency)} for ${payment.job?.title ?? "a job"}`,
-      when: formatRelativeTime(payment.paidAt, now),
-      at: payment.paidAt,
-    });
-  }
-
-  const crewJobIds = crewLogs.map((l) => l.relatedId).filter(Boolean) as string[];
-  const crewJobs =
-    crewJobIds.length > 0
-      ? await prisma.job.findMany({
-          where: { organizationId, id: { in: crewJobIds } },
-          include: { customer: true },
-        })
-      : [];
-  const jobCustomerById = new Map(crewJobs.map((j) => [j.id, j]));
-
-  const crewDedupeKeys = new Set<string>();
-
-  for (const log of crewLogs) {
-    if (!log.relatedId) continue;
-    const bucket = Math.floor(log.sentAt.getTime() / (5 * 60_000));
-    const dedupeKey = `${log.relatedId}:${log.template}:${bucket}`;
-    if (crewDedupeKeys.has(dedupeKey)) continue;
-    crewDedupeKeys.add(dedupeKey);
-
-    const job = jobCustomerById.get(log.relatedId);
-    const customerName = job
-      ? `${job.customer.firstName} ${job.customer.lastName}`.trim()
-      : "customer";
-    activityEvents.push({
-      who: "Team",
-      what: `${templateLabel(log.template)} — ${customerName}`,
-      when: formatRelativeTime(log.sentAt, now),
-      at: log.sentAt,
-    });
-  }
-
-  activityEvents.sort((a, b) => b.at.getTime() - a.at.getTime());
-  const activity = activityEvents.slice(0, 10);
-
-  const dateLabel = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).format(now);
+  const activity = activityFeed.items;
 
   const firstName = (userName ?? "there").split(" ")[0]!;
-  const greetingPeriod = getGreetingPeriod(now, timeZone);
 
   return {
+    pageTitle: "Dashboard",
+    pageSubtitle: "Overview of your business operations.",
     greetingName: firstName,
-    greetingTitle: formatGreetingTitle(greetingPeriod, displayName),
-    greetingSubtitle: formatGreetingSubtitle(firstName, dateLabel),
-    dateLabel,
-    showBusinessSnapshot: gettingStartedPercent >= 100,
-    snapshot,
+    dateLabel: "",
+    showPerformance: gettingStartedPercent >= 100,
     queueStats,
-    todayJobs,
-    pendingBookings,
-    pendingCount,
-    weekRevenueBars,
-    weekRevenueTotalLabel: formatMoney(weekRevenueCents, currency),
+    upcomingJobs,
     activity,
   };
 }

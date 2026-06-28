@@ -11,8 +11,8 @@ export function AppSidebar({ workspace }: { workspace: WorkspaceShellData }) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col bg-brand-950 px-3 py-4 text-white lg:flex">
-      <BookedFoxLogo href="/app/dashboard" theme="dark" className="mb-6 px-2" />
+    <aside className="hidden w-[260px] shrink-0 flex-col bg-gradient-to-b from-[#071F46] to-[#031B3A] px-3 py-4 text-white lg:flex">
+      <BookedFoxLogo href="/app/dashboard" theme="footer" compact className="mb-6 px-2" />
 
       <div className="mb-4 flex items-center gap-2.5 rounded-xl bg-white/5 px-2.5 py-2 ring-1 ring-white/10">
         <span className="flex size-8 items-center justify-center rounded-lg bg-brand-400 text-sm font-bold text-white">
@@ -39,14 +39,14 @@ export function AppSidebar({ workspace }: { workspace: WorkspaceShellData }) {
               href={href}
               className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
                 active
-                  ? "border-l-2 border-brand-400 bg-white/10 pl-[10px] text-white"
-                  : "border-l-2 border-transparent text-white/60 hover:bg-white/5 hover:text-white"
+                  ? "bg-white/10 text-white"
+                  : "text-white/60 hover:bg-white/5 hover:text-white"
               }`}
             >
               <Icon className="size-4" />
               {label}
               {badge && (
-                <span className="ml-auto rounded-full bg-brand-400 px-1.5 text-[10px] font-bold text-white">
+                <span className="ml-auto rounded-full bg-[#FF5A1F] px-1.5 text-[10px] font-bold text-white">
                   {badge}
                 </span>
               )}

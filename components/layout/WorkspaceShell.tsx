@@ -17,6 +17,7 @@ export function WorkspaceShell({
 }) {
   const pathname = usePathname();
   const isOnboarding = pathname === "/app/onboarding";
+  const isDashboard = pathname === "/app/dashboard";
 
   if (isOnboarding) {
     return (
@@ -38,8 +39,11 @@ export function WorkspaceShell({
       {workspace && <AppSidebar workspace={workspace} />}
       <div className="flex min-w-0 flex-1 flex-col">
         <AppTopbar workspace={workspace} userName={userName} />
-        <main id="main-content" className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
+        <main
+          id="main-content"
+          className={`flex-1 ${isDashboard ? "bg-[#F4F6FA] px-8 py-7" : "px-4 py-6 sm:px-6 lg:px-8"}`}
+        >
+          <div className={isDashboard ? "w-full" : "mx-auto w-full max-w-7xl"}>{children}</div>
         </main>
       </div>
     </div>

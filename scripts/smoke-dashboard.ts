@@ -11,6 +11,9 @@ const { prisma } = await import("../lib/db/prisma");
 const { getDashboardData } = await import("../server/services/dashboard");
 const { getGettingStartedTasks } = await import("../server/services/getting-started");
 const { getBookingPageUrl } = await import("../lib/url/app");
+const { getDashboardPerformance, defaultDashboardPerformanceRange } = await import(
+  "../lib/reporting/dashboard-performance"
+);
 
 const TEST_SLUG = "smoke-test-co";
 
@@ -49,64 +52,82 @@ async function main() {
   }
 
   const ids = data.queueStats.map((s) => s.id).sort();
-  const expectedIds = [
-    "awaiting_payment",
-    "booked_today",
-    "scheduled_today",
-    "unassigned_today",
-  ];
+  const expectedIds = ["awaiting_payment", "jobs_today", "new_bookings", "unassigned_today"];
   if (ids.join(",") !== expectedIds.join(",")) {
     console.error(`✗ Unexpected queue stat ids: ${ids.join(", ")}`);
     process.exit(1);
   }
 
   for (const stat of data.queueStats) {
-    if (!stat.href || !stat.iconClassName) {
-      console.error(`✗ Queue stat ${stat.id} missing href or iconClassName`);
+    if (!stat.href || !stat.subtext) {
+      console.error(`✗ Queue stat ${stat.id} missing href or subtext`);
+      process.exit(1);
+    }
+    if (!Array.isArray(stat.sparkline7d) || stat.sparkline7d.length !== 7) {
+      console.error(`✗ Queue stat ${stat.id} missing 7-day sparkline`);
+      process.exit(1);
+    }
+    if (!stat.sparklineColor) {
+      console.error(`✗ Queue stat ${stat.id} missing sparkline color`);
       process.exit(1);
     }
   }
+  console.log("✓ KPI 7-day sparklines present on all queue stats");
 
-  const bookedToday = data.queueStats.find((s) => s.id === "booked_today");
-  if (bookedToday?.href !== "/app/bookings?status=accepted&range=today") {
-    console.error(`✗ booked_today href mismatch: ${bookedToday?.href}`);
+  const newBookings = data.queueStats.find((s) => s.id === "new_bookings");
+  if (newBookings?.subtext !== "Today") {
+    console.error(`✗ new_bookings subtext should be "Today", got: ${newBookings?.subtext}`);
     process.exit(1);
   }
   const awaitingPayment = data.queueStats.find((s) => s.id === "awaiting_payment");
+  if (awaitingPayment?.subtext !== "Awaiting payment") {
+    console.error(`✗ awaiting_payment subtext mismatch: ${awaitingPayment?.subtext}`);
+    process.exit(1);
+  }
+  if (awaitingPayment?.value.includes("$")) {
+    console.error("✗ awaiting_payment KPI must not include dollar amounts");
+    process.exit(1);
+  }
+
+  if (newBookings?.href !== "/app/bookings") {
+    console.error(`✗ new_bookings href mismatch: ${newBookings?.href}`);
+    process.exit(1);
+  }
   if (awaitingPayment?.href !== "/app/payments?status=pending") {
     console.error(`✗ awaiting_payment href mismatch: ${awaitingPayment?.href}`);
     process.exit(1);
   }
-  console.log("✓ KPI deep links: booked today + awaiting payment");
+  console.log("✓ KPI deep links: new bookings + payments pending");
 
-  if (!data.greetingTitle || !data.greetingSubtitle) {
-    console.error("✗ Missing greeting title or subtitle");
-    process.exit(1);
-  }
-  if (!data.greetingTitle.includes(displayName)) {
-    console.error(`✗ Greeting title should reference business name: ${data.greetingTitle}`);
+  if (data.pageTitle !== "Dashboard" || data.pageSubtitle !== "Overview of your business operations.") {
+    console.error("✗ Missing dashboard page title or subtitle");
     process.exit(1);
   }
 
   if (gettingStarted.percent >= 100) {
-    if (!data.showBusinessSnapshot || !data.snapshot) {
-      console.error("✗ Expected business snapshot when getting started is complete");
+    if (!data.showPerformance) {
+      console.error("✗ Expected performance section when getting started is complete");
       process.exit(1);
     }
+    const performance = await getDashboardPerformance(
+      org.id,
+      org.timezone,
+      defaultDashboardPerformanceRange(org.timezone),
+    );
     console.log(
-      `✓ Snapshot: ${data.snapshot.bookingsCreatedCount} bookings, ${data.snapshot.jobsScheduledCount} jobs`,
+      `✓ Performance: ${performance.bookings.newCustomers} new customers, ${performance.revenue.totalCents} cents revenue`,
     );
   } else {
-    console.log(`✓ Getting started ${gettingStarted.percent}% — snapshot skipped`);
+    console.log(`✓ Getting started ${gettingStarted.percent}% — performance skipped`);
   }
 
   console.log(`✓ Queue: ${data.queueStats.map((s) => s.label).join(", ")}`);
-  console.log(`✓ Greeting: ${data.greetingTitle}`);
+  console.log(`✓ Subtitle: ${data.pageSubtitle}`);
   console.log(
-    `✓ Today jobs: ${data.todayJobs.length}, pending: ${data.pendingCount}, activity: ${data.activity.length}`,
+    `✓ Upcoming jobs: ${data.upcomingJobs.length}, activity: ${data.activity.length}`,
   );
 
-  const enriched = data.todayJobs[0];
+  const enriched = data.upcomingJobs[0];
   if (enriched) {
     if (!("priceLabel" in enriched) || !("addressLine" in enriched)) {
       console.error("✗ Today job rows missing enriched fields");

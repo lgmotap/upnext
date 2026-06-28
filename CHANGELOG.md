@@ -4,6 +4,17 @@ All notable changes to UpNext are documented here. Format loosely follows Keep a
 
 ## [Unreleased]
 ### Added
+- **Dashboard performance zone**: shared date-range selector (Last 7/30 days, This month), performance overview metrics (new customers, jobs scheduled/completed, average job value, repeat customers, canceled/rescheduled), and gross revenue area chart; `lib/reporting/dashboard-performance.ts`.
+- **Recharts on dashboard**: KPI sparklines (`SparklineChart`) and gross revenue area chart (`GrossRevenueChart`); custom Tailwind card shells unchanged.
+### Changed
+- **Dashboard Recharts polish**: shared `dashboardCardClass` shell, `DashboardSparkline` + `MiniMetricSparkline` (LineChart), `GrossRevenueChart` (AreaChart), icon vs sparkline `MiniMetricCard` types, section wrappers (`TopKpiGrid`, `PerformanceSection`, `OperationsSection`).
+- **Dashboard UX fixes**: KPI labels (Booked today, Scheduled for today), unified performance metrics grid, independent gross revenue date selector (`revenueFrom`/`revenueTo`, default Last 30 days), responsive upcoming schedule layout.
+- **Dashboard visual polish**: compact KPI cards with icon chips and subtle sparklines, unified `#E6EAF0` card system, refined performance mini-cards, premium gross revenue chart, balanced bottom row (max 5 schedule/activity rows).
+- **Dashboard load fix**: stop running industry catalog seeding on every dashboard visit (was blocking render ~8s); add loading skeleton + performance error fallback; split dashboard performance types/helpers from Prisma module so Turbopack dev can compile `/app/dashboard`.
+- **Dashboard ops polish (PR 1)**: 7-day KPI sparklines, urgent-state card styling, schedule footer link, tighter new-bookings card.
+- **Dashboard analytics polish (PR 2)**: performance layout split (bookings + revenue, metrics row), revenue chart grid/axes, enriched activity feed, `/app/activity` full history page.
+- **App top bar logo**: show branded horizontal logo on mobile/tablet when sidebar is hidden (replaces text “BookedFox ·” lockup).
+- **Dashboard layout**: ops-first structure — Today KPIs (jobs today, new bookings, needs assignment, payments pending), today's schedule table, performance section when onboarding complete; title "Dashboard" with personal greeting in subtitle; removed duplicate week revenue card.
 - **Legal pages (production)**: Full `/privacy` and `/terms` for Secret Sauce OÜ (BookedFox operator) with subprocessors, controller/processor roles, GDPR/CCPA rights, and `privacy@bookedfox.com` contact; shared `components/legal/LegalShell.tsx`.
 - **Google Tag Manager (marketing only)**: `NEXT_PUBLIC_GTM_ID` loads GTM on indexable routes (`/`, `/privacy`, `/terms`) via `lib/seo/marketing-paths.ts` + `proxy.ts` header gate; never on `/app`, `/book`, auth, or crew. `smoke:seo` validates placement.
 - **Waitlist owner alerts**: set `WAITLIST_NOTIFY_EMAIL` to receive a Resend email on each new waitlist lead (duplicates do not re-notify).

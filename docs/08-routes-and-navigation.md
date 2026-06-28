@@ -13,6 +13,7 @@
 ```
 /app/onboarding          (post-signup business setup wizard)
 /app/dashboard
+/app/activity
 /app/bookings
 /app/bookings/[bookingRequestId]
 /app/calendar

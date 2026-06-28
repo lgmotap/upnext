@@ -91,12 +91,16 @@ export default async function RootLayout({
   const gtm = getGtmConfig();
 
   return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       {loadGtm && gtm.enabled ? <GoogleTagManager gtmId={gtm.id} /> : null}
       <head>
         <JsonLd />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

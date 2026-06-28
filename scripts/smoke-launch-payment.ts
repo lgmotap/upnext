@@ -47,22 +47,28 @@ async function main() {
   if (refreshed?.status !== "paid") throw new Error("Payment status not paid");
   console.log("✓ Job payment status is paid");
 
-  const dashboard = await getDashboardData(
+  const { getDashboardPerformance, defaultDashboardPerformanceRange } = await import(
+    "../lib/reporting/dashboard-performance"
+  );
+  await getDashboardData(
     org.id,
     org.timezone,
     org.currency,
     "Smoke Owner",
     displayName,
-    0,
+    100,
   );
-  const weekRevenue = dashboard.weekRevenueTotalLabel;
+  const performance = await getDashboardPerformance(
+    org.id,
+    org.timezone,
+    defaultDashboardPerformanceRange(org.timezone),
+  );
+  const revenueLabel = formatMoney(performance.revenue.totalCents, org.currency);
 
-  const expectedMin = formatMoney(0, org.currency);
-  if (weekRevenue === expectedMin && job.priceCents > 0) {
-    // paidAt might fall outside week window in edge TZ cases — still pass if payment row is paid
-    console.log(`⚠ Dashboard week revenue shows ${weekRevenue} (paidAt may be outside week window)`);
+  if (performance.revenue.totalCents === 0 && job.priceCents > 0) {
+    console.log(`⚠ Dashboard performance revenue shows ${revenueLabel} (paidAt may be outside range window)`);
   } else {
-    console.log(`✓ Dashboard revenue this week: ${weekRevenue}`);
+    console.log(`✓ Dashboard performance revenue: ${revenueLabel}`);
   }
 
   const paidCount = await prisma.paymentRecord.count({

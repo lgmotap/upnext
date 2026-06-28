@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "footer";
 
 function Wordmark({ theme }: { theme: Theme }) {
   return (
@@ -16,6 +16,7 @@ function Wordmark({ theme }: { theme: Theme }) {
  * BookedFox logo lockups.
  * - `light`: transparent horizontal PNG (header on white/soft bg).
  * - `dark`: transparent icon + split-color wordmark (navy surfaces).
+ * - `footer`: white horizontal PNG (navy surfaces — matches marketing footer).
  */
 export function BookedFoxLogo({
   href = "/",
@@ -24,6 +25,7 @@ export function BookedFoxLogo({
   priority = false,
   asLink = true,
   iconOnly = false,
+  compact = false,
 }: {
   href?: string;
   theme?: Theme;
@@ -31,15 +33,17 @@ export function BookedFoxLogo({
   priority?: boolean;
   asLink?: boolean;
   iconOnly?: boolean;
+  compact?: boolean;
 }) {
+  const imageSize = compact ? "h-7 w-auto shrink-0 sm:h-8" : "h-8 w-auto shrink-0 sm:h-9";
   const content =
-    theme === "light" && !iconOnly ? (
+    (theme === "light" || theme === "footer") && !iconOnly ? (
       <Image
-        src="/brand/logo-horizontal.png"
+        src={theme === "footer" ? "/brand/logo-footer.png" : "/brand/logo-horizontal.png"}
         alt="BookedFox"
         width={1024}
-        height={218}
-        className={`h-8 w-auto shrink-0 sm:h-9 ${className}`}
+        height={theme === "footer" ? 188 : 218}
+        className={`${imageSize} ${className}`}
         priority={priority}
       />
     ) : (
